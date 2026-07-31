@@ -24,7 +24,8 @@ import {
   Check,
   XCircle,
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  CheckSquare
 } from 'lucide-react';
 
 interface Transaction {
@@ -102,6 +103,52 @@ export default function Index() {
   // Delete Modal State
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [trxToDelete, setTrxToDelete] = useState<Transaction | null>(null);
+
+  // Bulk Selection State
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(transactions.data.map(t => t.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectRow = (id: number) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const isAllSelected = transactions.data.length > 0 && selectedIds.length === transactions.data.length;
+
+  const handleBulkApprove = () => {
+    if (selectedIds.length === 0) return;
+    if (window.confirm(`Apakah Anda yakin ingin menyetujui ${selectedIds.length} transaksi terpilih?`)) {
+      router.post('/dashboard/transactions/bulk-approve', { ids: selectedIds }, {
+        onSuccess: () => setSelectedIds([])
+      });
+    }
+  };
+
+  const handleBulkReject = () => {
+    if (selectedIds.length === 0) return;
+    if (window.confirm(`Apakah Anda yakin ingin menolak ${selectedIds.length} transaksi terpilih?`)) {
+      router.post('/dashboard/transactions/bulk-reject', { ids: selectedIds }, {
+        onSuccess: () => setSelectedIds([])
+      });
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    if (window.confirm(`Apakah Anda yakin ingin menghapus ${selectedIds.length} transaksi terpilih secara permanen?`)) {
+      router.post('/dashboard/transactions/bulk-delete', { ids: selectedIds }, {
+        onSuccess: () => setSelectedIds([])
+      });
+    }
+  };
 
   // Inertia Form
   const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
@@ -298,15 +345,15 @@ export default function Index() {
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-white font-sans flex items-center gap-2">
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans flex items-center gap-2">
               Jurnal & Daftar Transaksi
               {isStaff && (
-                <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full flex items-center gap-1">
+                <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full flex items-center gap-1">
                   <Clock className="h-3 w-3" /> Staff Mode (Perlu Persetujuan)
                 </span>
               )}
             </h2>
-            <p className="text-slate-400 text-sm">
+            <p className="text-slate-500 dark:text-slate-400 text-sm">
               Daftar pencatatan pemasukan dan pengeluaran kas PT Pos Indonesia Kantor Regional IV Semarang.
             </p>
           </div>
@@ -320,33 +367,78 @@ export default function Index() {
           </button>
         </div>
 
+        {selectedIds.length > 0 && (
+          <div className="bg-orange-500/10 border border-orange-500/30 dark:bg-orange-950/80 dark:border-orange-500/40 rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3 text-slate-900 dark:text-orange-200 shadow-xl backdrop-blur-md animate-fadeIn">
+            <div className="flex items-center gap-2 font-semibold text-xs text-orange-700 dark:text-orange-200">
+              <CheckSquare className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+              <span>{selectedIds.length} transaksi dipilih</span>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              {canApprove && (
+                <>
+                  <button
+                    onClick={handleBulkApprove}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs rounded-lg transition-colors shadow-sm cursor-pointer"
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    Setujui Terpilih
+                  </button>
+                  <button
+                    onClick={handleBulkReject}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-medium text-xs rounded-lg transition-colors shadow-sm cursor-pointer"
+                  >
+                    <XCircle className="h-3.5 w-3.5" />
+                    Tolak Terpilih
+                  </button>
+                </>
+              )}
+              {!isStaff && (
+                <button
+                  onClick={handleBulkDelete}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white font-medium text-xs rounded-lg transition-colors shadow-sm cursor-pointer"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Hapus Terpilih
+                </button>
+              )}
+              <button
+                onClick={() => setSelectedIds([])}
+                className="text-xs text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white px-2 py-1 cursor-pointer"
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Search & Filters */}
-        <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 space-y-4">
+        <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800/80 rounded-2xl p-5 space-y-4 transition-colors">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* Quick Search */}
-            <div className="flex items-center w-full max-w-sm bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 focus-within:border-orange-500/60 transition-colors">
-              <Search className="h-4 w-4 text-slate-500 mr-2" />
+            <div className="flex items-center w-full max-w-sm bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 focus-within:border-orange-500/60 transition-colors">
+              <Search className="h-4 w-4 text-slate-400 dark:text-slate-500 mr-2" />
               <input
                 type="text"
                 placeholder="Cari No. Transaksi atau keterangan..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleSearchKeyPress}
-                className="bg-transparent text-sm text-slate-300 placeholder-slate-600 focus:outline-none w-full"
+                className="bg-transparent text-sm text-slate-900 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none w-full"
               />
             </div>
 
             <div className="flex items-center gap-2 self-end md:self-auto">
               <button
                 onClick={() => applyFilters(1)}
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-xl border border-slate-700/50 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:text-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-700/50 transition-colors cursor-pointer"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
                 Cari
               </button>
               <button
                 onClick={resetFilters}
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-400 bg-transparent hover:text-slate-200 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer"
               >
                 Reset Filter
               </button>
@@ -354,14 +446,14 @@ export default function Index() {
           </div>
 
           {/* Filter Options */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2 border-t border-slate-800/50">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2 border-t border-slate-200 dark:border-slate-800/50">
             <div className="flex flex-col gap-1">
               <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Mulai Tanggal</label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                className="bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-orange-500"
               />
             </div>
 
@@ -371,7 +463,7 @@ export default function Index() {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                className="bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-orange-500"
               />
             </div>
 
@@ -380,7 +472,7 @@ export default function Index() {
               <select
                 value={selectedType}
                 onChange={(e) => setSelectedType(e.target.value)}
-                className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-300 focus:outline-none cursor-pointer"
+                className="bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-900 dark:text-slate-300 focus:outline-none cursor-pointer"
               >
                 <option value="">Semua</option>
                 <option value="pemasukan">Pemasukan</option>
@@ -393,7 +485,7 @@ export default function Index() {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-300 focus:outline-none cursor-pointer"
+                className="bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-900 dark:text-slate-300 focus:outline-none cursor-pointer"
               >
                 <option value="">Semua Kategori</option>
                 {categories.map(c => (
@@ -407,7 +499,7 @@ export default function Index() {
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-300 focus:outline-none cursor-pointer"
+                className="bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-900 dark:text-slate-300 focus:outline-none cursor-pointer"
               >
                 <option value="">Semua Status</option>
                 <option value="approved">Disetujui</option>
@@ -419,12 +511,21 @@ export default function Index() {
         </div>
 
         {/* Data Table */}
-        <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl overflow-hidden flex flex-col">
+        <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800/80 rounded-2xl overflow-hidden flex flex-col transition-colors">
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-800 text-slate-400 font-semibold text-[11px] uppercase tracking-wider bg-slate-950/40">
-                  <th className="py-3 pl-4 pr-2 whitespace-nowrap">No. Transaksi</th>
+                <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider bg-slate-50 dark:bg-slate-950/40">
+                  <th className="py-3 pl-4 pr-2 w-10 text-center">
+                    <input
+                      type="checkbox"
+                      checked={isAllSelected}
+                      onChange={handleSelectAll}
+                      className="rounded border-slate-300 dark:border-slate-700 text-orange-600 focus:ring-orange-500 bg-white dark:bg-slate-900 cursor-pointer"
+                      title="Pilih Semua"
+                    />
+                  </th>
+                  <th className="py-3 px-2 whitespace-nowrap">No. Transaksi</th>
                   <th className="py-3 px-2 whitespace-nowrap">Tanggal</th>
                   <th className="py-3 px-2 whitespace-nowrap">Jenis</th>
                   <th className="py-3 px-2 whitespace-nowrap">Kategori</th>
@@ -435,16 +536,31 @@ export default function Index() {
                   {!isStaff && <th className="py-3 pr-4 pl-2 text-center whitespace-nowrap">Aksi</th>}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/50">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800/50">
                 {transactions.data.map((trx) => {
                   const isPdf = trx.bukti_transaksi_url ? trx.bukti_transaksi_url.toLowerCase().endsWith('.pdf') : false;
+                  const isSelected = selectedIds.includes(trx.id);
 
                   return (
-                    <tr key={trx.id} className="text-slate-300 hover:bg-slate-800/40 transition-colors group">
-                      <td className="py-3 pl-4 pr-2 font-mono text-[11px] font-bold text-white whitespace-nowrap">
+                    <tr 
+                      key={trx.id} 
+                      className={`
+                        text-slate-700 dark:text-slate-300 transition-colors group
+                        ${isSelected ? 'bg-orange-500/10 dark:bg-orange-950/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'}
+                      `}
+                    >
+                      <td className="py-3 pl-4 pr-2 text-center">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleSelectRow(trx.id)}
+                          className="rounded border-slate-300 dark:border-slate-700 text-orange-600 focus:ring-orange-500 bg-white dark:bg-slate-900 cursor-pointer"
+                        />
+                      </td>
+                      <td className="py-3 px-2 font-mono text-[11px] font-bold text-slate-900 dark:text-white whitespace-nowrap">
                         {trx.nomor_transaksi}
                       </td>
-                      <td className="py-3 px-2 text-xs font-medium text-slate-200 whitespace-nowrap">
+                      <td className="py-3 px-2 text-xs font-medium text-slate-700 dark:text-slate-200 whitespace-nowrap">
                         {new Date(trx.tanggal).toLocaleDateString('id-ID', {
                           day: 'numeric',
                           month: 'short',
@@ -465,7 +581,7 @@ export default function Index() {
                         )}
                       </td>
                       <td className="py-3 px-2 whitespace-nowrap">
-                        <span className="inline-block text-[10px] font-bold text-slate-300 bg-slate-800 px-2 py-0.5 rounded-full border border-slate-700/50">
+                        <span className="inline-block text-[10px] font-bold text-slate-700 bg-slate-100 border-slate-200 dark:text-slate-300 dark:bg-slate-800 px-2 py-0.5 rounded-full border dark:border-slate-700/50">
                           {trx.category?.nama_kategori || '-'}
                         </span>
                       </td>
@@ -473,18 +589,18 @@ export default function Index() {
                       {/* Status Persetujuan Column */}
                       <td className="py-3 px-2 text-xs whitespace-nowrap">
                         {trx.status === 'approved' ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                            <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                            <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
                             Disetujui
                           </span>
                         ) : trx.status === 'pending' ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30 animate-pulse" title="Pending Persetujuan">
-                            <Clock className="h-3 w-3 text-amber-400" />
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30 animate-pulse" title="Pending Persetujuan">
+                            <Clock className="h-3 w-3 text-amber-600 dark:text-amber-400" />
                             Pending
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/30">
-                            <XCircle className="h-3 w-3 text-rose-400" />
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/30">
+                            <XCircle className="h-3 w-3 text-rose-600 dark:text-rose-400" />
                             Ditolak
                           </span>
                         )}
@@ -495,11 +611,11 @@ export default function Index() {
                       </td>
                       <td className="py-3 px-2 text-right font-bold whitespace-nowrap">
                         {trx.jenis_transaksi === 'pemasukan' ? (
-                          <span className="text-emerald-400 text-xs inline-flex items-center justify-end">
+                          <span className="text-emerald-600 dark:text-emerald-400 text-xs inline-flex items-center justify-end font-semibold">
                             {formatRupiah(trx.nominal)}
                           </span>
                         ) : (
-                          <span className="text-rose-400 text-xs inline-flex items-center justify-end">
+                          <span className="text-rose-600 dark:text-rose-400 text-xs inline-flex items-center justify-end font-semibold">
                             {formatRupiah(trx.nominal)}
                           </span>
                         )}
@@ -510,24 +626,24 @@ export default function Index() {
                         {trx.bukti_transaksi_url ? (
                           <button
                             onClick={() => openProofPreview(trx)}
-                            className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all cursor-pointer"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 border transition-all cursor-pointer"
                             title="Lihat Pratinjau Bukti"
                           >
                             {isPdf ? (
                               <>
-                                <FileText className="h-3 w-3 text-rose-400" />
+                                <FileText className="h-3 w-3 text-rose-500 dark:text-rose-400" />
                                 <span>PDF</span>
                               </>
                             ) : (
                               <>
-                                <ImageIcon className="h-3 w-3 text-cyan-400" />
+                                <ImageIcon className="h-3 w-3 text-cyan-600 dark:text-cyan-400" />
                                 <span>Foto</span>
                               </>
                             )}
                             <Eye className="h-3 w-3 text-slate-400" />
                           </button>
                         ) : (
-                          <span className="text-[11px] text-slate-600 italic">Tidak Ada</span>
+                          <span className="text-[11px] text-slate-400 dark:text-slate-600 italic">Tidak Ada</span>
                         )}
                       </td>
 
@@ -540,7 +656,7 @@ export default function Index() {
                               <>
                                 <button
                                   onClick={() => handleApprove(trx)}
-                                  className="px-2 py-0.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/40 text-[10px] font-bold flex items-center gap-0.5 transition-all cursor-pointer"
+                                  className="px-2 py-0.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-600 text-emerald-600 dark:text-emerald-400 hover:text-white dark:hover:text-white border border-emerald-500/30 text-[10px] font-bold flex items-center gap-0.5 transition-all cursor-pointer"
                                   title="Setujui Transaksi (Approve)"
                                 >
                                   <Check className="h-3 w-3" />
@@ -548,7 +664,7 @@ export default function Index() {
                                 </button>
                                 <button
                                   onClick={() => handleReject(trx)}
-                                  className="px-2 py-0.5 rounded-lg bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/40 text-[10px] font-bold flex items-center gap-0.5 transition-all cursor-pointer"
+                                  className="px-2 py-0.5 rounded-lg bg-rose-500/10 hover:bg-rose-600 text-rose-600 dark:text-rose-400 hover:text-white dark:hover:text-white border border-rose-500/30 text-[10px] font-bold flex items-center gap-0.5 transition-all cursor-pointer"
                                   title="Tolak Transaksi (Reject)"
                                 >
                                   <X className="h-3 w-3" />
@@ -560,14 +676,14 @@ export default function Index() {
                             {/* Edit & Delete Buttons */}
                             <button
                               onClick={() => openEditModal(trx)}
-                              className="p-1 rounded-lg bg-slate-800 hover:bg-amber-500/20 text-slate-400 hover:text-amber-300 border border-slate-700/50 transition-colors"
+                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-amber-500/20 text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-300 border border-slate-200 dark:border-slate-700/50 transition-colors cursor-pointer"
                               title="Edit Transaksi"
                             >
                               <Edit3 className="h-3.5 w-3.5" />
                             </button>
                             <button
                               onClick={() => handleDeleteConfirm(trx)}
-                              className="p-1 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-700/50 transition-colors"
+                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/20 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700/50 transition-colors cursor-pointer"
                               title="Hapus Transaksi"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -583,11 +699,11 @@ export default function Index() {
                   <tr>
                     <td colSpan={isStaff ? 8 : 9} className="py-16 text-center">
                       <div className="flex flex-col items-center justify-center max-w-sm mx-auto space-y-3">
-                        <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 shadow-inner">
-                          <Coins className="h-6 w-6 text-slate-600" />
+                        <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 shadow-inner">
+                          <Coins className="h-6 w-6 text-slate-400 dark:text-slate-600" />
                         </div>
                         <div>
-                          <h4 className="text-sm font-semibold text-slate-300">Belum Ada Transaksi Tercatat</h4>
+                          <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Belum Ada Transaksi Tercatat</h4>
                           <p className="text-xs text-slate-500 mt-1">Klik tombol <strong>"Catat Transaksi Baru"</strong> di atas untuk menambah transaksi pertamamu.</p>
                         </div>
                       </div>
@@ -600,28 +716,28 @@ export default function Index() {
 
           {/* Pagination */}
           {transactions.last_page > 1 && (
-            <div className="border-t border-slate-800/80 px-6 py-4 flex items-center justify-between bg-slate-950/10">
+            <div className="border-t border-slate-200 dark:border-slate-800/80 px-6 py-4 flex items-center justify-between bg-slate-50 dark:bg-slate-950/10">
               <span className="text-xs text-slate-500 font-medium">
-                Menampilkan <span className="text-slate-300 font-semibold">{transactions.data.length}</span> dari{' '}
-                <span className="text-slate-300 font-semibold">{transactions.total}</span> transaksi
+                Menampilkan <span className="text-slate-900 dark:text-slate-300 font-semibold">{transactions.data.length}</span> dari{' '}
+                <span className="text-slate-900 dark:text-slate-300 font-semibold">{transactions.total}</span> transaksi
               </span>
 
               <div className="flex items-center gap-2">
                 <button
                   disabled={transactions.current_page === 1}
                   onClick={() => applyFilters(transactions.current_page - 1)}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-800 disabled:opacity-35 disabled:cursor-not-allowed transition-all"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:text-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-800 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer"
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
                   Sebelumnya
                 </button>
-                <span className="text-xs text-slate-400 px-2.5">
-                  Halaman <span className="text-slate-200 font-bold">{transactions.current_page}</span> dari {transactions.last_page}
+                <span className="text-xs text-slate-500 dark:text-slate-400 px-2.5">
+                  Halaman <span className="text-slate-900 dark:text-slate-200 font-bold">{transactions.current_page}</span> dari {transactions.last_page}
                 </span>
                 <button
                   disabled={transactions.current_page === transactions.last_page}
                   onClick={() => applyFilters(transactions.current_page + 1)}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-800 disabled:opacity-35 disabled:cursor-not-allowed transition-all"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:text-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-800 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer"
                 >
                   Berikutnya
                   <ChevronRight className="h-3.5 w-3.5" />
@@ -637,42 +753,42 @@ export default function Index() {
       {/* ========================================================================= */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/50">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Coins className="h-5 w-5 text-orange-500" />
                 {editingTrx ? 'Edit Record Transaksi' : 'Catat Transaksi Baru'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {/* Modal Body / Form */}
-            <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 text-slate-300 text-sm">
+            <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 text-slate-700 dark:text-slate-300 text-sm">
               {/* Notice for Staff */}
               {isStaff && (
-                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-center gap-2.5 text-amber-300 text-xs font-medium">
-                  <ShieldCheck className="h-4 w-4 shrink-0 text-amber-400" />
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-center gap-2.5 text-amber-700 dark:text-amber-300 text-xs font-medium">
+                  <ShieldCheck className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
                   <span>Transaksi yang diinput oleh Staff akan memerlukan persetujuan (approval) dari Admin atau Supervisor sebelum masuk ke laporan saldo resmi.</span>
                 </div>
               )}
 
               {/* Jenis Arus Kas */}
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                   Jenis Arus Kas <span className="text-rose-500">*</span>
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <label
                     className={`py-3 px-4 rounded-xl border font-semibold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all ${
                       data.jenis_transaksi === 'pemasukan'
-                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow-md shadow-emerald-950/50 ring-1 ring-emerald-500'
-                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-600 dark:text-emerald-400 shadow-md shadow-emerald-950/25 ring-1 ring-emerald-500'
+                        : 'bg-slate-50 border-slate-300 dark:bg-slate-950 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-700'
                     }`}
                   >
                     <input
@@ -683,15 +799,15 @@ export default function Index() {
                       onChange={() => setData('jenis_transaksi', 'pemasukan')}
                       className="sr-only"
                     />
-                    <ArrowUpRight className="h-4 w-4 text-emerald-400" />
+                    <ArrowUpRight className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                     Pemasukan Kas
                   </label>
 
                   <label
                     className={`py-3 px-4 rounded-xl border font-semibold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all ${
                       data.jenis_transaksi === 'pengeluaran'
-                        ? 'bg-rose-500/20 border-rose-500 text-rose-400 shadow-md shadow-rose-950/50 ring-1 ring-rose-500'
-                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                        ? 'bg-rose-500/20 border-rose-500 text-rose-600 dark:text-rose-400 shadow-md shadow-rose-950/25 ring-1 ring-rose-500'
+                        : 'bg-slate-50 border-slate-300 dark:bg-slate-950 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-700'
                     }`}
                   >
                     <input
@@ -702,39 +818,39 @@ export default function Index() {
                       onChange={() => setData('jenis_transaksi', 'pengeluaran')}
                       className="sr-only"
                     />
-                    <ArrowDownLeft className="h-4 w-4 text-rose-400" />
+                    <ArrowDownLeft className="h-4 w-4 text-rose-600 dark:text-rose-400" />
                     Pengeluaran Kas
                   </label>
                 </div>
                 {errors.jenis_transaksi && (
-                  <p className="text-xs text-rose-400 mt-1">{errors.jenis_transaksi}</p>
+                  <p className="text-xs text-rose-500 dark:text-rose-400 mt-1">{errors.jenis_transaksi}</p>
                 )}
               </div>
 
               {/* Tanggal & Kategori */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     Tanggal Transaksi <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="date"
                     value={data.tanggal}
                     onChange={(e) => setData('tanggal', e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-orange-500"
+                    className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:border-orange-500"
                     required
                   />
-                  {errors.tanggal && <p className="text-xs text-rose-400 mt-1">{errors.tanggal}</p>}
+                  {errors.tanggal && <p className="text-xs text-rose-500 dark:text-rose-400 mt-1">{errors.tanggal}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                     Kategori <span className="text-rose-500">*</span>
                   </label>
                   <select
                     value={data.kategori_id}
                     onChange={(e) => setData('kategori_id', e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-orange-500 cursor-pointer"
+                    className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:border-orange-500 cursor-pointer"
                     required
                   >
                     <option value="">Pilih Kategori</option>
@@ -742,13 +858,13 @@ export default function Index() {
                       <option key={c.id} value={c.id}>{c.nama_kategori}</option>
                     ))}
                   </select>
-                  {errors.kategori_id && <p className="text-xs text-rose-400 mt-1">{errors.kategori_id}</p>}
+                  {errors.kategori_id && <p className="text-xs text-rose-500 dark:text-rose-400 mt-1">{errors.kategori_id}</p>}
                 </div>
               </div>
 
               {/* Nominal */}
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Nominal (IDR) <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
@@ -760,16 +876,16 @@ export default function Index() {
                     placeholder="0"
                     value={data.nominal}
                     onChange={(e) => setData('nominal', e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-sm text-slate-200 font-mono font-bold focus:outline-none focus:border-orange-500"
+                    className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl pl-9 pr-3 py-2 text-sm text-slate-900 dark:text-slate-200 font-mono font-bold focus:outline-none focus:border-orange-500"
                     required
                   />
                 </div>
-                {errors.nominal && <p className="text-xs text-rose-400 mt-1">{errors.nominal}</p>}
+                {errors.nominal && <p className="text-xs text-rose-500 dark:text-rose-400 mt-1">{errors.nominal}</p>}
               </div>
 
               {/* Keterangan */}
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Keterangan / Catatan
                 </label>
                 <textarea
@@ -777,23 +893,23 @@ export default function Index() {
                   placeholder="Contoh: Pembayaran tagihan pengiriman PosPay cabang..."
                   value={data.keterangan}
                   onChange={(e) => setData('keterangan', e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-orange-500"
+                  className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:border-orange-500"
                 />
-                {errors.keterangan && <p className="text-xs text-rose-400 mt-1">{errors.keterangan}</p>}
+                {errors.keterangan && <p className="text-xs text-rose-500 dark:text-rose-400 mt-1">{errors.keterangan}</p>}
               </div>
 
               {/* Upload Bukti Transaksi */}
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Bukti Transaksi (Foto / PDF) {!editingTrx && <span className="text-rose-500">*</span>}
                 </label>
 
-                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-800 border-dashed rounded-xl bg-slate-950/60 hover:border-slate-700 transition-colors">
+                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 dark:border-slate-800 border-dashed rounded-xl bg-slate-50 dark:bg-slate-950/60 hover:border-slate-400 dark:hover:border-slate-700 transition-colors">
                   <div className="space-y-2 text-center">
                     {filePreview ? (
                       <div className="flex flex-col items-center gap-2">
                         {filePreview.isPdf ? (
-                          <div className="w-16 h-16 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
+                          <div className="w-16 h-16 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-500 dark:text-rose-400">
                             <FileText className="h-8 w-8" />
                           </div>
                         ) : (
@@ -801,12 +917,12 @@ export default function Index() {
                             <img
                               src={filePreview.url}
                               alt="Preview Bukti"
-                              className="w-24 h-24 object-cover rounded-xl border border-slate-700 shadow-md"
+                              className="w-24 h-24 object-cover rounded-xl border border-slate-300 dark:border-slate-700 shadow-md"
                             />
                           </div>
                         )}
-                        <span className="text-xs text-slate-300 font-medium truncate max-w-xs">{filePreview.name}</span>
-                        <label className="text-xs text-orange-400 hover:text-orange-300 font-semibold cursor-pointer underline">
+                        <span className="text-xs text-slate-700 dark:text-slate-300 font-medium truncate max-w-xs">{filePreview.name}</span>
+                        <label className="text-xs text-orange-600 dark:text-orange-400 hover:underline font-semibold cursor-pointer">
                           Ganti File
                           <input
                             type="file"
@@ -818,9 +934,9 @@ export default function Index() {
                       </div>
                     ) : (
                       <>
-                        <UploadCloud className="mx-auto h-10 w-10 text-slate-500" />
-                        <div className="flex text-xs text-slate-400">
-                          <label className="relative cursor-pointer font-semibold text-orange-500 hover:text-orange-400 focus-within:outline-none">
+                        <UploadCloud className="mx-auto h-10 w-10 text-slate-400 dark:text-slate-500" />
+                        <div className="flex text-xs text-slate-500 dark:text-slate-400">
+                          <label className="relative cursor-pointer font-semibold text-orange-600 dark:text-orange-400 hover:underline focus-within:outline-none">
                             <span>Pilih file foto atau PDF</span>
                             <input
                               type="file"
@@ -832,7 +948,7 @@ export default function Index() {
                           </label>
                           <p className="pl-1">atau drag and drop</p>
                         </div>
-                        <p className="text-[11px] text-slate-600">
+                        <p className="text-[11px] text-slate-400 dark:text-slate-600">
                           PNG, JPG, WEBP, atau PDF hingga 10 MB
                         </p>
                       </>
@@ -840,23 +956,23 @@ export default function Index() {
                   </div>
                 </div>
                 {errors.bukti_transaksi && (
-                  <p className="text-xs text-rose-400 mt-1">{errors.bukti_transaksi}</p>
+                  <p className="text-xs text-rose-500 dark:text-rose-400 mt-1">{errors.bukti_transaksi}</p>
                 )}
               </div>
 
               {/* Submit Buttons */}
-              <div className="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors"
+                  className="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={processing}
-                  className="px-5 py-2.5 bg-orange-600 hover:bg-orange-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-orange-950/50 disabled:opacity-50 transition-all cursor-pointer"
+                  className="px-5 py-2.5 bg-orange-600 hover:bg-orange-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-orange-950/25 disabled:opacity-50 transition-all cursor-pointer"
                 >
                   {processing ? 'Menyimpan...' : editingTrx ? 'Simpan Perubahan' : 'Catat Transaksi'}
                 </button>
@@ -870,19 +986,19 @@ export default function Index() {
       {/* MODAL 2: PRATINJAU BUKTI TRANSAKSI (FOTO / PDF VIEWER) */}
       {/* ========================================================================= */}
       {previewModalOpen && activePreview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/70">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/70">
               <div className="flex items-center gap-2">
                 {activePreview.isPdf ? (
-                  <FileText className="h-5 w-5 text-rose-400" />
+                  <FileText className="h-5 w-5 text-rose-500 dark:text-rose-400" />
                 ) : (
-                  <ImageIcon className="h-5 w-5 text-cyan-400" />
+                  <ImageIcon className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
                 )}
                 <div>
-                  <h3 className="text-sm font-bold text-white">Pratinjau Bukti Transaksi</h3>
-                  <p className="text-[11px] font-mono text-slate-400">{activePreview.nomor}</p>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Pratinjau Bukti Transaksi</h3>
+                  <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400">{activePreview.nomor}</p>
                 </div>
               </div>
 
@@ -891,7 +1007,7 @@ export default function Index() {
                   href={activePreview.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 transition-colors"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:text-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   Buka Tab Baru
@@ -906,7 +1022,7 @@ export default function Index() {
                 </a>
                 <button
                   onClick={() => setPreviewModalOpen(false)}
-                  className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors ml-2"
+                  className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ml-2 cursor-pointer"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -914,18 +1030,18 @@ export default function Index() {
             </div>
 
             {/* Modal Content */}
-            <div className="p-6 bg-slate-950 flex items-center justify-center overflow-auto max-h-[78vh]">
+            <div className="p-6 bg-slate-100 dark:bg-slate-950 flex items-center justify-center overflow-auto max-h-[78vh]">
               {activePreview.isPdf ? (
                 <iframe
                   src={activePreview.url}
                   title={`Bukti Transaksi ${activePreview.nomor}`}
-                  className="w-full h-[70vh] rounded-xl border border-slate-800 shadow-2xl"
+                  className="w-full h-[70vh] rounded-xl border border-slate-300 dark:border-slate-800 shadow-2xl"
                 />
               ) : (
                 <img
                   src={activePreview.url}
                   alt={`Bukti Transaksi ${activePreview.nomor}`}
-                  className="max-h-[70vh] max-w-full rounded-xl object-contain shadow-2xl border border-slate-800"
+                  className="max-h-[70vh] max-w-full rounded-xl object-contain shadow-2xl border border-slate-300 dark:border-slate-800"
                 />
               )}
             </div>
@@ -938,20 +1054,20 @@ export default function Index() {
       {/* ========================================================================= */}
       {deleteModalOpen && trxToDelete && !isStaff && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4">
+          <div className="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
+              <div className="w-10 h-10 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0">
                 <Trash2 className="h-5 w-5" />
               </div>
               <div>
-                <h4 className="text-base font-bold text-white">Hapus Record Transaksi?</h4>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Nomor: <span className="font-mono font-bold text-slate-200">{trxToDelete.nomor_transaksi}</span>
+                <h4 className="text-base font-bold text-slate-900 dark:text-white">Hapus Record Transaksi?</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Nomor: <span className="font-mono font-bold text-slate-900 dark:text-slate-200">{trxToDelete.nomor_transaksi}</span>
                 </p>
               </div>
             </div>
 
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
               Tindakan ini tidak dapat dibatalkan. Data transaksi beserta file bukti transaksi terkait akan dihapus secara permanen dari server.
             </p>
 
@@ -959,14 +1075,14 @@ export default function Index() {
               <button
                 type="button"
                 onClick={() => setDeleteModalOpen(false)}
-                className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors"
+                className="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer"
               >
                 Batal
               </button>
               <button
                 type="button"
                 onClick={executeDelete}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-rose-950/50 transition-all cursor-pointer"
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-rose-950/25 transition-all cursor-pointer"
               >
                 Hapus Permanen
               </button>

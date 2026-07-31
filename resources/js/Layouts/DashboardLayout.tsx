@@ -12,10 +12,12 @@ import {
   Menu,
   X,
   ChevronLeft,
-  PanelLeftClose,
   PanelLeft,
-  ShieldCheck
+  ShieldCheck,
+  Sun,
+  Moon
 } from 'lucide-react';
+import { useTheme } from '../Hooks/useTheme';
 
 interface User {
   id: number;
@@ -33,6 +35,7 @@ interface PageProps {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { auth } = usePage<any>().props as unknown as PageProps;
   const user = auth.user;
+  const { theme, toggleTheme } = useTheme();
 
   const [currentDate, setCurrentDate] = useState('');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -108,11 +111,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const filteredMenu = menuItems.filter(item => item.roles.includes(user.role));
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans relative overflow-x-hidden">
+    <div className="min-h-screen bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans relative overflow-x-hidden transition-colors duration-200">
       {/* Sidebar - Fixed 100vh Full Slide Hide/Show for Desktop & Mobile */}
       <aside 
         className={`
-          fixed top-0 bottom-0 left-0 z-40 h-screen w-64 bg-slate-900 border-r border-slate-800 
+          fixed top-0 bottom-0 left-0 z-40 h-screen w-64 bg-white border-r border-slate-200 dark:bg-slate-900 dark:border-slate-800 
           flex flex-col justify-between transition-all duration-300 ease-in-out shrink-0 overflow-x-hidden no-scrollbar
           ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           ${sidebarOpen ? 'md:translate-x-0' : 'md:-translate-x-full'}
@@ -120,7 +123,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       >
         <div className="flex flex-col flex-1 min-h-0 overflow-x-hidden">
           {/* Brand Logo Header */}
-          <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800 shrink-0">
+          <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
             <div className="flex items-center gap-3 min-w-0">
               {/* Intact Logo Badge */}
               <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-orange-600 to-amber-500 flex items-center justify-center shadow-md shadow-orange-600/20 shrink-0 text-[10px] font-black text-white select-none">
@@ -128,8 +131,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
 
               <div className="min-w-0">
-                <h2 className="text-sm font-bold text-white leading-none truncate">PosFinance</h2>
-                <span className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider block truncate">Regional IV Semarang</span>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white leading-none truncate">PosFinance</h2>
+                <span className="text-[9px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider block truncate">Regional IV Semarang</span>
               </div>
             </div>
 
@@ -137,7 +140,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <button
               onClick={toggleSidebar}
               title="Sembunyikan Sidebar"
-              className="hidden md:flex p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors shrink-0"
+              className="hidden md:flex p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
@@ -145,7 +148,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {/* Mobile Close Button */}
             <button 
               onClick={() => setMobileSidebarOpen(false)}
-              className="md:hidden p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 shrink-0"
+              className="md:hidden p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0"
             >
               <X className="h-5 w-5" />
             </button>
@@ -165,10 +168,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all duration-150 ${
                     isActive
                       ? 'bg-orange-600 text-white shadow-lg shadow-orange-600/20'
-                      : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-800/60'
                   }`}
                 >
-                  <Icon className={`h-5 w-5 shrink-0 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-100'}`} />
+                  <Icon className={`h-5 w-5 shrink-0 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-100'}`} />
                   <span className="truncate">{item.label}</span>
                 </Link>
               );
@@ -177,18 +180,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         {/* User Session Info & Logout - Fixed at Bottom of Sidebar */}
-        <div className="p-3.5 border-t border-slate-800 shrink-0 bg-slate-900 overflow-x-hidden no-scrollbar">
+        <div className="p-3.5 border-t border-slate-200 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900 overflow-x-hidden no-scrollbar">
           <Link
             href="/profile"
-            className="bg-slate-950/50 border border-slate-800/80 hover:border-orange-500/40 hover:bg-slate-950 rounded-xl p-3 mb-2.5 flex items-center gap-3 transition-all group cursor-pointer"
+            className="bg-slate-100 border border-slate-200 dark:bg-slate-950/50 dark:border-slate-800/80 hover:border-orange-500/40 hover:bg-slate-200 dark:hover:bg-slate-950 rounded-xl p-3 mb-2.5 flex items-center gap-3 transition-all group cursor-pointer"
             title="Buka Profil Saya"
           >
             <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-orange-600 to-amber-500 text-white flex items-center justify-center font-bold text-sm uppercase shrink-0 shadow-md group-hover:scale-105 transition-transform">
               {user.name.charAt(0)}
             </div>
             <div className="min-w-0 flex-1">
-              <h4 className="text-xs font-semibold text-white group-hover:text-orange-400 truncate leading-tight transition-colors">{user.name}</h4>
-              <span className="inline-block text-[9px] font-bold text-orange-500 uppercase tracking-wider bg-orange-500/10 px-2 py-0.5 rounded-full mt-1">
+              <h4 className="text-xs font-semibold text-slate-900 dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 truncate leading-tight transition-colors">{user.name}</h4>
+              <span className="inline-block text-[9px] font-bold text-orange-600 dark:text-orange-500 uppercase tracking-wider bg-orange-500/10 px-2 py-0.5 rounded-full mt-1">
                 {user.role}
               </span>
             </div>
@@ -198,7 +201,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             method="post"
             href="/logout"
             as="button"
-            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all duration-150"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10 border border-transparent hover:border-red-200 dark:hover:border-red-500/20 transition-all duration-150"
           >
             <LogOut className="h-4.5 w-4.5 shrink-0" />
             <span>Keluar</span>
@@ -211,12 +214,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         sidebarOpen ? 'md:pl-64' : 'md:pl-0'
       }`}>
         {/* Top Navbar Header (Sticky) */}
-        <header className="h-16 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md px-4 md:px-6 flex items-center justify-between sticky top-0 z-30">
+        <header className="h-16 border-b border-slate-200 bg-white/80 dark:border-slate-800 dark:bg-slate-900/80 backdrop-blur-md px-4 md:px-6 flex items-center justify-between sticky top-0 z-30 transition-colors">
           <div className="flex items-center gap-3">
             {/* Toggle Button for Mobile */}
             <button 
               onClick={() => setMobileSidebarOpen(true)}
-              className="md:hidden p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors"
+              className="md:hidden p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
               <Menu className="h-5 w-5" />
             </button>
@@ -226,9 +229,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <button
                 onClick={toggleSidebar}
                 title="Tampilkan Sidebar"
-                className="hidden md:flex items-center gap-2 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                className="hidden md:flex items-center gap-2 p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
-                <div className="flex items-center gap-2 text-orange-400 font-semibold text-xs bg-orange-500/10 px-2.5 py-1 rounded-lg border border-orange-500/20">
+                <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400 font-semibold text-xs bg-orange-500/10 px-2.5 py-1 rounded-lg border border-orange-500/20">
                   <PanelLeft className="h-4.5 w-4.5" />
                   <span>Buka Menu</span>
                 </div>
@@ -236,8 +239,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             )}
 
             <div>
-              <h1 className="text-xs md:text-sm font-semibold text-slate-300">
-                Selamat datang kembali, <Link href="/profile" className="text-white font-bold hover:text-orange-400 hover:underline transition-colors">{user.name}</Link>
+              <h1 className="text-xs md:text-sm font-semibold text-slate-600 dark:text-slate-300">
+                Selamat datang kembali, <Link href="/profile" className="text-slate-900 dark:text-white font-bold hover:text-orange-600 dark:hover:text-orange-400 hover:underline transition-colors">{user.name}</Link>
               </h1>
               <p className="hidden md:block text-[11px] text-slate-500 font-medium">
                 PT Pos Indonesia - Kantor Regional IV Semarang
@@ -246,25 +249,38 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <div className="flex items-center gap-3 md:gap-4">
-            <div className="hidden lg:flex items-center gap-2 text-xs text-slate-400 bg-slate-800/40 border border-slate-800/80 px-3.5 py-1.5 rounded-full">
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'Ubah ke Mode Terang' : 'Ubah ke Mode Gelap'}
+              className="p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-colors flex items-center justify-center"
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-5 w-5 text-amber-400" />
+              ) : (
+                <Moon className="h-5 w-5 text-slate-700" />
+              )}
+            </button>
+
+            <div className="hidden lg:flex items-center gap-2 text-xs text-slate-600 bg-slate-100 border border-slate-200 dark:text-slate-400 dark:bg-slate-800/40 dark:border-slate-800/80 px-3.5 py-1.5 rounded-full">
               <Calendar className="h-3.5 w-3.5 text-orange-500" />
               <span>{currentDate}</span>
             </div>
 
-            <div className="h-8 w-px bg-slate-800" />
+            <div className="h-8 w-px bg-slate-200 dark:bg-slate-800" />
 
             <Link
               href="/profile"
-              className="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-slate-800/60 transition-all group cursor-pointer"
+              className="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all group cursor-pointer"
               title="Buka Profil Saya"
             >
               <div className="text-right hidden sm:block">
-                <p className="text-xs font-semibold text-white group-hover:text-orange-400 transition-colors leading-none">{user.name}</p>
+                <p className="text-xs font-semibold text-slate-900 dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors leading-none">{user.name}</p>
                 <span className="text-[10px] text-slate-500 font-medium lowercase">
                   {user.email}
                 </span>
               </div>
-              <div className="h-9 w-9 rounded-xl bg-orange-600/10 border border-orange-500/20 text-orange-500 group-hover:bg-orange-500 group-hover:text-white flex items-center justify-center font-bold uppercase shadow-sm transition-all">
+              <div className="h-9 w-9 rounded-xl bg-orange-600/10 border border-orange-500/20 text-orange-600 dark:text-orange-500 group-hover:bg-orange-500 group-hover:text-white flex items-center justify-center font-bold uppercase shadow-sm transition-all">
                 <UserIcon className="h-4 w-4" />
               </div>
             </Link>

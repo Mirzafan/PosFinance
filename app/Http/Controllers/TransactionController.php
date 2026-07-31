@@ -244,4 +244,84 @@ class TransactionController extends Controller
 
         return redirect()->back()->with('success', 'Transaksi ' . $transaction->nomor_transaksi . ' ditolak (Rejected).');
     }
+
+    public function bulkApprove(Request $request)
+    {
+        if (!in_array($request->user()->role, ['admin', 'supervisor'])) {
+            abort(403, 'Hanya Admin dan Supervisor yang dapat menyetujui transaksi.');
+        }
+
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:transactions,id',
+        ]);
+
+        $count = count($validated['ids']);
+        Transaction::whereIn('id', $validated['ids'])->update(['status' => 'approved']);
+
+        AuditLog::record(
+            'BULK_APPROVE',
+            'Transaksi',
+            "Menyetujui secara massal {$count} transaksi yang dipilih.",
+            $request->user()
+        );
+
+        return redirect()->back()->with('success', "{$count} transaksi berhasil disetujui (Approved).");
+    }
+
+    public function bulkReject(Request $request)
+    {
+        if (!in_array($request->user()->role, ['admin', 'supervisor'])) {
+            abort(403, 'Hanya Admin dan Supervisor yang dapat menolak transaksi.');
+        }
+
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:transactions,id',
+        ]);
+
+        $count = count($validated['ids']);
+        Transaction::whereIn('id', $validated['ids'])->update(['status' => 'rejected']);
+
+        AuditLog::record(
+            'BULK_REJECT',
+            'Transaksi',
+            "Menolak secara massal {$count} transaksi yang dipilih.",
+            $request->user()
+        );
+
+        return redirect()->back()->with('success', "{$count} transaksi ditolak (Rejected).");
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        if ($request->user()->role === 'staff') {
+            abort(403, 'Staff hanya dapat menambah dan melihat data transaksi.');
+        }
+
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:transactions,id',
+        ]);
+
+        $transactions = Transaction::whereIn('id', $validated['ids'])->get();
+        $count = $transactions->count();
+
+        foreach ($transactions as $t) {
+            if ($t->bukti_transaksi && Storage::disk('public')->exists($t->bukti_transaksi)) {
+                Storage::disk('public')->delete($t->bukti_transaksi);
+            }
+        }
+
+        Transaction::whereIn('id', $validated['ids'])->delete();
+
+        AuditLog::record(
+            'BULK_DELETE',
+            'Transaksi',
+            "Menghapus secara massal {$count} transaksi dari sistem.",
+            $request->user()
+        );
+
+        return redirect()->back()->with('success', "{$count} transaksi berhasil dihapus.");
+    }
 }

@@ -123,37 +123,37 @@ export default function UpdateProfileInformation({
             {/* Pop Up Modal Success Update Profile */}
             {showSuccessModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-                    <div className="bg-[#0B101B] border border-[#182232] rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative text-center space-y-5">
+                    <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative text-center space-y-5">
                         {/* Close Button */}
                         <button
                             type="button"
                             onClick={() => setShowSuccessModal(false)}
-                            className="absolute top-4 right-4 text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800/60 transition-colors"
+                            className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
                         >
                             <X className="h-5 w-5" />
                         </button>
 
                         {/* Success Icon */}
-                        <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-400 shadow-lg shadow-emerald-950/50">
-                            <CheckCircle2 className="h-10 w-10 text-emerald-400" />
+                        <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400 shadow-lg shadow-emerald-950/25">
+                            <CheckCircle2 className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
                         </div>
 
                         {/* Header / Content Text */}
                         <div className="space-y-2">
-                            <h3 className="text-xl font-bold text-white tracking-tight">
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
                                 Berhasil Perbarui Profil
                             </h3>
-                            <p className="text-xs text-slate-400 leading-relaxed">
-                                Informasi nama dan email profil akun Anda telah berhasil diperbarui.
+                            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                                Informasi profil dan alamat email akun Anda telah sukses tersimpan dan diperbarui pada sistem PosFinance.
                             </p>
                         </div>
 
-                        {/* Action Button */}
+                        {/* Submit Confirmation Button */}
                         <div className="pt-2">
                             <button
                                 type="button"
                                 onClick={() => setShowSuccessModal(false)}
-                                className="w-full py-2.5 px-4 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-orange-950/40 transition-all cursor-pointer"
+                                className="w-full py-2.5 px-4 bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-semibold text-xs rounded-xl shadow-lg shadow-orange-950/25 transition-all cursor-pointer"
                             >
                                 Mengerti & Tutup
                             </button>

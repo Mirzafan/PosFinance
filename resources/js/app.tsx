@@ -7,6 +7,19 @@ import { createRoot } from 'react-dom/client';
 
 const appName = import.meta.env.VITE_APP_NAME && import.meta.env.VITE_APP_NAME !== 'Laravel' ? import.meta.env.VITE_APP_NAME : 'PosFinance';
 
+// Initialize Theme on startup
+if (typeof window !== 'undefined') {
+  const savedTheme = localStorage.getItem('theme');
+  const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = savedTheme ? savedTheme === 'dark' : systemPrefersDark;
+
+  if (isDark) {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+}
+
 createInertiaApp({
     title: (title) => title ? `${title} - ${appName}` : appName,
     resolve: (name) =>

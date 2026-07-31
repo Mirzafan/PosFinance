@@ -75,14 +75,14 @@ export default function Index() {
         {/* Title Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-white">Kategori Transaksi</h2>
-            <p className="text-slate-400 text-sm">Kelola kategori pengelompokan pemasukan dan pengeluaran keuangan.</p>
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Kategori Transaksi</h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">Kelola kategori pengelompokan pemasukan dan pengeluaran keuangan.</p>
           </div>
 
           {canManage && (
             <button
               onClick={() => { setShowAddModal(true); reset(); }}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 shadow-lg shadow-orange-600/25 transition-all duration-150 active:scale-95"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 shadow-lg shadow-orange-600/25 transition-all duration-150 active:scale-95 cursor-pointer"
             >
               <Plus className="h-4.5 w-4.5" />
               Tambah Kategori
@@ -91,14 +91,14 @@ export default function Index() {
         </div>
 
         {/* Actions (Search) */}
-        <div className="flex items-center w-full max-w-sm bg-slate-900 border border-slate-800 rounded-xl px-3 py-2">
-          <Search className="h-4 w-4 text-slate-500 mr-2" />
+        <div className="flex items-center w-full max-w-sm bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-xl px-3 py-2">
+          <Search className="h-4 w-4 text-slate-400 dark:text-slate-500 mr-2" />
           <input
             type="text"
             placeholder="Cari kategori..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="bg-transparent text-sm text-slate-300 placeholder-slate-600 focus:outline-none w-full"
+            className="bg-transparent text-sm text-slate-900 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none w-full"
           />
         </div>
 
@@ -107,14 +107,14 @@ export default function Index() {
           {filteredCategories.map((cat) => (
             <div
               key={cat.id}
-              className="bg-slate-900/50 backdrop-blur border border-slate-800/80 rounded-2xl p-5 hover:border-slate-700/50 transition-all duration-200 flex items-center justify-between group"
+              className="bg-white dark:bg-slate-900/50 backdrop-blur border border-slate-200 dark:border-slate-800/80 rounded-2xl p-5 hover:border-slate-300 dark:hover:border-slate-700/50 transition-all duration-200 flex items-center justify-between group shadow-sm"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-orange-600/10 border border-orange-500/20 text-orange-500 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-orange-600/10 border border-orange-500/20 text-orange-600 dark:text-orange-500 flex items-center justify-center">
                   <Tag className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-white text-sm">{cat.nama_kategori}</h4>
+                  <h4 className="font-semibold text-slate-900 dark:text-white text-sm">{cat.nama_kategori}</h4>
                   <span className="text-[10px] text-slate-500">ID: #{cat.id}</span>
                 </div>
               </div>
@@ -123,13 +123,13 @@ export default function Index() {
                 <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                   <button
                     onClick={() => openEditModal(cat)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                   >
                     <Edit2 className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => handleDelete(cat.id)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors cursor-pointer"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -149,24 +149,24 @@ export default function Index() {
         {showAddModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="fixed inset-0 bg-slate-950/65 backdrop-blur-sm" onClick={() => setShowAddModal(false)} />
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-md z-10 relative overflow-hidden animate-zoomIn">
+            <div className="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-3xl p-6 w-full max-w-md z-10 relative overflow-hidden animate-zoomIn shadow-2xl">
               <button
                 onClick={() => setShowAddModal(false)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
-              <h3 className="text-lg font-bold text-white mb-4">Tambah Kategori Transaksi</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Tambah Kategori Transaksi</h3>
 
               {errors.nama_kategori && (
-                <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
+                <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs">
                   {errors.nama_kategori}
                 </div>
               )}
 
               <form onSubmit={handleAddSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                     Nama Kategori
                   </label>
                   <input
@@ -175,7 +175,7 @@ export default function Index() {
                     placeholder="Contoh: Logistik"
                     value={data.nama_kategori}
                     onChange={(e) => setData('nama_kategori', e.target.value)}
-                    className="block w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                    className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                   />
                 </div>
 
@@ -183,14 +183,14 @@ export default function Index() {
                   <button
                     type="button"
                     onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 text-xs font-semibold transition-colors"
+                    className="px-4 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold transition-colors cursor-pointer"
                   >
                     Batal
                   </button>
                   <button
                     type="submit"
                     disabled={processing}
-                    className="px-4 py-2.5 rounded-xl text-white bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-xs font-semibold transition-all shadow-md shadow-orange-500/15 disabled:opacity-50"
+                    className="px-4 py-2.5 rounded-xl text-white bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-xs font-semibold transition-all shadow-md shadow-orange-500/15 disabled:opacity-50 cursor-pointer"
                   >
                     {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Simpan'}
                   </button>
@@ -204,24 +204,24 @@ export default function Index() {
         {showEditModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="fixed inset-0 bg-slate-950/65 backdrop-blur-sm" onClick={() => setShowEditModal(false)} />
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-md z-10 relative overflow-hidden animate-zoomIn">
+            <div className="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-3xl p-6 w-full max-w-md z-10 relative overflow-hidden animate-zoomIn shadow-2xl">
               <button
                 onClick={() => setShowEditModal(false)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
-              <h3 className="text-lg font-bold text-white mb-4">Ubah Kategori Transaksi</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Ubah Kategori Transaksi</h3>
 
               {errors.nama_kategori && (
-                <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
+                <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs">
                   {errors.nama_kategori}
                 </div>
               )}
 
               <form onSubmit={handleEditSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                     Nama Kategori
                   </label>
                   <input
@@ -230,7 +230,7 @@ export default function Index() {
                     placeholder="Contoh: Logistik"
                     value={data.nama_kategori}
                     onChange={(e) => setData('nama_kategori', e.target.value)}
-                    className="block w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                    className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                   />
                 </div>
 
@@ -238,14 +238,14 @@ export default function Index() {
                   <button
                     type="button"
                     onClick={() => setShowEditModal(false)}
-                    className="px-4 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 text-xs font-semibold transition-colors"
+                    className="px-4 py-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold transition-colors cursor-pointer"
                   >
                     Batal
                   </button>
                   <button
                     type="submit"
                     disabled={processing}
-                    className="px-4 py-2.5 rounded-xl text-white bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-xs font-semibold transition-all shadow-md shadow-orange-500/15 disabled:opacity-50"
+                    className="px-4 py-2.5 rounded-xl text-white bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-xs font-semibold transition-all shadow-md shadow-orange-500/15 disabled:opacity-50 cursor-pointer"
                   >
                     {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Simpan Perubahan'}
                   </button>
