@@ -39,6 +39,10 @@ class TransactionsExport implements FromQuery, WithMapping, WithHeadings, Should
             $query->where('jenis_transaksi', $this->filters['jenis_transaksi']);
         }
 
+        if (!empty($this->filters['kategori_id'])) {
+            $query->where('kategori_id', $this->filters['kategori_id']);
+        }
+
         $query->where('status', 'approved');
 
         return $query->orderBy('tanggal', 'asc')->orderBy('id', 'asc');
