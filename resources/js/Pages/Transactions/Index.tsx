@@ -25,7 +25,8 @@ import {
   XCircle,
   ShieldCheck,
   AlertCircle,
-  CheckSquare
+  CheckSquare,
+  Loader2
 } from 'lucide-react';
 
 interface Transaction {
@@ -104,8 +105,10 @@ export default function Index() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [trxToDelete, setTrxToDelete] = useState<Transaction | null>(null);
 
-  // Bulk Selection State
+  // Bulk Selection & Action Loading State
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [bulkAction, setBulkAction] = useState<'approve' | 'reject' | 'delete' | null>(null);
+  const [actionLoading, setActionLoading] = useState<{ id: number; type: 'approve' | 'reject' } | null>(null);
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
@@ -124,27 +127,33 @@ export default function Index() {
   const isAllSelected = transactions.data.length > 0 && selectedIds.length === transactions.data.length;
 
   const handleBulkApprove = () => {
-    if (selectedIds.length === 0) return;
+    if (selectedIds.length === 0 || bulkAction !== null) return;
     if (window.confirm(`Apakah Anda yakin ingin menyetujui ${selectedIds.length} transaksi terpilih?`)) {
       router.post('/dashboard/transactions/bulk-approve', { ids: selectedIds }, {
+        onStart: () => setBulkAction('approve'),
+        onFinish: () => setBulkAction(null),
         onSuccess: () => setSelectedIds([])
       });
     }
   };
 
   const handleBulkReject = () => {
-    if (selectedIds.length === 0) return;
+    if (selectedIds.length === 0 || bulkAction !== null) return;
     if (window.confirm(`Apakah Anda yakin ingin menolak ${selectedIds.length} transaksi terpilih?`)) {
       router.post('/dashboard/transactions/bulk-reject', { ids: selectedIds }, {
+        onStart: () => setBulkAction('reject'),
+        onFinish: () => setBulkAction(null),
         onSuccess: () => setSelectedIds([])
       });
     }
   };
 
   const handleBulkDelete = () => {
-    if (selectedIds.length === 0) return;
+    if (selectedIds.length === 0 || bulkAction !== null) return;
     if (window.confirm(`Apakah Anda yakin ingin menghapus ${selectedIds.length} transaksi terpilih secara permanen?`)) {
       router.post('/dashboard/transactions/bulk-delete', { ids: selectedIds }, {
+        onStart: () => setBulkAction('delete'),
+        onFinish: () => setBulkAction(null),
         onSuccess: () => setSelectedIds([])
       });
     }
@@ -290,13 +299,17 @@ export default function Index() {
   // Approve & Reject Actions
   const handleApprove = (trx: Transaction) => {
     router.post(`/dashboard/transactions/${trx.id}/approve`, {}, {
-      preserveScroll: true
+      preserveScroll: true,
+      onStart: () => setActionLoading({ id: trx.id, type: 'approve' }),
+      onFinish: () => setActionLoading(null)
     });
   };
 
   const handleReject = (trx: Transaction) => {
     router.post(`/dashboard/transactions/${trx.id}/reject`, {}, {
-      preserveScroll: true
+      preserveScroll: true,
+      onStart: () => setActionLoading({ id: trx.id, type: 'reject' }),
+      onFinish: () => setActionLoading(null)
     });
   };
 
@@ -379,27 +392,57 @@ export default function Index() {
                 <>
                   <button
                     onClick={handleBulkApprove}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs rounded-lg transition-colors shadow-sm cursor-pointer"
+                    disabled={bulkAction !== null}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-xs rounded-lg transition-colors shadow-sm cursor-pointer"
                   >
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    Setujui Terpilih
+                    {bulkAction === 'approve' ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <span>Menyetujui...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        <span>Setujui Terpilih</span>
+                      </>
+                    )}
                   </button>
                   <button
                     onClick={handleBulkReject}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-medium text-xs rounded-lg transition-colors shadow-sm cursor-pointer"
+                    disabled={bulkAction !== null}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-xs rounded-lg transition-colors shadow-sm cursor-pointer"
                   >
-                    <XCircle className="h-3.5 w-3.5" />
-                    Tolak Terpilih
+                    {bulkAction === 'reject' ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <span>Menolak...</span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="h-3.5 w-3.5" />
+                        <span>Tolak Terpilih</span>
+                      </>
+                    )}
                   </button>
                 </>
               )}
               {!isStaff && (
                 <button
                   onClick={handleBulkDelete}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white font-medium text-xs rounded-lg transition-colors shadow-sm cursor-pointer"
+                  disabled={bulkAction !== null}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-xs rounded-lg transition-colors shadow-sm cursor-pointer"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  Hapus Terpilih
+                  {bulkAction === 'delete' ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>Menghapus...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-3.5 w-3.5" />
+                      <span>Hapus Terpilih</span>
+                    </>
+                  )}
                 </button>
               )}
               <button
@@ -656,18 +699,28 @@ export default function Index() {
                               <>
                                 <button
                                   onClick={() => handleApprove(trx)}
-                                  className="px-2 py-0.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-600 text-emerald-600 dark:text-emerald-400 hover:text-white dark:hover:text-white border border-emerald-500/30 text-[10px] font-bold flex items-center gap-0.5 transition-all cursor-pointer"
+                                  disabled={actionLoading !== null}
+                                  className="px-2 py-0.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-emerald-600 dark:text-emerald-400 hover:text-white dark:hover:text-white border border-emerald-500/30 text-[10px] font-bold flex items-center gap-0.5 transition-all cursor-pointer"
                                   title="Setujui Transaksi (Approve)"
                                 >
-                                  <Check className="h-3 w-3" />
+                                  {actionLoading?.id === trx.id && actionLoading?.type === 'approve' ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <Check className="h-3 w-3" />
+                                  )}
                                   Setujui
                                 </button>
                                 <button
                                   onClick={() => handleReject(trx)}
-                                  className="px-2 py-0.5 rounded-lg bg-rose-500/10 hover:bg-rose-600 text-rose-600 dark:text-rose-400 hover:text-white dark:hover:text-white border border-rose-500/30 text-[10px] font-bold flex items-center gap-0.5 transition-all cursor-pointer"
+                                  disabled={actionLoading !== null}
+                                  className="px-2 py-0.5 rounded-lg bg-rose-500/10 hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed text-rose-600 dark:text-rose-400 hover:text-white dark:hover:text-white border border-rose-500/30 text-[10px] font-bold flex items-center gap-0.5 transition-all cursor-pointer"
                                   title="Tolak Transaksi (Reject)"
                                 >
-                                  <X className="h-3 w-3" />
+                                  {actionLoading?.id === trx.id && actionLoading?.type === 'reject' ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <X className="h-3 w-3" />
+                                  )}
                                   Tolak
                                 </button>
                               </>

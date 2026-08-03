@@ -18,7 +18,8 @@ import {
   ExternalLink,
   ImageIcon,
   X,
-  AlertTriangle
+  AlertTriangle,
+  Loader2
 } from 'lucide-react';
 
 interface Transaction {
@@ -64,8 +65,9 @@ export default function Index() {
   const [selectedType, setSelectedType] = useState(filters.jenis_transaksi || '');
   const [selectedCategory, setSelectedCategory] = useState(filters.kategori_id || '');
 
-  // Validation state
+  // Validation & Loading state
   const [errorMessage, setErrorMessage] = useState('');
+  const [downloadingFormat, setDownloadingFormat] = useState<'excel' | 'pdf' | null>(null);
 
   // Proof Preview Modal
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
@@ -120,16 +122,54 @@ export default function Index() {
     return params.toString();
   };
 
-  const handleExportExcel = () => {
-    if (!validateRequiredDates()) return;
+  const handleExportExcel = async () => {
+    if (!validateRequiredDates() || downloadingFormat !== null) return;
     const query = buildQueryString();
-    window.location.href = `/reports/excel?${query}`;
+    setDownloadingFormat('excel');
+    try {
+      const response = await fetch(`/reports/excel?${query}`);
+      if (!response.ok) throw new Error('Gagal mengunduh laporan Excel');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `laporan-posfinance-${startDate}-sd-${endDate}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+      setErrorMessage('Terjadi kesalahan saat mengunduh file Excel.');
+    } finally {
+      setDownloadingFormat(null);
+    }
   };
 
-  const handleExportPdf = () => {
-    if (!validateRequiredDates()) return;
+  const handleExportPdf = async () => {
+    if (!validateRequiredDates() || downloadingFormat !== null) return;
     const query = buildQueryString();
-    window.location.href = `/reports/pdf?${query}`;
+    setDownloadingFormat('pdf');
+    try {
+      const response = await fetch(`/reports/pdf?${query}`);
+      if (!response.ok) throw new Error('Gagal mengunduh laporan PDF');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `laporan-posfinance-${startDate}-sd-${endDate}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+      setErrorMessage('Terjadi kesalahan saat mengunduh file PDF.');
+    } finally {
+      setDownloadingFormat(null);
+    }
   };
 
   const openProofPreview = (trx: Transaction) => {
@@ -167,17 +207,37 @@ export default function Index() {
           <div className="flex items-center gap-3">
             <button
               onClick={handleExportExcel}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-emerald-950/50 transition-all cursor-pointer"
+              disabled={downloadingFormat !== null}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-xs rounded-xl shadow-lg shadow-emerald-950/50 transition-all cursor-pointer"
             >
-              <FileSpreadsheet className="h-4 w-4" />
-              Ekspor Excel (.xlsx)
+              {downloadingFormat === 'excel' ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Mengunduh...</span>
+                </>
+              ) : (
+                <>
+                  <FileSpreadsheet className="h-4 w-4" />
+                  <span>Ekspor Excel (.xlsx)</span>
+                </>
+              )}
             </button>
             <button
               onClick={handleExportPdf}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-600 hover:bg-orange-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-orange-950/50 transition-all cursor-pointer"
+              disabled={downloadingFormat !== null}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-xs rounded-xl shadow-lg shadow-orange-950/50 transition-all cursor-pointer"
             >
-              <FileText className="h-4 w-4" />
-              Cetak PDF
+              {downloadingFormat === 'pdf' ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Mengunduh...</span>
+                </>
+              ) : (
+                <>
+                  <FileText className="h-4 w-4" />
+                  <span>Cetak PDF</span>
+                </>
+              )}
             </button>
           </div>
         </div>

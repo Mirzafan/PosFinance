@@ -82,6 +82,11 @@ class CategoryController extends Controller
         }
 
         $category = Category::findOrFail($id);
+
+        if ($category->transactions()->exists()) {
+            return redirect()->back()->with('error', 'Kategori "' . $category->nama_kategori . '" tidak dapat dihapus karena masih digunakan oleh transaksi.');
+        }
+
         $name = $category->nama_kategori;
         $category->delete();
 
