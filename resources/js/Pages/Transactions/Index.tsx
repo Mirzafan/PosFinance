@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Head, usePage, router, useForm } from '@inertiajs/react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 import { 
@@ -104,6 +105,11 @@ export default function Index() {
   // Delete Modal State
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [trxToDelete, setTrxToDelete] = useState<Transaction | null>(null);
+
+  // Success Pop Up Modal State
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successModalTitle, setSuccessModalTitle] = useState('Berhasil Menambahkan Transaksi');
+  const [successModalMessage, setSuccessModalMessage] = useState('');
 
   // Bulk Selection & Action Loading State
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -283,6 +289,9 @@ export default function Index() {
       }, {
         onSuccess: () => {
           setIsModalOpen(false);
+          setSuccessModalTitle('Berhasil Perbarui Transaksi');
+          setSuccessModalMessage('Catatan transaksi telah sukses diperbarui pada jurnal PosFinance.');
+          setShowSuccessModal(true);
           reset();
         }
       });
@@ -290,6 +299,14 @@ export default function Index() {
       post('/dashboard/transactions', {
         onSuccess: () => {
           setIsModalOpen(false);
+          if (isStaff) {
+            setSuccessModalTitle('Pencatatan Transaksi Terkirim');
+            setSuccessModalMessage('Catatan transaksi baru telah sukses diinput dan dikirim ke Supervisor/Admin untuk proses persetujuan (approval).');
+          } else {
+            setSuccessModalTitle('Berhasil Menambahkan Transaksi');
+            setSuccessModalMessage('Catatan transaksi kas baru telah sukses disimpan dan ditambahkan ke dalam jurnal PosFinance.');
+          }
+          setShowSuccessModal(true);
           reset();
         }
       });
@@ -347,14 +364,6 @@ export default function Index() {
       <Head title="Transaksi - PosFinance Regional IV Semarang" />
 
       <div className="space-y-6 animate-fadeIn">
-        {/* Flash Message */}
-        {flash?.success && (
-          <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 flex items-center gap-3 text-emerald-400 text-sm shadow-md">
-            <CheckCircle2 className="h-5 w-5 shrink-0" />
-            <span>{flash.success}</span>
-          </div>
-        )}
-
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -804,8 +813,8 @@ export default function Index() {
       {/* ========================================================================= */}
       {/* MODAL 1: FORM CATAT / EDIT TRANSAKSI */}
       {/* ========================================================================= */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+      {isModalOpen && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
           <div className="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
@@ -1032,14 +1041,15 @@ export default function Index() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ========================================================================= */}
       {/* MODAL 2: PRATINJAU BUKTI TRANSAKSI (FOTO / PDF VIEWER) */}
       {/* ========================================================================= */}
-      {previewModalOpen && activePreview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+      {previewModalOpen && activePreview && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
           <div className="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/70">
@@ -1099,14 +1109,15 @@ export default function Index() {
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ========================================================================= */}
       {/* MODAL 3: KONFIRMASI HAPUS TRANSAKSI (ADMIN & SUPERVISOR ONLY) */}
       {/* ========================================================================= */}
-      {deleteModalOpen && trxToDelete && !isStaff && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+      {deleteModalOpen && trxToDelete && !isStaff && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
           <div className="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0">
@@ -1141,7 +1152,51 @@ export default function Index() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Pop Up Modal Success Transaksi */}
+      {showSuccessModal && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative text-center space-y-5 animate-zoomIn">
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => setShowSuccessModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            {/* Success Icon */}
+            <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400 shadow-lg shadow-emerald-950/25">
+              <CheckCircle2 className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
+            </div>
+
+            {/* Header / Content Text */}
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+                {successModalTitle}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                {successModalMessage}
+              </p>
+            </div>
+
+            {/* Submit Confirmation Button */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full py-2.5 px-4 bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-semibold text-xs rounded-xl shadow-lg shadow-orange-950/25 transition-all cursor-pointer"
+              >
+                Mengerti & Tutup
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </DashboardLayout>
   );

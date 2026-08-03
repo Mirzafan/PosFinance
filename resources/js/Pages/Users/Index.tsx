@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 import { Plus, Edit2, Trash2, Search, X, Loader2, CheckCircle2, AlertCircle, Shield, UserCheck, ShieldCheck } from 'lucide-react';
@@ -231,8 +232,8 @@ export default function Index() {
         </div>
 
         {/* Add Modal */}
-        {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+        {showAddModal && typeof window !== 'undefined' && createPortal(
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
             <div className="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-3xl p-6 w-full max-w-md z-10 relative overflow-hidden shadow-2xl space-y-4">
               <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                 <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -329,12 +330,13 @@ export default function Index() {
                 </div>
               </form>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
         {/* Edit Modal */}
-        {showEditModal && selectedUser && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+        {showEditModal && selectedUser && typeof window !== 'undefined' && createPortal(
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
             <div className="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-3xl p-6 w-full max-w-md z-10 relative overflow-hidden shadow-2xl space-y-4">
               <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                 <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -430,7 +432,8 @@ export default function Index() {
                 </div>
               </form>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     </DashboardLayout>
