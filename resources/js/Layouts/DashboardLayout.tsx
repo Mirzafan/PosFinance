@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { 
   LayoutDashboard, 
   Tag, 
@@ -39,6 +39,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const [currentDate, setCurrentDate] = useState('');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('posfinance_sidebar_open');
@@ -197,15 +198,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </Link>
 
-          <Link
-            method="post"
-            href="/logout"
-            as="button"
-            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10 border border-transparent hover:border-red-200 dark:hover:border-red-500/20 transition-all duration-150"
+          <button
+            type="button"
+            onClick={() => setShowLogoutModal(true)}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10 border border-transparent hover:border-red-200 dark:hover:border-red-500/20 transition-all duration-150 cursor-pointer"
           >
             <LogOut className="h-4.5 w-4.5 shrink-0" />
             <span>Keluar</span>
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -299,6 +299,56 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           onClick={() => setMobileSidebarOpen(false)}
           className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-sm md:hidden animate-fadeIn"
         />
+      )}
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative text-center space-y-5 animate-zoomIn">
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => setShowLogoutModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            {/* Logout Warning Icon */}
+            <div className="w-16 h-16 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto text-rose-600 dark:text-rose-400 shadow-lg shadow-rose-950/25">
+              <LogOut className="h-8 w-8 text-rose-600 dark:text-rose-400" />
+            </div>
+
+            {/* Title & Description */}
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+                Konfirmasi Keluar
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                Apakah Anda yakin ingin keluar dari akun PosFinance? Anda perlu melakukan login kembali untuk mengakses sistem.
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowLogoutModal(false)}
+                className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs rounded-xl border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => router.post('/logout')}
+                className="w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-rose-950/25 transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Ya, Keluar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -2,10 +2,10 @@ import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode, useState } from 'react';
 import { useTheme } from '../Hooks/useTheme';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, LogOut, X } from 'lucide-react';
 
 export default function Authenticated({
     header,
@@ -16,6 +16,7 @@ export default function Authenticated({
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
 
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
@@ -84,13 +85,13 @@ export default function Authenticated({
                                         >
                                             Profile
                                         </Dropdown.Link>
-                                        <Dropdown.Link
-                                            href={route('logout')}
-                                            method="post"
-                                            as="button"
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowLogoutModal(true)}
+                                            className="block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none dark:text-gray-300 dark:hover:bg-gray-800 dark:focus:bg-gray-800"
                                         >
                                             Log Out
-                                        </Dropdown.Link>
+                                        </button>
                                     </Dropdown.Content>
                                 </Dropdown>
                             </div>
@@ -168,13 +169,13 @@ export default function Authenticated({
                             <ResponsiveNavLink href={route('profile.edit')}>
                                 Profile
                             </ResponsiveNavLink>
-                            <ResponsiveNavLink
-                                method="post"
-                                href={route('logout')}
-                                as="button"
+                            <button
+                                type="button"
+                                onClick={() => setShowLogoutModal(true)}
+                                className="block w-full px-4 py-2 text-start text-base font-medium text-gray-600 transition duration-150 ease-in-out hover:bg-gray-50 hover:text-gray-800 focus:bg-gray-50 focus:text-gray-800 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200 dark:focus:bg-gray-700 dark:focus:text-gray-200"
                             >
                                 Log Out
-                            </ResponsiveNavLink>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -189,6 +190,56 @@ export default function Authenticated({
             )}
 
             <main>{children}</main>
+
+            {/* Logout Confirmation Modal */}
+            {showLogoutModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+                    <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative text-center space-y-5 animate-zoomIn">
+                        {/* Close Button */}
+                        <button
+                            type="button"
+                            onClick={() => setShowLogoutModal(false)}
+                            className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+
+                        {/* Logout Warning Icon */}
+                        <div className="w-16 h-16 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto text-rose-600 dark:text-rose-400 shadow-lg shadow-rose-950/25">
+                            <LogOut className="h-8 w-8 text-rose-600 dark:text-rose-400" />
+                        </div>
+
+                        {/* Title & Description */}
+                        <div className="space-y-2">
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+                                Konfirmasi Keluar
+                            </h3>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                                Apakah Anda yakin ingin keluar dari akun PosFinance? Anda perlu melakukan login kembali untuk mengakses sistem.
+                            </p>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-3 pt-2">
+                            <button
+                                type="button"
+                                onClick={() => setShowLogoutModal(false)}
+                                className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs rounded-xl border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => router.post('/logout')}
+                                className="w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-rose-950/25 transition-all cursor-pointer flex items-center justify-center gap-2"
+                            >
+                                <LogOut className="h-4 w-4" />
+                                Ya, Keluar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -5,7 +5,7 @@ import TextInput from '@/Components/TextInput';
 import { Transition } from '@headlessui/react';
 import { useForm } from '@inertiajs/react';
 import { FormEventHandler, useRef, useState } from 'react';
-import { CheckCircle2, X } from 'lucide-react';
+import { CheckCircle2, Save, X } from 'lucide-react';
 
 export default function UpdatePasswordForm({
     className = '',
@@ -131,7 +131,10 @@ export default function UpdatePasswordForm({
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing}>Save</PrimaryButton>
+                    <PrimaryButton disabled={processing} className="gap-2">
+                        <Save className="h-4 w-4" />
+                        Simpan Password
+                    </PrimaryButton>
 
                     <Transition
                         show={recentlySuccessful}
