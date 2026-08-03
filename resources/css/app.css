@@ -25,3 +25,49 @@ input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
 }
+
+/* Dark mode native input & picker color scheme */
+html.dark input[type="date"],
+html.dark input[type="time"],
+html.dark input[type="datetime-local"],
+html.dark input[type="month"],
+.dark input[type="date"],
+.dark input[type="time"],
+.dark input[type="datetime-local"],
+.dark input[type="month"] {
+  color-scheme: dark;
+}
+
+/* Calendar picker */
+::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 2px;
+  transition: opacity 0.2s ease, filter 0.2s ease, transform 0.2s ease;
+}
+
+/* Light mode icon - Crisp dark contrast */
+html:not(.dark) ::-webkit-calendar-picker-indicator {
+  opacity: 0.75;
+  filter: none;
+}
+
+html:not(.dark) ::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  filter: brightness(0.4);
+}
+
+/* Dark mode icon - Crisp light/white contrast against dark background (matches light mode contrast) */
+.dark ::-webkit-calendar-picker-indicator,
+html.dark ::-webkit-calendar-picker-indicator {
+  opacity: 0.9;
+  filter: brightness(0) invert(0.9);
+}
+
+.dark ::-webkit-calendar-picker-indicator:hover,
+html.dark ::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  filter: brightness(0) invert(1) drop-shadow(0 0 3px rgba(249, 115, 22, 0.6));
+  transform: scale(1.1);
+}
+
