@@ -77,7 +77,7 @@ export default function ResetPassword({
                   type="email"
                   required
                   value={data.email}
-                  onChange={(e) => setData('email', e.target.value)}
+                  onChange={(e) => setData('email', e.target.value.toLowerCase())}
                   className="block w-full pl-10 pr-4 py-3 bg-slate-950/80 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                 />
               </div>

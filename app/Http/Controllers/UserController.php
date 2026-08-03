@@ -32,12 +32,13 @@ class UserController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'required|string|lowercase|email|max:255|unique:users',
             'password' => 'required|string|min:8',
             'role' => 'required|in:admin,staff,supervisor',
         ], [
             'name.required' => 'Nama lengkap wajib diisi.',
             'email.required' => 'Alamat email wajib diisi.',
+            'email.lowercase' => 'Alamat email tidak boleh mengandung huruf kapital.',
             'email.unique' => 'Alamat email ini sudah terdaftar.',
             'password.required' => 'Kata sandi wajib diisi.',
             'password.min' => 'Kata sandi minimal 8 karakter.',
@@ -46,7 +47,7 @@ class UserController extends Controller
 
         $newUser = User::create([
             'name' => $validated['name'],
-            'email' => $validated['email'],
+            'email' => strtolower($validated['email']),
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
         ]);
@@ -71,12 +72,13 @@ class UserController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'required|string|lowercase|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8',
             'role' => 'required|in:admin,staff,supervisor',
         ], [
             'name.required' => 'Nama lengkap wajib diisi.',
             'email.required' => 'Alamat email wajib diisi.',
+            'email.lowercase' => 'Alamat email tidak boleh mengandung huruf kapital.',
             'email.unique' => 'Alamat email ini sudah digunakan oleh akun lain.',
             'password.min' => 'Kata sandi minimal 8 karakter.',
             'role.required' => 'Role hak akses wajib dipilih.',
@@ -84,7 +86,7 @@ class UserController extends Controller
 
         $data = [
             'name' => $validated['name'],
-            'email' => $validated['email'],
+            'email' => strtolower($validated['email']),
             'role' => $validated['role'],
         ];
 

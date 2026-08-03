@@ -24,11 +24,14 @@ class PasswordResetLinkController extends Controller
 
     /**
      * Handle an incoming password reset link request.
-     *
      * @throws ValidationException
      */
     public function store(Request $request): RedirectResponse
     {
+        if ($request->email) {
+            $request->merge(['email' => strtolower($request->email)]);
+        }
+
         $request->validate([
             'email' => 'required|email',
         ]);

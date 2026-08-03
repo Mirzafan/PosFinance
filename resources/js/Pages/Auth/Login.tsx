@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { Lock, Mail, Loader2, ArrowRight, Eye, EyeOff, KeyRound } from 'lucide-react';
 
@@ -10,8 +10,28 @@ export default function Login({ status }: { status?: string }) {
     remember: false,
   });
 
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('posfinance_remember_email');
+    const savedRemember = localStorage.getItem('posfinance_remember_me');
+    if (savedRemember === 'true' && savedEmail) {
+      setData((prev) => ({
+        ...prev,
+        email: savedEmail,
+        remember: true,
+      }));
+    }
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (data.remember) {
+      localStorage.setItem('posfinance_remember_email', data.email);
+      localStorage.setItem('posfinance_remember_me', 'true');
+    } else {
+      localStorage.removeItem('posfinance_remember_email');
+      localStorage.removeItem('posfinance_remember_me');
+    }
+
     post(route('login'), {
       onFinish: () => reset('password'),
     });
@@ -71,7 +91,7 @@ export default function Login({ status }: { status?: string }) {
                   required
                   placeholder="example@example.com"
                   value={data.email}
-                  onChange={(e) => setData('email', e.target.value)}
+                  onChange={(e) => setData('email', e.target.value.toLowerCase())}
                   className="block w-full pl-10 pr-4 py-3 bg-slate-950/80 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                 />
               </div>

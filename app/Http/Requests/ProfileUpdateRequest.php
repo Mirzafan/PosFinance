@@ -28,4 +28,11 @@ class ProfileUpdateRequest extends FormRequest
             ],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'email.lowercase' => 'Alamat email tidak boleh mengandung huruf kapital.',
+        ];
+    }
 }

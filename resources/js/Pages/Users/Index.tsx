@@ -277,7 +277,7 @@ export default function Index() {
                     required
                     placeholder="budi@posindonesia.co.id"
                     value={data.email}
-                    onChange={(e) => setData('email', e.target.value)}
+                    onChange={(e) => setData('email', e.target.value.toLowerCase())}
                     className="block w-full px-3 py-2.5 bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
                   />
                 </div>
@@ -379,7 +379,7 @@ export default function Index() {
                     required
                     placeholder="budi@posindonesia.co.id"
                     value={data.email}
-                    onChange={(e) => setData('email', e.target.value)}
+                    onChange={(e) => setData('email', e.target.value.toLowerCase())}
                     className="block w-full px-3 py-2.5 bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
                   />
                 </div>

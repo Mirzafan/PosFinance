@@ -26,6 +26,14 @@ class User extends Authenticatable
     ];
 
     /**
+     * Set the user's email to lowercase.
+     */
+    protected function setEmailAttribute($value): void
+    {
+        $this->attributes['email'] = strtolower($value);
+    }
+
+    /**
      * The attributes that should be hidden for serialization.
      *
      * @var list<string>
