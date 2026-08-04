@@ -172,17 +172,13 @@
     </table>
 
     <div class="summary-container">
-        <div class="summary-box income">
-            <h3>Total Pemasukan</h3>
+        <div class="summary-box income" style="width: 46%; float: left; margin-right: 4%;">
+            <h3>Total Pendapatan Layanan</h3>
             <p>Rp {{ number_format($total_pemasukan, 2, ',', '.') }}</p>
         </div>
-        <div class="summary-box expense">
-            <h3>Total Pengeluaran</h3>
-            <p>Rp {{ number_format($total_pengeluaran, 2, ',', '.') }}</p>
-        </div>
-        <div class="summary-box balance" style="margin-right: 0;">
-            <h3>Saldo Bersih</h3>
-            <p>Rp {{ number_format($saldo, 2, ',', '.') }}</p>
+        <div class="summary-box balance" style="width: 46%; float: left; margin-right: 0; border-left-color: #ff6600;">
+            <h3>Total Rekaman Transaksi</h3>
+            <p>{{ count($transactions) }} Transaksi</p>
         </div>
         <div class="clearfix"></div>
     </div>
