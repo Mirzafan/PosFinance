@@ -142,7 +142,7 @@ export default function Index() {
               <Shield className="h-6 w-6 text-orange-500" />
               Manajemen Hak Akses Pengguna
             </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Kelola akun pengguna, peran (*roles*), dan otorisasi hak akses sistem PosFinance.</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Kelola akun pengguna, peran, dan otorisasi hak akses sistem PosFinance.</p>
           </div>
 
           <button
