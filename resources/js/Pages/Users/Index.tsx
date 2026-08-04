@@ -8,7 +8,7 @@ interface UserItem {
   id: number;
   name: string;
   email: string;
-  role: 'admin' | 'staff' | 'supervisor';
+  role: 'admin' | 'staff';
 }
 
 interface PageProps {
@@ -33,11 +33,16 @@ export default function Index() {
   const [selectedUser, setSelectedUser] = useState<UserItem | null>(null);
   const [userToDelete, setUserToDelete] = useState<UserItem | null>(null);
 
+  // Success Pop Up Modal State
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successModalTitle, setSuccessModalTitle] = useState('');
+  const [successModalMessage, setSuccessModalMessage] = useState('');
+
   const { data, setData, post, put, delete: destroyAction, processing, errors, reset, clearErrors } = useForm({
     name: '',
     email: '',
     password: '',
-    role: 'staff' as 'admin' | 'staff' | 'supervisor',
+    role: 'staff' as 'admin' | 'staff',
   });
 
   const openAddModal = () => {
@@ -54,9 +59,14 @@ export default function Index() {
 
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const name = data.name;
+    const email = data.email;
     post('/dashboard/users', {
       onSuccess: () => {
         setShowAddModal(false);
+        setSuccessModalTitle('Berhasil Menambahkan Pengguna');
+        setSuccessModalMessage(`Akun pengguna baru "${name}" (${email}) telah sukses terdaftar dalam sistem PosFinance.`);
+        setShowSuccessModal(true);
         reset();
       }
     });
@@ -65,9 +75,13 @@ export default function Index() {
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUser) return;
+    const name = data.name;
     put(`/dashboard/users/${selectedUser.id}`, {
       onSuccess: () => {
         setShowEditModal(false);
+        setSuccessModalTitle('Berhasil Perbarui Pengguna');
+        setSuccessModalMessage(`Data akun pengguna "${name}" telah sukses diperbarui.`);
+        setShowSuccessModal(true);
         setSelectedUser(null);
         reset();
       }
@@ -79,6 +93,7 @@ export default function Index() {
       alert('Anda tidak dapat menghapus akun Anda sendiri.');
       return;
     }
+<<<<<<< HEAD
     setUserToDelete(userItem);
     setShowDeleteModal(true);
   };
@@ -89,6 +104,14 @@ export default function Index() {
       onSuccess: () => {
         setShowDeleteModal(false);
         setUserToDelete(null);
+=======
+    if (!confirm(`Apakah Anda yakin ingin menghapus akun user: ${userItem.name}?`)) return;
+    destroyAction(`/dashboard/users/${userItem.id}`, {
+      onSuccess: () => {
+        setSuccessModalTitle('Berhasil Menghapus Pengguna');
+        setSuccessModalMessage(`Akun pengguna "${userItem.name}" (${userItem.email}) telah sukses dihapus secara permanen.`);
+        setShowSuccessModal(true);
+>>>>>>> c719ba0 (update some features)
       }
     });
   };
@@ -110,9 +133,8 @@ export default function Index() {
     u.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  const roleLabelMap = {
+  const roleLabelMap: Record<string, string> = {
     admin: 'Admin Utama',
-    supervisor: 'Supervisor Keuangan',
     staff: 'Staff Keuangan',
   };
 
@@ -202,9 +224,7 @@ export default function Index() {
                       <span className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
                         u.role === 'admin'
                           ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30'
-                          : u.role === 'supervisor'
-                            ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30'
-                            : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                          : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
                       }`}>
                         {roleLabelMap[u.role] || u.role}
                       </span>
@@ -318,9 +338,8 @@ export default function Index() {
                     onChange={(e) => setData('role', e.target.value as any)}
                     className="block w-full px-3 py-2.5 bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-orange-500 cursor-pointer"
                   >
-                    <option value="staff">Staff Keuangan (Input Transaksi & Pending Approval)</option>
-                    <option value="supervisor">Supervisor Keuangan (Approve Transaksi & Laporan)</option>
-                    <option value="admin">Admin Utama (Kelola Pengguna & Metadata)</option>
+                    <option value="staff">Staff Keuangan (Pencatatan & Jurnal Transaksi)</option>
+                    <option value="admin">Admin Utama (Kelola Pengguna & Sistem)</option>
                   </select>
                 </div>
 
@@ -420,9 +439,8 @@ export default function Index() {
                     onChange={(e) => setData('role', e.target.value as any)}
                     className="block w-full px-3 py-2.5 bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-orange-500 cursor-pointer"
                   >
-                    <option value="staff">Staff Keuangan (Input Transaksi & Pending Approval)</option>
-                    <option value="supervisor">Supervisor Keuangan (Approve Transaksi & Laporan)</option>
-                    <option value="admin">Admin Utama (Kelola Pengguna & Metadata)</option>
+                    <option value="staff">Staff Keuangan (Pencatatan & Jurnal Transaksi)</option>
+                    <option value="admin">Admin Utama (Kelola Pengguna & Sistem)</option>
                   </select>
                 </div>
 
@@ -448,6 +466,7 @@ export default function Index() {
           document.body
         )}
 
+<<<<<<< HEAD
         {/* Delete Confirmation Modal */}
         {showDeleteModal && userToDelete && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
@@ -518,6 +537,37 @@ export default function Index() {
               </div>
             </div>
           </div>
+=======
+        {/* MODAL SUCCESS NOTIFIKASI POP-UP */}
+        {showSuccessModal && createPortal(
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+            <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center space-y-4 relative overflow-hidden animate-zoomIn">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400 shadow-lg shadow-emerald-950/25">
+                <CheckCircle2 className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+                  {successModalTitle}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  {successModalMessage}
+                </p>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSuccessModal(false)}
+                  className="w-full py-2.5 px-4 bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-semibold text-xs rounded-xl shadow-lg shadow-orange-950/25 transition-all cursor-pointer"
+                >
+                  Mengerti & Tutup
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+>>>>>>> c719ba0 (update some features)
         )}
       </div>
     </DashboardLayout>

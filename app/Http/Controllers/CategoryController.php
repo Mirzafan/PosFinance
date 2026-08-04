@@ -20,8 +20,8 @@ class CategoryController extends Controller
 
     public function store(Request $request)
     {
-        if (!in_array($request->user()->role, ['admin', 'supervisor'])) {
-            abort(403, 'Akses ditolak. Hanya Admin dan Supervisor yang dapat mengelola kategori transaksi.');
+        if ($request->user()->role !== 'admin') {
+            abort(403, 'Akses ditolak. Hanya Admin yang dapat mengelola kategori transaksi.');
         }
 
         $validated = $request->validate([
@@ -47,8 +47,8 @@ class CategoryController extends Controller
 
     public function update(Request $request, $id)
     {
-        if (!in_array($request->user()->role, ['admin', 'supervisor'])) {
-            abort(403, 'Akses ditolak. Hanya Admin dan Supervisor yang dapat mengelola kategori transaksi.');
+        if ($request->user()->role !== 'admin') {
+            abort(403, 'Akses ditolak. Hanya Admin yang dapat mengelola kategori transaksi.');
         }
 
         $category = Category::findOrFail($id);
@@ -77,8 +77,8 @@ class CategoryController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        if (!in_array($request->user()->role, ['admin', 'supervisor'])) {
-            abort(403, 'Akses ditolak. Hanya Admin dan Supervisor yang dapat mengelola kategori transaksi.');
+        if ($request->user()->role !== 'admin') {
+            abort(403, 'Akses ditolak. Hanya Admin yang dapat mengelola kategori transaksi.');
         }
 
         $category = Category::findOrFail($id);

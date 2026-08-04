@@ -62,13 +62,12 @@ class TransactionController extends Controller
     {
         $validated = $request->validate([
             'tanggal' => 'nullable|date',
-            'jenis_transaksi' => 'required|in:pemasukan,pengeluaran',
+            'jenis_transaksi' => 'nullable|in:pemasukan,pengeluaran',
             'kategori_id' => 'required|exists:categories,id',
             'nominal' => 'required|numeric|min:0',
             'keterangan' => 'nullable|string',
             'bukti_transaksi' => 'required|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
         ], [
-            'jenis_transaksi.required' => 'Jenis transaksi wajib dipilih.',
             'kategori_id.required' => 'Kategori wajib dipilih.',
             'nominal.required' => 'Nominal transaksi wajib diisi.',
             'bukti_transaksi.required' => 'Bukti transaksi (foto/PDF) wajib diunggah.',
@@ -92,15 +91,12 @@ class TransactionController extends Controller
         $randomSuffix = strtoupper(substr(uniqid(), -4));
         $nomorTransaksi = 'TRX-' . $dateStr . '-' . $randomSuffix;
 
-        // Staff entries require Admin/Supervisor approval (status = pending)
-        // Admin or Supervisor entries are automatically approved
-        $userRole = $request->user()->role;
-        $status = ($userRole === 'staff') ? 'pending' : 'approved';
+        $status = 'approved';
 
         $transaction = Transaction::create([
             'nomor_transaksi' => $nomorTransaksi,
             'tanggal' => $dateInput,
-            'jenis_transaksi' => $validated['jenis_transaksi'],
+            'jenis_transaksi' => 'pemasukan',
             'kategori_id' => $validated['kategori_id'],
             'cabang_id' => $branch->id,
             'user_id' => $request->user()->id,
@@ -114,15 +110,11 @@ class TransactionController extends Controller
         AuditLog::record(
             'CREATE',
             'Transaksi',
-            "Mencatat transaksi {$validated['jenis_transaksi']} baru ({$nomorTransaksi}) nominal Rp " . number_format($validated['nominal'], 0, ',', '.') . " [Status: " . ucfirst($status) . "]",
+            "Mencatat pendapatan ritel jasa kurir ({$nomorTransaksi}) nominal Rp " . number_format($validated['nominal'], 0, ',', '.') . " [Status: Approved]",
             $request->user()
         );
 
-        $msg = ($status === 'pending') 
-            ? 'Transaksi berhasil dicatat dan menunggu persetujuan (approval) Admin/Supervisor.' 
-            : 'Transaksi berhasil dicatat.';
-
-        return redirect()->back()->with('success', $msg);
+        return redirect()->back()->with('success', 'Transaksi pendapatan berhasil dicatat.');
     }
 
     public function update(Request $request, $id)
@@ -135,13 +127,12 @@ class TransactionController extends Controller
 
         $validated = $request->validate([
             'tanggal' => 'nullable|date',
-            'jenis_transaksi' => 'required|in:pemasukan,pengeluaran',
+            'jenis_transaksi' => 'nullable|in:pemasukan,pengeluaran',
             'kategori_id' => 'required|exists:categories,id',
             'nominal' => 'required|numeric|min:0',
             'keterangan' => 'nullable|string',
             'bukti_transaksi' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
         ], [
-            'jenis_transaksi.required' => 'Jenis transaksi wajib dipilih.',
             'kategori_id.required' => 'Kategori wajib dipilih.',
             'nominal.required' => 'Nominal transaksi wajib diisi.',
             'bukti_transaksi.mimes' => 'Bukti transaksi harus berupa foto (JPG, PNG, WEBP) atau dokumen PDF.',
@@ -149,7 +140,7 @@ class TransactionController extends Controller
         ]);
 
         $data = [
-            'jenis_transaksi' => $validated['jenis_transaksi'],
+            'jenis_transaksi' => 'pemasukan',
             'kategori_id' => $validated['kategori_id'],
             'nominal' => $validated['nominal'],
             'keterangan' => $validated['keterangan'] ?? null,
@@ -207,8 +198,8 @@ class TransactionController extends Controller
 
     public function approve(Request $request, $id)
     {
-        if (!in_array($request->user()->role, ['admin', 'supervisor'])) {
-            abort(403, 'Hanya Admin dan Supervisor yang dapat menyetujui transaksi.');
+        if ($request->user()->role !== 'admin') {
+            abort(403, 'Hanya Admin yang dapat menyetujui atau menolak transaksi.');
         }
 
         $transaction = Transaction::findOrFail($id);
@@ -227,8 +218,8 @@ class TransactionController extends Controller
 
     public function reject(Request $request, $id)
     {
-        if (!in_array($request->user()->role, ['admin', 'supervisor'])) {
-            abort(403, 'Hanya Admin dan Supervisor yang dapat menolak transaksi.');
+        if ($request->user()->role !== 'admin') {
+            abort(403, 'Hanya Admin yang dapat menyetujui atau menolak transaksi.');
         }
 
         $transaction = Transaction::findOrFail($id);
@@ -247,8 +238,8 @@ class TransactionController extends Controller
 
     public function bulkApprove(Request $request)
     {
-        if (!in_array($request->user()->role, ['admin', 'supervisor'])) {
-            abort(403, 'Hanya Admin dan Supervisor yang dapat menyetujui transaksi.');
+        if ($request->user()->role !== 'admin') {
+            abort(403, 'Hanya Admin yang dapat menyetujui atau menolak transaksi.');
         }
 
         $validated = $request->validate([
@@ -271,8 +262,8 @@ class TransactionController extends Controller
 
     public function bulkReject(Request $request)
     {
-        if (!in_array($request->user()->role, ['admin', 'supervisor'])) {
-            abort(403, 'Hanya Admin dan Supervisor yang dapat menolak transaksi.');
+        if ($request->user()->role !== 'admin') {
+            abort(403, 'Hanya Admin yang dapat menyetujui atau menolak transaksi.');
         }
 
         $validated = $request->validate([

@@ -30,9 +30,9 @@ class AuditLogSeeder extends Seeder
             ]);
 
             AuditLog::create([
-                'user_id' => $supervisor ? $supervisor->id : null,
-                'user_name' => $supervisor ? $supervisor->name : 'Supervisor Keuangan',
-                'user_role' => 'supervisor',
+                'user_id' => $admin ? $admin->id : null,
+                'user_name' => $admin ? $admin->name : 'Admin Utama',
+                'user_role' => 'admin',
                 'action' => 'APPROVE',
                 'module' => 'Transaksi',
                 'description' => 'Menyetujui (Approve) transaksi (TRX-20260730-02B5) nominal Rp 600.000',

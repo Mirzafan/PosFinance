@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Head, Link } from '@inertiajs/react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 import {
@@ -155,96 +156,59 @@ export default function Dashboard({ summary, charts, recentTransactions }: Dashb
           </div>
         </div>
 
-        {/* 4 Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Card 1: Total Pemasukan */}
-          <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-5 relative overflow-hidden group hover:border-emerald-500/30 transition-all duration-300 shadow-sm">
+        {/* 3 Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Card 1: Total Pendapatan Jasa Kurir & Logistik */}
+          <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 relative overflow-hidden group hover:border-emerald-500/30 transition-all duration-300 shadow-sm">
             <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all" />
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Pemasukan</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Pendapatan Layanan</span>
               <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
                 <TrendingUp className="h-5 w-5" />
               </div>
             </div>
             <div className="space-y-1">
-              <h3 className="text-xl lg:text-2xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">
+              <h3 className="text-xl lg:text-3xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">
                 {formatRupiah(summary?.total_pemasukan || 0)}
               </h3>
               <p className="text-[11px] text-emerald-600/90 dark:text-emerald-400/90 font-medium flex items-center gap-1">
                 <ArrowUpRight className="h-3.5 w-3.5" />
-                Arus kas masuk disetujui (2026)
+                Pendapatan Jasa Kurir & Logistik (2026)
               </p>
             </div>
           </div>
 
-          {/* Card 2: Total Pengeluaran */}
-          <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-5 relative overflow-hidden group hover:border-rose-500/30 transition-all duration-300 shadow-sm">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/5 rounded-full blur-2xl group-hover:bg-rose-500/10 transition-all" />
+          {/* Card 2: Status Kategori Utama */}
+          <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 relative overflow-hidden group hover:border-orange-500/30 transition-all duration-300 shadow-sm">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/5 rounded-full blur-2xl group-hover:bg-orange-500/10 transition-all" />
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Pengeluaran</span>
-              <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400">
-                <TrendingDown className="h-5 w-5" />
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Kategori Layanan Utama</span>
+              <div className="p-2.5 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400">
+                <Wallet className="h-5 w-5" />
               </div>
             </div>
             <div className="space-y-1">
-              <h3 className="text-xl lg:text-2xl font-bold text-rose-600 dark:text-rose-400 tracking-tight">
-                {formatRupiah(summary?.total_pengeluaran || 0)}
+              <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight truncate">
+                Pendapatan Jasa Kurir & Logistik
               </h3>
-              <p className="text-[11px] text-rose-600/90 dark:text-rose-400/90 font-medium flex items-center gap-1">
-                <ArrowDownLeft className="h-3.5 w-3.5" />
-                Arus kas keluar disetujui (2026)
+              <p className="text-[11px] text-orange-600/90 dark:text-orange-400/90 font-medium">
+                POSSAMEDAY, POSNEXTDAY, & POSREGULER
               </p>
             </div>
           </div>
 
-          {/* Card 3: Saldo Kas */}
-          {(() => {
-            const isPositive = (summary?.saldo || 0) >= 0;
-            return (
-              <div className={`bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-5 relative overflow-hidden group transition-all duration-300 shadow-sm ${
-                isPositive ? 'hover:border-emerald-500/30' : 'hover:border-rose-500/30'
-              }`}>
-                <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl transition-all ${
-                  isPositive ? 'bg-emerald-500/5 group-hover:bg-emerald-500/10' : 'bg-rose-500/5 group-hover:bg-rose-500/10'
-                }`} />
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Saldo Kas (Net)</span>
-                  <div className={`p-2.5 rounded-xl border ${
-                    isPositive
-                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
-                      : 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
-                  }`}>
-                    <Wallet className="h-5 w-5" />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <h3 className={`text-xl lg:text-2xl font-bold tracking-tight ${
-                    isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
-                  }`}>
-                    {formatRupiah(summary?.saldo || 0)}
-                  </h3>
-                  <p className={`text-[11px] font-medium ${
-                    isPositive ? 'text-emerald-600/90 dark:text-emerald-400/90' : 'text-rose-600/90 dark:text-rose-400/90'
-                  }`}>
-                    {isPositive ? 'Surplus Keuangan Regional' : 'Defisit Keuangan Regional'}
-                  </p>
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* Card 4: Total Transaksi */}
-          <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-5 relative overflow-hidden group hover:border-amber-500/30 transition-all duration-300 shadow-sm">
+          {/* Card 3: Total Transaksi Pendapatan */}
+          <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 relative overflow-hidden group hover:border-amber-500/30 transition-all duration-300 shadow-sm">
             <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-all" />
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Transaksi</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Transaksi Layanan</span>
               <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400">
                 <Receipt className="h-5 w-5" />
               </div>
             </div>
             <div className="space-y-1">
-              <h3 className="text-xl lg:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-                {summary?.total_transaksi || 0} <span className="text-sm font-normal text-slate-500 dark:text-slate-400">Tersetujui</span>
+              <h3 className="text-xl lg:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+                {summary?.total_transaksi || 0} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">Transaksi</span>
               </h3>
               <p className="text-[11px] text-amber-600/90 dark:text-amber-400/90 font-medium">
                 Tercatat resmi PosFinance
@@ -253,27 +217,22 @@ export default function Dashboard({ summary, charts, recentTransactions }: Dashb
           </div>
         </div>
 
-        {/* Middle Section (Charts) */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Area Chart (2/3 width) */}
-          <div className="lg:col-span-2 bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 relative overflow-hidden flex flex-col justify-between shadow-sm">
+        {/* Middle Section (Monthly Trends Chart) */}
+        <div className="grid grid-cols-1 gap-6">
+          <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 relative overflow-hidden flex flex-col justify-between shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <BarChart2 className="h-4 w-4 text-orange-500" />
-                  Tren Arus Kas Bulanan (2026)
+                  Grafik Tren Pendapatan Jasa Kurir & Logistik (2026)
                 </h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Perbandingan pemasukan vs pengeluaran kas per bulan</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Pertumbuhan omset pendapatan layanan kurir & logistik per bulan</p>
               </div>
 
               <div className="flex items-center gap-4 text-xs font-medium">
-                <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                  Pemasukan
-                </span>
-                <span className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-                  Pengeluaran
+                  Pendapatan Layanan
                 </span>
               </div>
             </div>
@@ -281,7 +240,7 @@ export default function Dashboard({ summary, charts, recentTransactions }: Dashb
             <div className="h-[280px] w-full flex items-center justify-center">
               {isMounted && charts?.monthly_trends && charts.monthly_trends.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={charts.monthly_trends} margin={{ top: 10, right: 10, left: -10, bottom: 0 }} barGap={6}>
+                  <BarChart data={charts.monthly_trends} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-800" vertical={false} />
                     <XAxis dataKey="label" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
                     <YAxis
@@ -294,86 +253,21 @@ export default function Dashboard({ summary, charts, recentTransactions }: Dashb
                     <Tooltip content={<CustomTooltip />} />
                     <Bar
                       dataKey="pemasukan"
-                      name="Pemasukan"
+                      name="Pendapatan"
                       fill="#10b981"
                       radius={[6, 6, 0, 0]}
-                      maxBarSize={40}
-                    />
-                    <Bar
-                      dataKey="pengeluaran"
-                      name="Pengeluaran"
-                      fill="#f43f5e"
-                      radius={[6, 6, 0, 0]}
-                      maxBarSize={40}
+                      maxBarSize={48}
                     />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
                 <div className="w-full flex flex-col items-center justify-center text-slate-500 space-y-2 border border-dashed border-slate-300 dark:border-slate-800/80 rounded-2xl p-6 bg-slate-50 dark:bg-slate-950/20">
                   <BarChart2 className="h-8 w-8 text-slate-400 dark:text-slate-600/60 stroke-[1.5]" />
-                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Belum Ada Data Arus Kas</span>
-                  <span className="text-[11px] text-slate-500 text-center max-w-xs">Data grafik tren akan otomatis muncul setelah transaksi keuangan dicatat.</span>
+                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Belum Ada Data Pendapatan</span>
+                  <span className="text-[11px] text-slate-500 text-center max-w-xs">Data grafik tren akan otomatis muncul setelah transaksi pendapatan dicatat.</span>
                 </div>
               )}
             </div>
-          </div>
-
-          {/* Right Pie/Donut Chart (1/3 width) */}
-          <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 relative overflow-hidden flex flex-col justify-between shadow-sm">
-            <div>
-              <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <PieIcon className="h-4 w-4 text-orange-500" />
-                Distribusi Kategori
-              </h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Proporsi nominal per kategori keuangan</p>
-            </div>
-
-            <div className="h-[220px] w-full my-auto flex items-center justify-center">
-              {isMounted && charts?.category_breakdown && charts.category_breakdown.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={charts.category_breakdown}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={55}
-                      outerRadius={80}
-                      paddingAngle={4}
-                      dataKey="value"
-                    >
-                      {charts.category_breakdown.map((_entry, index) => (
-                        <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(val: any) => [formatRupiah(val), 'Nominal']}
-                      contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px', fontSize: '12px', color: '#0f172a' }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="w-full flex flex-col items-center justify-center text-slate-500 space-y-2 border border-dashed border-slate-300 dark:border-slate-800/80 rounded-2xl p-6 bg-slate-50 dark:bg-slate-950/20">
-                  <PieIcon className="h-8 w-8 text-slate-400 dark:text-slate-600/60 stroke-[1.5]" />
-                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Belum Ada Data Kategori</span>
-                  <span className="text-[11px] text-slate-500 text-center max-w-xs">Grafik proporsi kategori akan aktif setelah ada transaksi.</span>
-                </div>
-              )}
-            </div>
-
-            {/* Legend List */}
-            {charts?.category_breakdown && charts.category_breakdown.length > 0 && (
-              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 dark:border-slate-800/60 max-h-24 overflow-y-auto">
-                {charts.category_breakdown.map((cat, idx) => (
-                  <div key={idx} className="flex items-center gap-1.5 text-[11px]">
-                    <span
-                      className="w-2 h-2 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: CATEGORY_COLORS[idx % CATEGORY_COLORS.length] }}
-                    />
-                    <span className="text-slate-600 dark:text-slate-400 truncate">{cat.name}</span>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
 
@@ -404,7 +298,6 @@ export default function Dashboard({ summary, charts, recentTransactions }: Dashb
                   <th className="py-3 pl-4 pr-4 whitespace-nowrap">No. Transaksi</th>
                   <th className="py-3 px-4 whitespace-nowrap">Tanggal</th>
                   <th className="py-3 px-4 whitespace-nowrap">Kategori</th>
-                  <th className="py-3 px-4 whitespace-nowrap">Status</th>
                   <th className="py-3 px-4 min-w-[160px]">Keterangan</th>
                   <th className="py-3 px-4 text-center whitespace-nowrap">Bukti Transaksi</th>
                   <th className="py-3 pr-4 pl-4 text-right whitespace-nowrap">Nominal</th>
@@ -431,25 +324,6 @@ export default function Dashboard({ summary, charts, recentTransactions }: Dashb
                           <span className="inline-block text-[10px] font-bold text-slate-700 bg-slate-100 dark:text-slate-300 dark:bg-slate-800/80 px-2.5 py-0.5 rounded-full border border-slate-200 dark:border-slate-700/50">
                             {trx.category?.nama_kategori || '-'}
                           </span>
-                        </td>
-                        {/* Status Persetujuan Column */}
-                        <td className="py-3.5 px-4 text-xs whitespace-nowrap">
-                          {trx.status === 'approved' ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
-                              <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
-                              Disetujui
-                            </span>
-                          ) : trx.status === 'pending' ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/30 animate-pulse">
-                              <Clock className="h-3 w-3 text-amber-600 dark:text-amber-400" />
-                              Pending
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 px-2.5 py-0.5 rounded-full border border-rose-500/30">
-                              <XCircle className="h-3 w-3 text-rose-600 dark:text-rose-400" />
-                              Ditolak
-                            </span>
-                          )}
                         </td>
                         <td className="py-3.5 text-xs max-w-xs truncate text-slate-700 dark:text-slate-300">
                           {trx.keterangan || '-'}

@@ -55,7 +55,7 @@ interface PageProps {
       id: number;
       name: string;
       email: string;
-      role: 'admin' | 'supervisor' | 'staff';
+      role: 'admin' | 'staff';
     };
   };
   transactions: {
@@ -83,7 +83,7 @@ export default function Index() {
   const { auth, transactions, categories, filters, flash } = usePage<any>().props as unknown as PageProps;
   const userRole = auth.user.role;
   const isStaff = userRole === 'staff';
-  const canApprove = ['admin', 'supervisor'].includes(userRole);
+  const canApprove = userRole === 'admin';
 
   // Filter States
   const [search, setSearch] = useState(filters.search || '');
@@ -97,6 +97,26 @@ export default function Index() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTrx, setEditingTrx] = useState<Transaction | null>(null);
   const [filePreview, setFilePreview] = useState<{ url: string; isPdf: boolean; name: string } | null>(null);
+  const [nominalDisplay, setNominalDisplay] = useState('');
+
+  const formatNumberWithDots = (val: string | number) => {
+    if (!val && val !== 0) return '';
+    const digits = String(val).split('.')[0].replace(/\D/g, '');
+    if (!digits) return '';
+    return new Intl.NumberFormat('id-ID').format(Number(digits));
+  };
+
+  const handleNominalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/\D/g, '');
+    if (!rawValue) {
+      setNominalDisplay('');
+      setData('nominal', '');
+    } else {
+      const formatted = new Intl.NumberFormat('id-ID').format(Number(rawValue));
+      setNominalDisplay(formatted);
+      setData('nominal', rawValue);
+    }
+  };
 
   // Bukti Preview Modal State
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
@@ -227,6 +247,7 @@ export default function Index() {
       keterangan: '',
       bukti_transaksi: null,
     });
+    setNominalDisplay('');
     setFilePreview(null);
     setIsModalOpen(true);
   };
@@ -236,14 +257,16 @@ export default function Index() {
     if (isStaff) return;
     setEditingTrx(trx);
     clearErrors();
+    const rawNominal = String(trx.nominal);
     setData({
       tanggal: trx.tanggal ? trx.tanggal.split('T')[0] : new Date().toISOString().split('T')[0],
       jenis_transaksi: trx.jenis_transaksi,
       kategori_id: String(trx.kategori_id),
-      nominal: String(trx.nominal),
+      nominal: rawNominal,
       keterangan: trx.keterangan || '',
       bukti_transaksi: null,
     });
+    setNominalDisplay(formatNumberWithDots(rawNominal));
 
     if (trx.bukti_transaksi_url) {
       const isPdf = trx.bukti_transaksi_url.toLowerCase().endsWith('.pdf');
@@ -299,13 +322,8 @@ export default function Index() {
       post('/dashboard/transactions', {
         onSuccess: () => {
           setIsModalOpen(false);
-          if (isStaff) {
-            setSuccessModalTitle('Pencatatan Transaksi Terkirim');
-            setSuccessModalMessage('Catatan transaksi baru telah sukses diinput dan dikirim ke Supervisor/Admin untuk proses persetujuan (approval).');
-          } else {
-            setSuccessModalTitle('Berhasil Menambahkan Transaksi');
-            setSuccessModalMessage('Catatan transaksi kas baru telah sukses disimpan dan ditambahkan ke dalam jurnal PosFinance.');
-          }
+          setSuccessModalTitle('Berhasil Menambahkan Transaksi');
+          setSuccessModalMessage('Catatan transaksi kas baru telah sukses disimpan dan ditambahkan ke dalam jurnal PosFinance.');
           setShowSuccessModal(true);
           reset();
         }
@@ -351,10 +369,14 @@ export default function Index() {
 
   const executeDelete = () => {
     if (!trxToDelete) return;
+    const nomorTrx = trxToDelete.nomor_transaksi;
     router.delete(`/dashboard/transactions/${trxToDelete.id}`, {
       onSuccess: () => {
         setDeleteModalOpen(false);
         setTrxToDelete(null);
+        setSuccessModalTitle('Berhasil Menghapus Transaksi');
+        setSuccessModalMessage(`Data transaksi ${nomorTrx} telah sukses dihapus secara permanen dari jurnal PosFinance.`);
+        setShowSuccessModal(true);
       }
     });
   };
@@ -369,14 +391,9 @@ export default function Index() {
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans flex items-center gap-2">
               Jurnal & Daftar Transaksi
-              {isStaff && (
-                <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full flex items-center gap-1">
-                  <Clock className="h-3 w-3" /> Staff Mode (Perlu Persetujuan)
-                </span>
-              )}
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-sm">
-              Daftar pencatatan pemasukan dan pengeluaran kas PT Pos Indonesia Kantor Regional IV Semarang.
+              Pencatatan pendapatan harian layanan kurir & logistik (POSSAMEDAY, POSNEXTDAY, & POSREGULER) PT Pos Indonesia Kantor Regional IV Semarang.
             </p>
           </div>
 
@@ -388,81 +405,6 @@ export default function Index() {
             Catat Transaksi Baru
           </button>
         </div>
-
-        {selectedIds.length > 0 && (
-          <div className="bg-orange-500/10 border border-orange-500/30 dark:bg-orange-950/80 dark:border-orange-500/40 rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3 text-slate-900 dark:text-orange-200 shadow-xl backdrop-blur-md animate-fadeIn">
-            <div className="flex items-center gap-2 font-semibold text-xs text-orange-700 dark:text-orange-200">
-              <CheckSquare className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-              <span>{selectedIds.length} transaksi dipilih</span>
-            </div>
-
-            <div className="flex items-center gap-2 flex-wrap">
-              {canApprove && (
-                <>
-                  <button
-                    onClick={handleBulkApprove}
-                    disabled={bulkAction !== null}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-xs rounded-lg transition-colors shadow-sm cursor-pointer"
-                  >
-                    {bulkAction === 'approve' ? (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        <span>Menyetujui...</span>
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                        <span>Setujui Terpilih</span>
-                      </>
-                    )}
-                  </button>
-                  <button
-                    onClick={handleBulkReject}
-                    disabled={bulkAction !== null}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-xs rounded-lg transition-colors shadow-sm cursor-pointer"
-                  >
-                    {bulkAction === 'reject' ? (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        <span>Menolak...</span>
-                      </>
-                    ) : (
-                      <>
-                        <XCircle className="h-3.5 w-3.5" />
-                        <span>Tolak Terpilih</span>
-                      </>
-                    )}
-                  </button>
-                </>
-              )}
-              {!isStaff && (
-                <button
-                  onClick={handleBulkDelete}
-                  disabled={bulkAction !== null}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-xs rounded-lg transition-colors shadow-sm cursor-pointer"
-                >
-                  {bulkAction === 'delete' ? (
-                    <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      <span>Menghapus...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="h-3.5 w-3.5" />
-                      <span>Hapus Terpilih</span>
-                    </>
-                  )}
-                </button>
-              )}
-              <button
-                onClick={() => setSelectedIds([])}
-                className="text-xs text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white px-2 py-1 cursor-pointer"
-              >
-                Batal
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Search & Filters */}
         <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800/80 rounded-2xl p-5 space-y-4 transition-colors">
@@ -519,18 +461,7 @@ export default function Index() {
               />
             </div>
 
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Jenis Arus Kas</label>
-              <select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-                className="bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-900 dark:text-slate-300 focus:outline-none cursor-pointer"
-              >
-                <option value="">Semua</option>
-                <option value="pemasukan">Pemasukan</option>
-                <option value="pengeluaran">Pengeluaran</option>
-              </select>
-            </div>
+
 
             <div className="flex flex-col gap-1">
               <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Kategori</label>
@@ -544,22 +475,7 @@ export default function Index() {
                   <option key={c.id} value={c.id}>{c.nama_kategori}</option>
                 ))}
               </select>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Status Persetujuan</label>
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-900 dark:text-slate-300 focus:outline-none cursor-pointer"
-              >
-                <option value="">Semua Status</option>
-                <option value="approved">Disetujui</option>
-                <option value="pending">Pending Persetujuan</option>
-                <option value="rejected">Ditolak</option>
-              </select>
-            </div>
-          </div>
+            </div>          </div>
         </div>
 
         {/* Data Table */}
@@ -568,20 +484,10 @@ export default function Index() {
             <table className="w-full text-xs text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider bg-slate-50 dark:bg-slate-950/40">
-                  <th className="py-3 pl-4 pr-2 w-10 text-center">
-                    <input
-                      type="checkbox"
-                      checked={isAllSelected}
-                      onChange={handleSelectAll}
-                      className="rounded border-slate-300 dark:border-slate-700 text-orange-600 focus:ring-orange-500 bg-white dark:bg-slate-900 cursor-pointer"
-                      title="Pilih Semua"
-                    />
-                  </th>
-                  <th className="py-3 px-2 whitespace-nowrap">No. Transaksi</th>
+                  <th className="py-3 pl-4 pr-2 whitespace-nowrap">No. Transaksi</th>
                   <th className="py-3 px-2 whitespace-nowrap">Tanggal</th>
                   <th className="py-3 px-2 whitespace-nowrap">Jenis</th>
                   <th className="py-3 px-2 whitespace-nowrap">Kategori</th>
-                  <th className="py-3 px-2 whitespace-nowrap">Status</th>
                   <th className="py-3 px-2 min-w-[120px]">Keterangan</th>
                   <th className="py-3 px-2 text-right whitespace-nowrap">Nominal</th>
                   <th className="py-3 px-2 text-center whitespace-nowrap">Bukti</th>
@@ -591,25 +497,13 @@ export default function Index() {
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800/50">
                 {transactions.data.map((trx) => {
                   const isPdf = trx.bukti_transaksi_url ? trx.bukti_transaksi_url.toLowerCase().endsWith('.pdf') : false;
-                  const isSelected = selectedIds.includes(trx.id);
 
                   return (
                     <tr 
                       key={trx.id} 
-                      className={`
-                        text-slate-700 dark:text-slate-300 transition-colors group
-                        ${isSelected ? 'bg-orange-500/10 dark:bg-orange-950/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'}
-                      `}
+                      className="text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group"
                     >
-                      <td className="py-3 pl-4 pr-2 text-center">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => handleSelectRow(trx.id)}
-                          className="rounded border-slate-300 dark:border-slate-700 text-orange-600 focus:ring-orange-500 bg-white dark:bg-slate-900 cursor-pointer"
-                        />
-                      </td>
-                      <td className="py-3 px-2 font-mono text-[11px] font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                      <td className="py-3 pl-4 pr-2 font-mono text-[11px] font-bold text-slate-900 dark:text-white whitespace-nowrap">
                         {trx.nomor_transaksi}
                       </td>
                       <td className="py-3 px-2 text-xs font-medium text-slate-700 dark:text-slate-200 whitespace-nowrap">
@@ -636,26 +530,6 @@ export default function Index() {
                         <span className="inline-block text-[10px] font-bold text-slate-700 bg-slate-100 border-slate-200 dark:text-slate-300 dark:bg-slate-800 px-2 py-0.5 rounded-full border dark:border-slate-700/50">
                           {trx.category?.nama_kategori || '-'}
                         </span>
-                      </td>
-
-                      {/* Status Persetujuan Column */}
-                      <td className="py-3 px-2 text-xs whitespace-nowrap">
-                        {trx.status === 'approved' ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                            <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
-                            Disetujui
-                          </span>
-                        ) : trx.status === 'pending' ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30 animate-pulse" title="Pending Persetujuan">
-                            <Clock className="h-3 w-3 text-amber-600 dark:text-amber-400" />
-                            Pending
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/30">
-                            <XCircle className="h-3 w-3 text-rose-600 dark:text-rose-400" />
-                            Ditolak
-                          </span>
-                        )}
                       </td>
 
                       <td className="py-3 px-2 text-xs max-w-[150px] truncate">
@@ -703,38 +577,6 @@ export default function Index() {
                       {!isStaff && (
                         <td className="py-3 pr-4 pl-2 text-center whitespace-nowrap">
                           <div className="flex items-center justify-center gap-1">
-                            {/* Approve & Reject Buttons (Admin & Supervisor Only for Pending Items) */}
-                            {canApprove && trx.status === 'pending' && (
-                              <>
-                                <button
-                                  onClick={() => handleApprove(trx)}
-                                  disabled={actionLoading !== null}
-                                  className="px-2 py-0.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-emerald-600 dark:text-emerald-400 hover:text-white dark:hover:text-white border border-emerald-500/30 text-[10px] font-bold flex items-center gap-0.5 transition-all cursor-pointer"
-                                  title="Setujui Transaksi (Approve)"
-                                >
-                                  {actionLoading?.id === trx.id && actionLoading?.type === 'approve' ? (
-                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                  ) : (
-                                    <Check className="h-3 w-3" />
-                                  )}
-                                  Setujui
-                                </button>
-                                <button
-                                  onClick={() => handleReject(trx)}
-                                  disabled={actionLoading !== null}
-                                  className="px-2 py-0.5 rounded-lg bg-rose-500/10 hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed text-rose-600 dark:text-rose-400 hover:text-white dark:hover:text-white border border-rose-500/30 text-[10px] font-bold flex items-center gap-0.5 transition-all cursor-pointer"
-                                  title="Tolak Transaksi (Reject)"
-                                >
-                                  {actionLoading?.id === trx.id && actionLoading?.type === 'reject' ? (
-                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                  ) : (
-                                    <X className="h-3 w-3" />
-                                  )}
-                                  Tolak
-                                </button>
-                              </>
-                            )}
-
                             {/* Edit & Delete Buttons */}
                             <button
                               onClick={() => openEditModal(trx)}
@@ -840,53 +682,15 @@ export default function Index() {
                 </div>
               )}
 
-              {/* Jenis Arus Kas */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                  Jenis Arus Kas <span className="text-rose-500">*</span>
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <label
-                    className={`py-3 px-4 rounded-xl border font-semibold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all ${
-                      data.jenis_transaksi === 'pemasukan'
-                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-600 dark:text-emerald-400 shadow-md shadow-emerald-950/25 ring-1 ring-emerald-500'
-                        : 'bg-slate-50 border-slate-300 dark:bg-slate-950 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-700'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="jenis_transaksi"
-                      value="pemasukan"
-                      checked={data.jenis_transaksi === 'pemasukan'}
-                      onChange={() => setData('jenis_transaksi', 'pemasukan')}
-                      className="sr-only"
-                    />
-                    <ArrowUpRight className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                    Pemasukan Kas
-                  </label>
-
-                  <label
-                    className={`py-3 px-4 rounded-xl border font-semibold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all ${
-                      data.jenis_transaksi === 'pengeluaran'
-                        ? 'bg-rose-500/20 border-rose-500 text-rose-600 dark:text-rose-400 shadow-md shadow-rose-950/25 ring-1 ring-rose-500'
-                        : 'bg-slate-50 border-slate-300 dark:bg-slate-950 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-700'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="jenis_transaksi"
-                      value="pengeluaran"
-                      checked={data.jenis_transaksi === 'pengeluaran'}
-                      onChange={() => setData('jenis_transaksi', 'pengeluaran')}
-                      className="sr-only"
-                    />
-                    <ArrowDownLeft className="h-4 w-4 text-rose-600 dark:text-rose-400" />
-                    Pengeluaran Kas
-                  </label>
+              {/* Jenis Transaksi Info */}
+              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3 flex items-center justify-between text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
+                <div className="flex items-center gap-2">
+                  <ArrowUpRight className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  <span>Jenis Transaksi: Pendapatan Layanan Kurir & Logistik</span>
                 </div>
-                {errors.jenis_transaksi && (
-                  <p className="text-xs text-rose-500 dark:text-rose-400 mt-1">{errors.jenis_transaksi}</p>
-                )}
+                <span className="bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 rounded-md text-[10px] uppercase font-bold tracking-wider">
+                  Pemasukan
+                </span>
               </div>
 
               {/* Tanggal & Kategori */}
@@ -932,12 +736,11 @@ export default function Index() {
                 <div className="relative">
                   <span className="absolute left-3.5 top-2.5 text-xs font-bold text-slate-500">Rp</span>
                   <input
-                    type="number"
-                    min="0"
-                    step="100"
-                    placeholder="0"
-                    value={data.nominal}
-                    onChange={(e) => setData('nominal', e.target.value)}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Contoh: 100.000"
+                    value={nominalDisplay}
+                    onChange={handleNominalChange}
                     className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl pl-9 pr-3 py-2 text-sm text-slate-900 dark:text-slate-200 font-mono font-bold focus:outline-none focus:border-orange-500"
                     required
                   />
@@ -952,7 +755,7 @@ export default function Index() {
                 </label>
                 <textarea
                   rows={3}
-                  placeholder="Contoh: Pembayaran tagihan pengiriman PosPay cabang..."
+                  placeholder="Contoh: Pendapatan harian transaksi pengiriman POSSAMEDAY / POSNEXTDAY..."
                   value={data.keterangan}
                   onChange={(e) => setData('keterangan', e.target.value)}
                   className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:border-orange-500"

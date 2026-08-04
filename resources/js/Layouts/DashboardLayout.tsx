@@ -30,7 +30,7 @@ interface User {
   id: number;
   name: string;
   email: string;
-  role: 'admin' | 'staff' | 'supervisor';
+  role: 'admin' | 'staff';
 }
 
 interface NotificationItem {
@@ -54,49 +54,12 @@ interface PageProps {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const props = usePage<any>().props as unknown as PageProps;
   const user = props.auth.user;
-  const notifications: NotificationItem[] = props.notifications || [];
   const { theme, toggleTheme } = useTheme();
 
   const [currentDate, setCurrentDate] = useState('');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  // Notification State
-  const [notifOpen, setNotifOpen] = useState(false);
-  const [readNotifIds, setReadNotifIds] = useState<string[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('posfinance_read_notifications');
-        return saved ? JSON.parse(saved) : [];
-      } catch {
-        return [];
-      }
-    }
-    return [];
-  });
-
-  const unreadCount = notifications.filter(n => !readNotifIds.includes(n.id)).length;
-
-  const handleNotificationClick = (item: NotificationItem) => {
-    if (!readNotifIds.includes(item.id)) {
-      const updated = [...readNotifIds, item.id];
-      setReadNotifIds(updated);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('posfinance_read_notifications', JSON.stringify(updated));
-      }
-    }
-    setNotifOpen(false);
-    router.visit(item.link);
-  };
-
-  const markAllAsRead = () => {
-    const allIds = notifications.map(n => n.id);
-    const updated = Array.from(new Set([...readNotifIds, ...allIds]));
-    setReadNotifIds(updated);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('posfinance_read_notifications', JSON.stringify(updated));
-    }
-  };
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('posfinance_sidebar_open');
@@ -132,25 +95,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       label: 'Dashboard',
       href: '/dashboard',
       icon: LayoutDashboard,
-      roles: ['admin', 'staff', 'supervisor'],
+      roles: ['admin', 'staff'],
     },
     {
       label: 'Kategori Transaksi',
       href: '/dashboard/categories',
       icon: Tag,
-      roles: ['admin', 'staff', 'supervisor'],
+      roles: ['admin', 'staff'],
     },
     {
       label: 'Transaksi',
       href: '/dashboard/transactions',
       icon: Coins,
-      roles: ['admin', 'staff', 'supervisor'],
+      roles: ['admin', 'staff'],
     },
     {
       label: 'Laporan Keuangan',
       href: '/dashboard/reports',
       icon: FileBarChart2,
-      roles: ['admin', 'staff', 'supervisor'],
+      roles: ['admin', 'staff'],
     },
     {
       label: 'User Management',
@@ -162,7 +125,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       label: 'Audit Log',
       href: '/dashboard/audit-logs',
       icon: ShieldCheck,
-      roles: ['admin', 'supervisor'],
+      roles: ['admin'],
     },
   ];
 
@@ -306,137 +269,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <div className="flex items-center gap-3 md:gap-4">
-            {/* Notification Center Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setNotifOpen(!notifOpen)}
-                title="Pusat Notifikasi"
-                className="p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-colors flex items-center justify-center relative cursor-pointer"
-              >
-                <Bell className="h-5 w-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow-md border-2 border-white dark:border-slate-900 animate-pulse">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
-              </button>
-
-              {/* Dropdown Panel */}
-              {notifOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setNotifOpen(false)}
-                  />
-                  <div className="absolute right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 md:translate-x-0 md:left-auto md:right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50 overflow-hidden animate-zoomIn">
-                    {/* Header */}
-                    <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/50 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Bell className="h-4 w-4 text-orange-500" />
-                        <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                          Pusat Notifikasi
-                        </h3>
-                        {unreadCount > 0 && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
-                            {unreadCount} baru
-                          </span>
-                        )}
-                      </div>
-                      {unreadCount > 0 && (
-                        <button
-                          onClick={markAllAsRead}
-                          className="text-[11px] font-semibold text-orange-600 dark:text-orange-400 hover:underline flex items-center gap-1 cursor-pointer"
-                        >
-                          <CheckCheck className="h-3.5 w-3.5" />
-                          Tandai Dibaca
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Notification List */}
-                    <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
-                      {notifications.length === 0 ? (
-                        <div className="p-8 text-center text-slate-400 dark:text-slate-500 space-y-2">
-                          <Bell className="h-8 w-8 mx-auto stroke-1 opacity-50" />
-                          <p className="text-xs font-medium">Belum ada notifikasi baru</p>
-                        </div>
-                      ) : (
-                        notifications.map((item) => {
-                          const isRead = readNotifIds.includes(item.id);
-                          return (
-                            <button
-                              key={item.id}
-                              onClick={() => handleNotificationClick(item)}
-                              className={`w-full text-left p-3.5 flex items-start gap-3 transition-colors cursor-pointer group ${
-                                isRead
-                                  ? 'bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/40 opacity-75'
-                                  : 'bg-orange-500/[0.04] dark:bg-orange-500/[0.06] hover:bg-orange-500/[0.08] font-medium'
-                              }`}
-                            >
-                              {/* Category Icon */}
-                              <div className="mt-0.5 shrink-0">
-                                {item.category === 'warning' && (
-                                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
-                                    <Clock className="h-4 w-4" />
-                                  </div>
-                                )}
-                                {item.category === 'success' && (
-                                  <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                                    <CheckCircle2 className="h-4 w-4" />
-                                  </div>
-                                )}
-                                {item.category === 'danger' && (
-                                  <div className="w-8 h-8 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400">
-                                    <XCircle className="h-4 w-4" />
-                                  </div>
-                                )}
-                                {item.category === 'info' && (
-                                  <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                                    <Coins className="h-4 w-4" />
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Notification Content */}
-                              <div className="flex-1 min-w-0 space-y-1">
-                                <div className="flex items-center justify-between gap-2">
-                                  <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
-                                    {item.title}
-                                  </h4>
-                                  <span className="text-[10px] text-slate-400 whitespace-nowrap">
-                                    {item.time}
-                                  </span>
-                                </div>
-                                <p className="text-xs text-slate-600 dark:text-slate-300 leading-snug line-clamp-2">
-                                  {item.message}
-                                </p>
-                              </div>
-
-                              {/* Unread Dot */}
-                              {!isRead && (
-                                <span className="w-2 h-2 rounded-full bg-orange-500 shrink-0 self-center" />
-                              )}
-                            </button>
-                          );
-                        })
-                      )}
-                    </div>
-
-                    {/* Footer */}
-                    <div className="p-2.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/50 text-center">
-                      <Link
-                        href="/dashboard/transactions"
-                        onClick={() => setNotifOpen(false)}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-orange-600 hover:text-orange-500 dark:text-orange-400 dark:hover:text-orange-300 transition-colors"
-                      >
-                        <span>Lihat Seluruh Jurnal Transaksi</span>
-                        <ChevronRight className="h-3.5 w-3.5" />
-                      </Link>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
+            {/* Theme Toggle Button */}
 
             {/* Theme Toggle Button */}
             <button

@@ -13,14 +13,14 @@ interface PageProps {
   categories: Category[];
   auth: {
     user: {
-      role: 'admin' | 'staff' | 'supervisor';
+      role: 'admin' | 'staff';
     };
   };
 }
 
 export default function Index() {
   const { categories, auth } = usePage<any>().props as unknown as PageProps;
-  const canManage = auth?.user?.role === 'admin' || auth?.user?.role === 'supervisor';
+  const canManage = auth?.user?.role === 'admin';
 
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -66,9 +66,15 @@ export default function Index() {
     });
   };
 
-  const handleDelete = (id: number) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus kategori ini? Semua transaksi dalam kategori ini juga akan terhapus.')) return;
-    destroyAction(`/dashboard/categories/${id}`);
+  const handleDelete = (cat: Category) => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus kategori "${cat.nama_kategori}"? Semua transaksi dalam kategori ini juga akan terhapus.`)) return;
+    destroyAction(`/dashboard/categories/${cat.id}`, {
+      onSuccess: () => {
+        setSuccessModalTitle('Berhasil Menghapus Kategori');
+        setSuccessModalMessage(`Kategori transaksi "${cat.nama_kategori}" telah sukses dihapus.`);
+        setShowSuccessModal(true);
+      }
+    });
   };
 
   const openEditModal = (cat: Category) => {
@@ -99,7 +105,7 @@ export default function Index() {
               Kategori Transaksi
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Kelola kategori pencatatan pemasukan dan pengeluaran kas PosFinance.
+              Daftar kategori layanan (POSSAMEDAY, POSNEXTDAY, & POSREGULER) PosFinance.
             </p>
           </div>
 
@@ -157,7 +163,7 @@ export default function Index() {
                     <Edit2 className="h-4 w-4" />
                   </button>
                   <button
-                    onClick={() => handleDelete(cat.id)}
+                    onClick={() => handleDelete(cat)}
                     className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-500/10 dark:hover:text-red-400 transition-colors cursor-pointer"
                     title="Hapus Kategori"
                   >
@@ -203,7 +209,7 @@ export default function Index() {
                   <input
                     type="text"
                     required
-                    placeholder="Contoh: Logistik"
+                    placeholder="Contoh: POSSAMEDAY"
                     value={data.nama_kategori}
                     onChange={(e) => setData('nama_kategori', e.target.value)}
                     className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
@@ -259,7 +265,7 @@ export default function Index() {
                   <input
                     type="text"
                     required
-                    placeholder="Contoh: Logistik"
+                    placeholder="Contoh: POSSAMEDAY"
                     value={data.nama_kategori}
                     onChange={(e) => setData('nama_kategori', e.target.value)}
                     className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"

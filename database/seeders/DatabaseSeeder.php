@@ -38,24 +38,14 @@ class DatabaseSeeder extends Seeder
             'role' => 'staff',
         ]);
 
-        User::create([
-            'name' => 'Supervisor Keuangan',
-            'email' => 'supervisor@posfinance.com',
-            'password' => Hash::make('password'),
-            'role' => 'supervisor',
-        ]);
-
         // Seed Branches (Single Dedicated Regional Branch)
         $branch = Branch::create(['nama_cabang' => 'Pos Indonesia Kantor Regional IV Semarang']);
 
-        // Seed Categories
+        // Seed Official PosAja! Application Product Categories
         $categoriesData = [
-            'PosPay',
-            'Giropos',
-            'Wesel Pos',
-            'Logistik',
-            'Operasional',
-            'Administrasi'
+            'POSSAMEDAY',
+            'POSNEXTDAY',
+            'POSREGULER',
         ];
 
         $categories = [];

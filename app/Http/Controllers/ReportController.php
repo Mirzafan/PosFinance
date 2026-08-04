@@ -40,9 +40,9 @@ class ReportController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-        $totalPemasukan = (float) $transactions->where('jenis_transaksi', 'pemasukan')->sum('nominal');
-        $totalPengeluaran = (float) $transactions->where('jenis_transaksi', 'pengeluaran')->sum('nominal');
-        $saldo = $totalPemasukan - $totalPengeluaran;
+        $totalPemasukan = (float) $transactions->sum('nominal');
+        $totalPengeluaran = 0;
+        $saldo = $totalPemasukan;
 
         $categories = Category::orderBy('nama_kategori')->get();
 
@@ -50,7 +50,7 @@ class ReportController extends Controller
             'transactions' => $transactions,
             'summary' => [
                 'total_pemasukan' => $totalPemasukan,
-                'total_pengeluaran' => $totalPengeluaran,
+                'total_pengeluaran' => 0,
                 'saldo' => $saldo,
                 'total_item' => $transactions->count(),
             ],
@@ -103,18 +103,18 @@ class ReportController extends Controller
         $branchName = 'Pos Indonesia Kantor Regional IV Semarang';
 
         // Calculate Totals
-        $totalPemasukan = (float) $transactions->where('jenis_transaksi', 'pemasukan')->sum('nominal');
-        $totalPengeluaran = (float) $transactions->where('jenis_transaksi', 'pengeluaran')->sum('nominal');
-        $saldo = $totalPemasukan - $totalPengeluaran;
+        $totalPemasukan = (float) $transactions->sum('nominal');
+        $totalPengeluaran = 0;
+        $saldo = $totalPemasukan;
 
         $data = [
             'transactions' => $transactions,
             'start_date' => $startDate ? Carbon::parse($startDate)->format('d F Y') : 'Awal Catatan',
             'end_date' => $endDate ? Carbon::parse($endDate)->format('d F Y') : 'Semua Data',
             'branch_name' => $branchName,
-            'jenis_transaksi' => $jenisTransaksi ? ucfirst($jenisTransaksi) : 'Semua',
+            'jenis_transaksi' => 'Pendapatan Jasa Kurir & Logistik',
             'total_pemasukan' => $totalPemasukan,
-            'total_pengeluaran' => $totalPengeluaran,
+            'total_pengeluaran' => 0,
             'saldo' => $saldo,
             'printed_at' => Carbon::now()->format('d-m-Y H:i:s'),
         ];

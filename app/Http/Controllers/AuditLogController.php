@@ -10,9 +10,9 @@ class AuditLogController extends Controller
 {
     public function index(Request $request)
     {
-        // Require admin or supervisor role to access Audit Logs
-        if (!in_array($request->user()->role, ['admin', 'supervisor'])) {
-            abort(403, 'Hanya Admin dan Supervisor yang memiliki akses ke Audit Log.');
+        // Require admin role to access Audit Logs
+        if ($request->user()->role !== 'admin') {
+            abort(403, 'Hanya Admin yang memiliki akses ke Audit Log.');
         }
 
         $query = AuditLog::with('user');
@@ -53,7 +53,6 @@ class AuditLogController extends Controller
         // Statistical summary counts
         $totalLogs = AuditLog::count();
         $transaksiLogsCount = AuditLog::where('module', 'Transaksi')->count();
-        $approvalLogsCount = AuditLog::whereIn('action', ['APPROVE', 'REJECT'])->count();
         $userLogsCount = AuditLog::where('module', 'User')->count();
 
         return Inertia::render('AuditLogs/Index', [
@@ -61,7 +60,6 @@ class AuditLogController extends Controller
             'stats' => [
                 'total_logs' => $totalLogs,
                 'transaksi_count' => $transaksiLogsCount,
-                'approval_count' => $approvalLogsCount,
                 'user_count' => $userLogsCount,
             ],
             'filters' => $request->only(['search', 'module', 'action', 'start_date', 'end_date']),
