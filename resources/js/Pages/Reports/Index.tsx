@@ -58,11 +58,26 @@ interface PageProps {
   };
 }
 
+const getTodayString = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getFirstDayOfMonthString = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}-01`;
+};
+
 export default function Index() {
   const { transactions, summary, categories, filters } = usePage<any>().props as unknown as PageProps;
 
   const [startDate, setStartDate] = useState(filters.start_date || '');
-  const [endDate, setEndDate] = useState(filters.end_date || '');
+  const [endDate, setEndDate] = useState(filters.end_date || getTodayString());
   const [selectedType, setSelectedType] = useState(filters.jenis_transaksi || '');
   const [selectedCategory, setSelectedCategory] = useState(filters.kategori_id || '');
 
@@ -106,12 +121,15 @@ export default function Index() {
   };
 
   const resetFilters = () => {
+    const defaultEnd = getTodayString();
     setStartDate('');
-    setEndDate('');
+    setEndDate(defaultEnd);
     setSelectedType('');
     setSelectedCategory('');
     setErrorMessage('');
-    router.get('/dashboard/reports', {}, { replace: true });
+    router.get('/dashboard/reports', {
+      end_date: defaultEnd
+    }, { replace: true });
   };
 
   const buildQueryString = () => {
@@ -300,7 +318,7 @@ export default function Index() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
             <div>
               <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1 flex items-center gap-1">
                 <Calendar className="h-3 w-3 text-orange-500" />
@@ -341,21 +359,6 @@ export default function Index() {
                 }`}
                 required
               />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">
-                Jenis Arus Kas
-              </label>
-              <select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-orange-500 cursor-pointer"
-              >
-                <option value="">Semua (Pemasukan & Pengeluaran)</option>
-                <option value="pemasukan">Pemasukan Kas</option>
-                <option value="pengeluaran">Pengeluaran Kas</option>
-              </select>
             </div>
 
             <div>

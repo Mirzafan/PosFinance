@@ -160,25 +160,19 @@
         <tr>
             <td style="width: 15%;"><strong>Periode</strong></td>
             <td style="width: 35%;">: {{ $start_date }} s/d {{ $end_date }}</td>
-            <td style="width: 15%;"><strong>Total Item</strong></td>
-            <td style="width: 35%;">: {{ count($transactions) }} Transaksi</td>
-        </tr>
-        <tr>
-            <td><strong>Lokasi / Unit</strong></td>
-            <td>: {{ $branch_name }}</td>
-            <td><strong>Total Pendapatan</strong></td>
-            <td>: <strong style="color: #27ae60;">Rp {{ number_format($total_pemasukan, 2, ',', '.') }}</strong></td>
+            <td style="width: 15%;"><strong>Lokasi / Unit</strong></td>
+            <td style="width: 35%;">: {{ $branch_name }}</td>
         </tr>
     </table>
 
     <div class="summary-container">
         <div class="summary-box income" style="width: 48%;">
             <h3>Total Pendapatan Retail (Omset)</h3>
-            <p>Rp {{ number_format($total_pemasukan, 2, ',', '.') }}</p>
+            <p style="color: #27ae60;">Rp {{ number_format($total_pemasukan, 2, ',', '.') }}</p>
         </div>
         <div class="summary-box balance" style="width: 48%; margin-right: 0;">
-            <h3>Laba Bersih Retail</h3>
-            <p style="color: #27ae60;">Rp {{ number_format($total_pemasukan, 2, ',', '.') }}</p>
+            <h3>Total Catatan Transaksi</h3>
+            <p>{{ count($transactions) }} Transaksi</p>
         </div>
         <div class="clearfix"></div>
     </div>

@@ -174,7 +174,7 @@ export default function Edit() {
         {activeTab === 'overview' && (
           <div className="space-y-6 animate-fadeIn">
             {/* Financial Contribution Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Card 1: Total Input Transaksi */}
               <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-5 relative overflow-hidden shadow-sm">
                 <div className="flex items-center justify-between mb-3">
@@ -194,32 +194,20 @@ export default function Edit() {
               </div>
 
               {/* Card 2: Total Pendapatan Retail */}
-              <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-5 relative overflow-hidden space-y-2 shadow-sm">
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Total Pendapatan Retail</span>
-                <div>
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-                    <ArrowUpRight className="h-3 w-3" /> Akumulasi Pemasukan
-                  </span>
-                  <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{formatRupiah(financialStats.total_pemasukan)}</p>
+              <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-5 relative overflow-hidden shadow-sm">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Pendapatan Retail</span>
+                  <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                    <TrendingUp className="h-5 w-5" />
+                  </div>
                 </div>
-              </div>
-
-              {/* Card 3: Status Persetujuan Breakdown */}
-              <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-5 relative overflow-hidden space-y-3 shadow-sm">
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Status Approval Transaksi</span>
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-2">
-                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 block">{financialStats.approved_count}</span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400">Disetujui</span>
-                  </div>
-                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-2">
-                    <span className="text-xs font-bold text-amber-600 dark:text-amber-400 block">{financialStats.pending_count}</span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400">Pending</span>
-                  </div>
-                  <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-2">
-                    <span className="text-xs font-bold text-rose-600 dark:text-rose-400 block">{financialStats.rejected_count}</span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400">Ditolak</span>
-                  </div>
+                <div className="space-y-1">
+                  <h3 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">
+                    {formatRupiah(financialStats.total_pemasukan)}
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                    <ArrowUpRight className="h-3 w-3 text-emerald-500" /> Total akumulasi pemasukan retail
+                  </p>
                 </div>
               </div>
             </div>
