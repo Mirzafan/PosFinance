@@ -75,6 +75,23 @@ interface DashboardProps {
 
 const CATEGORY_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316'];
 
+const formatCategoryName = (name: string) => {
+  if (!name) return '';
+  const upper = name.toUpperCase();
+  if (upper === 'POSSAMEDAY') return 'POS SAMEDAY';
+  if (upper === 'POSNEXTDAY') return 'POS NEXT DAY';
+  if (upper === 'POSREGULER' || upper === 'POSREGULAR') return 'POS REGULAR';
+  return name;
+};
+
+const getCategoryColor = (name: string, index: number) => {
+  const upper = name ? name.toUpperCase() : '';
+  if (upper.includes('SAMEDAY')) return '#3b82f6';
+  if (upper.includes('NEXTDAY')) return '#10b981';
+  if (upper.includes('REGULER') || upper.includes('REGULAR')) return '#f59e0b';
+  return CATEGORY_COLORS[index % CATEGORY_COLORS.length];
+};
+
 export default function Dashboard({ summary, charts, recentTransactions }: DashboardProps) {
   const [isMounted, setIsMounted] = useState(false);
 
@@ -125,6 +142,34 @@ export default function Dashboard({ summary, charts, recentTransactions }: Dashb
     }
     return null;
   };
+
+  const CustomCategoryTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-white border border-slate-200 text-slate-900 dark:bg-[#0f172a] dark:border-slate-700/80 dark:text-slate-100 p-3 rounded-xl shadow-xl text-xs space-y-1">
+          <p className="font-bold text-slate-900 dark:text-white">{formatCategoryName(data.name)}</p>
+          <p className="text-emerald-600 dark:text-emerald-400 font-semibold">{formatRupiah(data.value)}</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const categoryData = charts?.category_breakdown && charts.category_breakdown.length > 0
+    ? charts.category_breakdown
+    : [
+        { name: 'POSSAMEDAY', value: 0 },
+        { name: 'POSNEXTDAY', value: 0 },
+        { name: 'POSREGULER', value: 0 },
+      ];
+
+  const hasRealData = categoryData.some(item => item.value > 0);
+
+  const categoryChartData = categoryData.map(item => ({
+    ...item,
+    chartValue: hasRealData ? (item.value > 0 ? item.value : 0.0001) : 1,
+  }));
 
   return (
     <DashboardLayout>
@@ -217,9 +262,10 @@ export default function Dashboard({ summary, charts, recentTransactions }: Dashb
           </div>
         </div>
 
-        {/* Middle Section (Monthly Trends Chart) */}
-        <div className="grid grid-cols-1 gap-6">
-          <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 relative overflow-hidden flex flex-col justify-between shadow-sm">
+        {/* Middle Section (Monthly Trends Chart + Distribusi Kategori) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Grafik Tren (Bar Chart) */}
+          <div className="lg:col-span-7 bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 relative overflow-hidden flex flex-col justify-between shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -268,6 +314,71 @@ export default function Dashboard({ summary, charts, recentTransactions }: Dashb
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Distribusi Kategori (Donut Chart Card) */}
+          <div className="lg:col-span-5 bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 relative overflow-hidden flex flex-col justify-between shadow-sm">
+            <div>
+              <div className="flex items-start gap-2.5 mb-2">
+                <div className="p-2 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5">
+                  <PieIcon className="h-4.5 w-4.5" />
+                </div>
+                <div>
+                  <h4 className="text-base font-bold text-slate-900 dark:text-white leading-snug">
+                    Distribusi Kategori
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Proporsi nominal per kategori keuangan
+                  </p>
+                </div>
+              </div>
+
+              <div className="h-[210px] w-full flex items-center justify-center relative my-2">
+                {isMounted && categoryData && categoryData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={categoryChartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={55}
+                        outerRadius={85}
+                        paddingAngle={4}
+                        dataKey="chartValue"
+                        stroke="none"
+                      >
+                        {categoryChartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={getCategoryColor(entry.name, index)} />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<CustomCategoryTooltip />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 space-y-2 border border-dashed border-slate-300 dark:border-slate-800/80 rounded-2xl p-4 bg-slate-50 dark:bg-slate-950/20">
+                    <PieIcon className="h-7 w-7 text-slate-400 dark:text-slate-600/60 stroke-[1.5]" />
+                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Belum Ada Data Kategori</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Bottom Legend */}
+            {categoryData && categoryData.length > 0 && (
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-800/80 grid grid-cols-2 gap-y-2.5 gap-x-4">
+                {categoryData.map((item, index) => (
+                  <div key={item.name} className="flex items-center gap-2">
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: getCategoryColor(item.name, index) }}
+                    />
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
+                      {formatCategoryName(item.name)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

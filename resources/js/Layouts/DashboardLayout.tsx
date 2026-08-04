@@ -98,7 +98,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       roles: ['admin', 'staff'],
     },
     {
-      label: 'Kategori Transaksi',
+      label: 'Kategori Layanan',
       href: '/dashboard/categories',
       icon: Tag,
       roles: ['admin', 'staff'],

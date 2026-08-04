@@ -68,22 +68,17 @@ class DashboardController extends Controller
         $monthlyTrends = array_values($monthlyTrendsMap);
 
         // Category Breakdown Chart Data (Approved transactions)
-        $categoryBreakdown = Transaction::select(
-            'kategori_id',
-            DB::raw('SUM(nominal) as value')
-        )
-        ->where('status', 'approved')
-        ->with('category')
-        ->groupBy('kategori_id')
-        ->get()
-        ->map(function ($item) {
+        $categories = Category::all();
+        $categoryBreakdown = $categories->map(function ($category) {
+            $total = Transaction::where('kategori_id', $category->id)
+                ->where('status', 'approved')
+                ->sum('nominal');
             return [
-                'name' => $item->category ? $item->category->nama_kategori : 'Lainnya',
-                'value' => (float) $item->value,
+                'name' => $category->nama_kategori,
+                'value' => (float) $total,
                 'jenis_transaksi' => 'campuran'
             ];
-        })
-        ->toArray();
+        })->toArray();
 
         // 5 Recent Transactions (Show recent transactions with status)
         $recentTransactions = Transaction::with('category')

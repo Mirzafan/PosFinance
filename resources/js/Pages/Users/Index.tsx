@@ -93,25 +93,20 @@ export default function Index() {
       alert('Anda tidak dapat menghapus akun Anda sendiri.');
       return;
     }
-<<<<<<< HEAD
     setUserToDelete(userItem);
     setShowDeleteModal(true);
   };
 
   const executeDelete = () => {
     if (!userToDelete) return;
-    destroyAction(`/dashboard/users/${userToDelete.id}`, {
+    const targetUser = userToDelete;
+    destroyAction(`/dashboard/users/${targetUser.id}`, {
       onSuccess: () => {
         setShowDeleteModal(false);
         setUserToDelete(null);
-=======
-    if (!confirm(`Apakah Anda yakin ingin menghapus akun user: ${userItem.name}?`)) return;
-    destroyAction(`/dashboard/users/${userItem.id}`, {
-      onSuccess: () => {
         setSuccessModalTitle('Berhasil Menghapus Pengguna');
-        setSuccessModalMessage(`Akun pengguna "${userItem.name}" (${userItem.email}) telah sukses dihapus secara permanen.`);
+        setSuccessModalMessage(`Akun pengguna "${targetUser.name}" (${targetUser.email}) telah sukses dihapus secara permanen.`);
         setShowSuccessModal(true);
->>>>>>> c719ba0 (update some features)
       }
     });
   };
@@ -466,9 +461,8 @@ export default function Index() {
           document.body
         )}
 
-<<<<<<< HEAD
         {/* Delete Confirmation Modal */}
-        {showDeleteModal && userToDelete && (
+        {showDeleteModal && userToDelete && typeof window !== 'undefined' && createPortal(
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
             <div className="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-3xl p-6 w-full max-w-md z-10 relative overflow-hidden shadow-2xl space-y-5">
               <div className="flex items-start gap-4">
@@ -536,10 +530,12 @@ export default function Index() {
                 </button>
               </div>
             </div>
-          </div>
-=======
+          </div>,
+          document.body
+        )}
+
         {/* MODAL SUCCESS NOTIFIKASI POP-UP */}
-        {showSuccessModal && createPortal(
+        {showSuccessModal && typeof window !== 'undefined' && createPortal(
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
             <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center space-y-4 relative overflow-hidden animate-zoomIn">
               <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400 shadow-lg shadow-emerald-950/25">
@@ -567,7 +563,6 @@ export default function Index() {
             </div>
           </div>,
           document.body
->>>>>>> c719ba0 (update some features)
         )}
       </div>
     </DashboardLayout>

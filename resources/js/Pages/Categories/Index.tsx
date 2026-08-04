@@ -94,7 +94,7 @@ export default function Index() {
 
   return (
     <DashboardLayout>
-      <Head title="Kategori Transaksi - PosFinance Regional IV Semarang" />
+      <Head title="Kategori Layanan - PosFinance Regional IV Semarang" />
 
       <div className="space-y-6 animate-fadeIn">
         {/* Header */}
@@ -102,7 +102,7 @@ export default function Index() {
           <div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Tag className="h-6 w-6 text-orange-500" />
-              Kategori Transaksi
+              Kategori Layanan
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
               Daftar kategori layanan (POSSAMEDAY, POSNEXTDAY, & POSREGULER) PosFinance.
@@ -193,7 +193,7 @@ export default function Index() {
               >
                 <X className="h-5 w-5" />
               </button>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Tambah Kategori Transaksi</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Tambah Kategori Layanan</h3>
 
               {errors.nama_kategori && (
                 <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs">
@@ -249,7 +249,7 @@ export default function Index() {
               >
                 <X className="h-5 w-5" />
               </button>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Ubah Kategori Transaksi</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Ubah Kategori Layanan</h3>
 
               {errors.nama_kategori && (
                 <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs">
