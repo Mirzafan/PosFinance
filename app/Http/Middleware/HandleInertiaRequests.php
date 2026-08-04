@@ -45,7 +45,7 @@ class HandleInertiaRequests extends Middleware
 
                 $list = [];
 
-                if (in_array($user->role, ['admin', 'supervisor'])) {
+                if ($user->role === 'admin') {
                     // Pending approval transactions
                     $pendingList = \App\Models\Transaction::with('user', 'category')
                         ->where('status', 'pending')

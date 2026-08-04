@@ -38,24 +38,16 @@ class DatabaseSeeder extends Seeder
             'role' => 'staff',
         ]);
 
-        User::create([
-            'name' => 'Supervisor Keuangan',
-            'email' => 'supervisor@posfinance.com',
-            'password' => Hash::make('password'),
-            'role' => 'supervisor',
-        ]);
-
         // Seed Branches (Single Dedicated Regional Branch)
         $branch = Branch::create(['nama_cabang' => 'Pos Indonesia Kantor Regional IV Semarang']);
 
-        // Seed Categories
+        // Seed Categories (Pure Retail Revenue Categories)
         $categoriesData = [
-            'PosPay',
-            'Giropos',
-            'Wesel Pos',
-            'Logistik',
-            'Operasional',
-            'Administrasi'
+            'Meterai & Prangko (Retail)',
+            'Benda Pos & Souvenir',
+            'Kemasan & Packing Material',
+            'Konsinyasi & Produk UMKM Binaan',
+            'Layanan Pos Retail Lainnya'
         ];
 
         $categories = [];

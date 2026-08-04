@@ -148,10 +148,10 @@
     <div class="header">
         <div>
             <h1 class="logo-text">POS INDONESIA</h1>
-            <p class="logo-sub">Kantor Regional IV Semarang - PosFinance</p>
+            <p class="logo-sub">Kantor Regional IV Semarang - Laporan Pendapatan Retail</p>
         </div>
         <div class="title">
-            <h2>Laporan Keuangan Regional IV</h2>
+            <h2>Laporan Pendapatan Retail</h2>
             <p>Dicetak pada: {{ $printed_at }}</p>
         </div>
     </div>
@@ -160,29 +160,25 @@
         <tr>
             <td style="width: 15%;"><strong>Periode</strong></td>
             <td style="width: 35%;">: {{ $start_date }} s/d {{ $end_date }}</td>
-            <td style="width: 15%;"><strong>Filter Jenis</strong></td>
-            <td style="width: 35%;">: {{ ucfirst($jenis_transaksi) }}</td>
+            <td style="width: 15%;"><strong>Total Item</strong></td>
+            <td style="width: 35%;">: {{ count($transactions) }} Transaksi</td>
         </tr>
         <tr>
             <td><strong>Lokasi / Unit</strong></td>
             <td>: {{ $branch_name }}</td>
-            <td><strong>Total Item</strong></td>
-            <td>: {{ count($transactions) }} Transaksi</td>
+            <td><strong>Total Pendapatan</strong></td>
+            <td>: <strong style="color: #27ae60;">Rp {{ number_format($total_pemasukan, 2, ',', '.') }}</strong></td>
         </tr>
     </table>
 
     <div class="summary-container">
-        <div class="summary-box income">
-            <h3>Total Pemasukan</h3>
+        <div class="summary-box income" style="width: 48%;">
+            <h3>Total Pendapatan Retail (Omset)</h3>
             <p>Rp {{ number_format($total_pemasukan, 2, ',', '.') }}</p>
         </div>
-        <div class="summary-box expense">
-            <h3>Total Pengeluaran</h3>
-            <p>Rp {{ number_format($total_pengeluaran, 2, ',', '.') }}</p>
-        </div>
-        <div class="summary-box balance" style="margin-right: 0;">
-            <h3>Saldo Bersih</h3>
-            <p>Rp {{ number_format($saldo, 2, ',', '.') }}</p>
+        <div class="summary-box balance" style="width: 48%; margin-right: 0;">
+            <h3>Laba Bersih Retail</h3>
+            <p style="color: #27ae60;">Rp {{ number_format($total_pemasukan, 2, ',', '.') }}</p>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -190,11 +186,10 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 15%;">No. Trx</th>
-                <th style="width: 11%;">Tanggal</th>
-                <th style="width: 11%;">Jenis</th>
-                <th style="width: 15%;">Kategori</th>
-                <th style="width: 25%;">Keterangan</th>
+                <th style="width: 18%;">No. Trx</th>
+                <th style="width: 12%;">Tanggal</th>
+                <th style="width: 20%;">Kategori Retail</th>
+                <th style="width: 27%;">Keterangan</th>
                 <th style="width: 8%; text-align: center;">Bukti</th>
                 <th style="width: 15%; text-align: right;">Nominal</th>
             </tr>
@@ -204,11 +199,6 @@
                 <tr>
                     <td><strong>{{ $trx->nomor_transaksi }}</strong></td>
                     <td>{{ $trx->tanggal ? \Carbon\Carbon::parse($trx->tanggal)->format('d-m-Y') : '-' }}</td>
-                    <td>
-                        <span class="badge {{ $trx->jenis_transaksi === 'pemasukan' ? 'badge-income' : 'badge-expense' }}">
-                            {{ $trx->jenis_transaksi }}
-                        </span>
-                    </td>
                     <td>{{ $trx->category->nama_kategori ?? '-' }}</td>
                     <td>{{ $trx->keterangan ?? '-' }}</td>
                     <td style="text-align: center;">

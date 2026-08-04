@@ -15,16 +15,16 @@ class DashboardController extends Controller
         $currentYear = date('Y');
 
         // Summary Calculations (Approved transactions only)
-        $totalPemasukan = (float) Transaction::where('status', 'approved')->where('jenis_transaksi', 'pemasukan')->sum('nominal');
-        $totalPengeluaran = (float) Transaction::where('status', 'approved')->where('jenis_transaksi', 'pengeluaran')->sum('nominal');
-        $saldo = $totalPemasukan - $totalPengeluaran;
+        $totalPemasukan = (float) Transaction::where('status', 'approved')->sum('nominal');
         $totalTransaksi = Transaction::where('status', 'approved')->count();
+        $avgTransaksi = $totalTransaksi > 0 ? round($totalPemasukan / $totalTransaksi, 0) : 0;
 
         $summary = [
             'total_pemasukan' => $totalPemasukan,
-            'total_pengeluaran' => $totalPengeluaran,
-            'saldo' => $saldo,
+            'net_profit' => $totalPemasukan,
             'total_transaksi' => $totalTransaksi,
+            'avg_transaksi' => $avgTransaksi,
+            'saldo' => $totalPemasukan,
         ];
 
         // Monthly Trends Chart Data (Approved transactions)
@@ -38,12 +38,11 @@ class DashboardController extends Controller
 
         $rawMonthlyData = Transaction::select(
             DB::raw("{$monthSql} as month_num"),
-            'jenis_transaksi',
             DB::raw('SUM(nominal) as total')
         )
         ->where('status', 'approved')
         ->whereYear('tanggal', $currentYear)
-        ->groupBy('month_num', 'jenis_transaksi')
+        ->groupBy('month_num')
         ->get();
 
         $monthlyTrendsMap = [];
@@ -53,20 +52,13 @@ class DashboardController extends Controller
                 'label' => $monthNames[$m],
                 'month_key' => $key,
                 'pemasukan' => 0,
-                'pengeluaran' => 0,
-                'net' => 0,
             ];
         }
 
         foreach ($rawMonthlyData as $row) {
             $mKey = str_pad((int)$row->month_num, 2, '0', STR_PAD_LEFT);
             if (isset($monthlyTrendsMap[$mKey])) {
-                if ($row->jenis_transaksi === 'pemasukan') {
-                    $monthlyTrendsMap[$mKey]['pemasukan'] = (float) $row->total;
-                } else {
-                    $monthlyTrendsMap[$mKey]['pengeluaran'] = (float) $row->total;
-                }
-                $monthlyTrendsMap[$mKey]['net'] = $monthlyTrendsMap[$mKey]['pemasukan'] - $monthlyTrendsMap[$mKey]['pengeluaran'];
+                $monthlyTrendsMap[$mKey]['pemasukan'] = (float) $row->total;
             }
         }
 

@@ -40,9 +40,7 @@ class ReportController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-        $totalPemasukan = (float) $transactions->where('jenis_transaksi', 'pemasukan')->sum('nominal');
-        $totalPengeluaran = (float) $transactions->where('jenis_transaksi', 'pengeluaran')->sum('nominal');
-        $saldo = $totalPemasukan - $totalPengeluaran;
+        $totalPemasukan = (float) $transactions->sum('nominal');
 
         $categories = Category::orderBy('nama_kategori')->get();
 
@@ -50,12 +48,12 @@ class ReportController extends Controller
             'transactions' => $transactions,
             'summary' => [
                 'total_pemasukan' => $totalPemasukan,
-                'total_pengeluaran' => $totalPengeluaran,
-                'saldo' => $saldo,
+                'net_profit' => $totalPemasukan,
+                'saldo' => $totalPemasukan,
                 'total_item' => $transactions->count(),
             ],
             'categories' => $categories,
-            'filters' => $request->only(['start_date', 'end_date', 'jenis_transaksi', 'kategori_id']),
+            'filters' => $request->only(['start_date', 'end_date', 'kategori_id']),
         ]);
     }
 
@@ -64,18 +62,16 @@ class ReportController extends Controller
         $filters = [
             'start_date' => $request->input('start_date'),
             'end_date' => $request->input('end_date'),
-            'jenis_transaksi' => $request->input('jenis_transaksi'),
             'kategori_id' => $request->input('kategori_id'),
         ];
 
-        return Excel::download(new TransactionsExport($filters), 'laporan-posfinance-regional4-' . date('Ymd-His') . '.xlsx');
+        return Excel::download(new TransactionsExport($filters), 'laporan-pendapatan-retail-' . date('Ymd-His') . '.xlsx');
     }
 
     public function exportPdf(Request $request)
     {
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
-        $jenisTransaksi = $request->input('jenis_transaksi');
         $kategoriId = $request->input('kategori_id');
 
         $query = Transaction::with(['category', 'branch']);
@@ -86,10 +82,6 @@ class ReportController extends Controller
 
         if ($endDate) {
             $query->whereDate('tanggal', '<=', $endDate);
-        }
-
-        if ($jenisTransaksi) {
-            $query->where('jenis_transaksi', $jenisTransaksi);
         }
 
         if ($kategoriId) {
@@ -103,19 +95,16 @@ class ReportController extends Controller
         $branchName = 'Pos Indonesia Kantor Regional IV Semarang';
 
         // Calculate Totals
-        $totalPemasukan = (float) $transactions->where('jenis_transaksi', 'pemasukan')->sum('nominal');
-        $totalPengeluaran = (float) $transactions->where('jenis_transaksi', 'pengeluaran')->sum('nominal');
-        $saldo = $totalPemasukan - $totalPengeluaran;
+        $totalPemasukan = (float) $transactions->sum('nominal');
 
         $data = [
             'transactions' => $transactions,
             'start_date' => $startDate ? Carbon::parse($startDate)->format('d F Y') : 'Awal Catatan',
             'end_date' => $endDate ? Carbon::parse($endDate)->format('d F Y') : 'Semua Data',
             'branch_name' => $branchName,
-            'jenis_transaksi' => $jenisTransaksi ? ucfirst($jenisTransaksi) : 'Semua',
             'total_pemasukan' => $totalPemasukan,
-            'total_pengeluaran' => $totalPengeluaran,
-            'saldo' => $saldo,
+            'net_profit' => $totalPemasukan,
+            'saldo' => $totalPemasukan,
             'printed_at' => Carbon::now()->format('d-m-Y H:i:s'),
         ];
 

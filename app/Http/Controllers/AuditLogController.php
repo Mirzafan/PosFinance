@@ -10,9 +10,9 @@ class AuditLogController extends Controller
 {
     public function index(Request $request)
     {
-        // Require admin or supervisor role to access Audit Logs
-        if (!in_array($request->user()->role, ['admin', 'supervisor'])) {
-            abort(403, 'Hanya Admin dan Supervisor yang memiliki akses ke Audit Log.');
+        // Require admin role to access Audit Logs
+        if ($request->user()->role !== 'admin') {
+            abort(403, 'Hanya Admin yang memiliki akses ke Audit Log.');
         }
 
         $query = AuditLog::with('user');

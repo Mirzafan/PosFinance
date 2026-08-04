@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Head, usePage, router, useForm } from '@inertiajs/react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
+import LoadingSpinner from '@/Components/LoadingSpinner';
 import { 
   Search, 
   ArrowUpRight, 
@@ -55,7 +56,7 @@ interface PageProps {
       id: number;
       name: string;
       email: string;
-      role: 'admin' | 'supervisor' | 'staff';
+      role: 'admin' | 'staff';
     };
   };
   transactions: {
@@ -83,7 +84,7 @@ export default function Index() {
   const { auth, transactions, categories, filters, flash } = usePage<any>().props as unknown as PageProps;
   const userRole = auth.user.role;
   const isStaff = userRole === 'staff';
-  const canApprove = ['admin', 'supervisor'].includes(userRole);
+  const canApprove = userRole === 'admin';
 
   // Filter States
   const [search, setSearch] = useState(filters.search || '');
@@ -389,11 +390,20 @@ export default function Index() {
           </button>
         </div>
 
-        {selectedIds.length > 0 && (
-          <div className="bg-orange-500/10 border border-orange-500/30 dark:bg-orange-950/80 dark:border-orange-500/40 rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3 text-slate-900 dark:text-orange-200 shadow-xl backdrop-blur-md animate-fadeIn">
+        {!isStaff && selectedIds.length > 0 && (
+          <div className="relative overflow-hidden bg-orange-500/10 border border-orange-500/30 dark:bg-orange-950/80 dark:border-orange-500/40 rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3 text-slate-900 dark:text-orange-200 shadow-xl backdrop-blur-md animate-fadeIn">
+            {bulkAction !== null && (
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 via-emerald-500 to-amber-500 animate-pulse" />
+            )}
+            
             <div className="flex items-center gap-2 font-semibold text-xs text-orange-700 dark:text-orange-200">
               <CheckSquare className="h-4 w-4 text-orange-600 dark:text-orange-400" />
               <span>{selectedIds.length} transaksi dipilih</span>
+              {bulkAction !== null && (
+                <span className="text-[11px] font-normal text-slate-500 dark:text-orange-300 italic animate-pulse">
+                  (Memproses data server...)
+                </span>
+              )}
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
@@ -402,12 +412,14 @@ export default function Index() {
                   <button
                     onClick={handleBulkApprove}
                     disabled={bulkAction !== null}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-xs rounded-lg transition-colors shadow-sm cursor-pointer"
+                    className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-xs rounded-lg transition-all duration-200 shadow-sm cursor-pointer ${
+                      bulkAction === 'approve' ? 'ring-2 ring-emerald-400 shadow-lg shadow-emerald-600/30 animate-pulse' : ''
+                    }`}
                   >
                     {bulkAction === 'approve' ? (
                       <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        <span>Menyetujui...</span>
+                        <LoadingSpinner size="xs" color="white" />
+                        <span>Menyetujui ({selectedIds.length})...</span>
                       </>
                     ) : (
                       <>
@@ -419,12 +431,14 @@ export default function Index() {
                   <button
                     onClick={handleBulkReject}
                     disabled={bulkAction !== null}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-xs rounded-lg transition-colors shadow-sm cursor-pointer"
+                    className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-xs rounded-lg transition-all duration-200 shadow-sm cursor-pointer ${
+                      bulkAction === 'reject' ? 'ring-2 ring-amber-400 shadow-lg shadow-amber-600/30 animate-pulse' : ''
+                    }`}
                   >
                     {bulkAction === 'reject' ? (
                       <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        <span>Menolak...</span>
+                        <LoadingSpinner size="xs" color="white" />
+                        <span>Menolak ({selectedIds.length})...</span>
                       </>
                     ) : (
                       <>
@@ -439,12 +453,14 @@ export default function Index() {
                 <button
                   onClick={handleBulkDelete}
                   disabled={bulkAction !== null}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-xs rounded-lg transition-colors shadow-sm cursor-pointer"
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-red-600 hover:bg-red-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-xs rounded-lg transition-all duration-200 shadow-sm cursor-pointer ${
+                    bulkAction === 'delete' ? 'ring-2 ring-red-400 shadow-lg shadow-red-600/30 animate-pulse' : ''
+                  }`}
                 >
                   {bulkAction === 'delete' ? (
                     <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      <span>Menghapus...</span>
+                      <LoadingSpinner size="xs" color="white" />
+                      <span>Menghapus ({selectedIds.length})...</span>
                     </>
                   ) : (
                     <>
@@ -456,7 +472,8 @@ export default function Index() {
               )}
               <button
                 onClick={() => setSelectedIds([])}
-                className="text-xs text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white px-2 py-1 cursor-pointer"
+                disabled={bulkAction !== null}
+                className="text-xs text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white disabled:opacity-40 disabled:cursor-not-allowed px-2 py-1 cursor-pointer transition-colors"
               >
                 Batal
               </button>
@@ -520,15 +537,16 @@ export default function Index() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Jenis Arus Kas</label>
+              <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Kategori Retail</label>
               <select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
                 className="bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-900 dark:text-slate-300 focus:outline-none cursor-pointer"
               >
-                <option value="">Semua</option>
-                <option value="pemasukan">Pemasukan</option>
-                <option value="pengeluaran">Pengeluaran</option>
+                <option value="">Semua Kategori Retail</option>
+                {categories.map(c => (
+                  <option key={c.id} value={c.id}>{c.nama_kategori}</option>
+                ))}
               </select>
             </div>
 
@@ -568,15 +586,17 @@ export default function Index() {
             <table className="w-full text-xs text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider bg-slate-50 dark:bg-slate-950/40">
-                  <th className="py-3 pl-4 pr-2 w-10 text-center">
-                    <input
-                      type="checkbox"
-                      checked={isAllSelected}
-                      onChange={handleSelectAll}
-                      className="rounded border-slate-300 dark:border-slate-700 text-orange-600 focus:ring-orange-500 bg-white dark:bg-slate-900 cursor-pointer"
-                      title="Pilih Semua"
-                    />
-                  </th>
+                  {!isStaff && (
+                    <th className="py-3 pl-4 pr-2 w-10 text-center">
+                      <input
+                        type="checkbox"
+                        checked={isAllSelected}
+                        onChange={handleSelectAll}
+                        className="rounded border-slate-300 dark:border-slate-700 text-orange-600 focus:ring-orange-500 bg-white dark:bg-slate-900 cursor-pointer"
+                        title="Pilih Semua"
+                      />
+                    </th>
+                  )}
                   <th className="py-3 px-2 whitespace-nowrap">No. Transaksi</th>
                   <th className="py-3 px-2 whitespace-nowrap">Tanggal</th>
                   <th className="py-3 px-2 whitespace-nowrap">Jenis</th>
@@ -601,14 +621,16 @@ export default function Index() {
                         ${isSelected ? 'bg-orange-500/10 dark:bg-orange-950/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'}
                       `}
                     >
-                      <td className="py-3 pl-4 pr-2 text-center">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => handleSelectRow(trx.id)}
-                          className="rounded border-slate-300 dark:border-slate-700 text-orange-600 focus:ring-orange-500 bg-white dark:bg-slate-900 cursor-pointer"
-                        />
-                      </td>
+                      {!isStaff && (
+                        <td className="py-3 pl-4 pr-2 text-center">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => handleSelectRow(trx.id)}
+                            className="rounded border-slate-300 dark:border-slate-700 text-orange-600 focus:ring-orange-500 bg-white dark:bg-slate-900 cursor-pointer"
+                          />
+                        </td>
+                      )}
                       <td className="py-3 px-2 font-mono text-[11px] font-bold text-slate-900 dark:text-white whitespace-nowrap">
                         {trx.nomor_transaksi}
                       </td>
@@ -620,17 +642,10 @@ export default function Index() {
                         })}
                       </td>
                       <td className="py-3 px-2 text-xs whitespace-nowrap">
-                        {trx.jenis_transaksi === 'pemasukan' ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                            <ArrowUpRight className="h-3 w-3 text-emerald-400" />
-                            Pemasukan
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">
-                            <ArrowDownLeft className="h-3 w-3 text-rose-400" />
-                            Pengeluaran
-                          </span>
-                        )}
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                          <ArrowUpRight className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                          Pendapatan Retail
+                        </span>
                       </td>
                       <td className="py-3 px-2 whitespace-nowrap">
                         <span className="inline-block text-[10px] font-bold text-slate-700 bg-slate-100 border-slate-200 dark:text-slate-300 dark:bg-slate-800 px-2 py-0.5 rounded-full border dark:border-slate-700/50">
@@ -709,11 +724,11 @@ export default function Index() {
                                 <button
                                   onClick={() => handleApprove(trx)}
                                   disabled={actionLoading !== null}
-                                  className="px-2 py-0.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-emerald-600 dark:text-emerald-400 hover:text-white dark:hover:text-white border border-emerald-500/30 text-[10px] font-bold flex items-center gap-0.5 transition-all cursor-pointer"
+                                  className="px-2 py-0.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-emerald-600 dark:text-emerald-400 hover:text-white dark:hover:text-white border border-emerald-500/30 text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer shadow-sm"
                                   title="Setujui Transaksi (Approve)"
                                 >
                                   {actionLoading?.id === trx.id && actionLoading?.type === 'approve' ? (
-                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                    <LoadingSpinner size="xs" color="emerald" />
                                   ) : (
                                     <Check className="h-3 w-3" />
                                   )}
@@ -722,11 +737,11 @@ export default function Index() {
                                 <button
                                   onClick={() => handleReject(trx)}
                                   disabled={actionLoading !== null}
-                                  className="px-2 py-0.5 rounded-lg bg-rose-500/10 hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed text-rose-600 dark:text-rose-400 hover:text-white dark:hover:text-white border border-rose-500/30 text-[10px] font-bold flex items-center gap-0.5 transition-all cursor-pointer"
+                                  className="px-2 py-0.5 rounded-lg bg-rose-500/10 hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed text-rose-600 dark:text-rose-400 hover:text-white dark:hover:text-white border border-rose-500/30 text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer shadow-sm"
                                   title="Tolak Transaksi (Reject)"
                                 >
                                   {actionLoading?.id === trx.id && actionLoading?.type === 'reject' ? (
-                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                    <LoadingSpinner size="xs" color="rose" />
                                   ) : (
                                     <X className="h-3 w-3" />
                                   )}
@@ -759,7 +774,7 @@ export default function Index() {
 
                 {transactions.data.length === 0 && (
                   <tr>
-                    <td colSpan={isStaff ? 8 : 9} className="py-16 text-center">
+                    <td colSpan={isStaff ? 8 : 10} className="py-16 text-center">
                       <div className="flex flex-col items-center justify-center max-w-sm mx-auto space-y-3">
                         <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 shadow-inner">
                           <Coins className="h-6 w-6 text-slate-400 dark:text-slate-600" />
@@ -832,61 +847,21 @@ export default function Index() {
 
             {/* Modal Body / Form */}
             <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 text-slate-700 dark:text-slate-300 text-sm">
-              {/* Notice for Staff */}
-              {isStaff && (
-                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-center gap-2.5 text-amber-700 dark:text-amber-300 text-xs font-medium">
-                  <ShieldCheck className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                  <span>Transaksi yang diinput oleh Staff akan memerlukan persetujuan (approval) dari Admin atau Supervisor sebelum masuk ke laporan saldo resmi.</span>
-                </div>
-              )}
+              {/* Notice info */}
+              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3 flex items-center gap-2.5 text-emerald-700 dark:text-emerald-300 text-xs font-medium">
+                <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                <span>Penambahan data transaksi tidak memerlukan konfirmasi Admin/Supervisor, langsung tercatat secara resmi dengan mengunggah bukti transaksi.</span>
+              </div>
 
-              {/* Jenis Arus Kas */}
+              {/* Jenis Transaksi (Locked to Pendapatan Retail) */}
               <div>
                 <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                  Jenis Arus Kas <span className="text-rose-500">*</span>
+                  Jenis Transaksi
                 </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <label
-                    className={`py-3 px-4 rounded-xl border font-semibold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all ${
-                      data.jenis_transaksi === 'pemasukan'
-                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-600 dark:text-emerald-400 shadow-md shadow-emerald-950/25 ring-1 ring-emerald-500'
-                        : 'bg-slate-50 border-slate-300 dark:bg-slate-950 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-700'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="jenis_transaksi"
-                      value="pemasukan"
-                      checked={data.jenis_transaksi === 'pemasukan'}
-                      onChange={() => setData('jenis_transaksi', 'pemasukan')}
-                      className="sr-only"
-                    />
-                    <ArrowUpRight className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                    Pemasukan Kas
-                  </label>
-
-                  <label
-                    className={`py-3 px-4 rounded-xl border font-semibold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all ${
-                      data.jenis_transaksi === 'pengeluaran'
-                        ? 'bg-rose-500/20 border-rose-500 text-rose-600 dark:text-rose-400 shadow-md shadow-rose-950/25 ring-1 ring-rose-500'
-                        : 'bg-slate-50 border-slate-300 dark:bg-slate-950 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-700'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="jenis_transaksi"
-                      value="pengeluaran"
-                      checked={data.jenis_transaksi === 'pengeluaran'}
-                      onChange={() => setData('jenis_transaksi', 'pengeluaran')}
-                      className="sr-only"
-                    />
-                    <ArrowDownLeft className="h-4 w-4 text-rose-600 dark:text-rose-400" />
-                    Pengeluaran Kas
-                  </label>
+                <div className="py-2.5 px-4 rounded-xl border border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold text-xs flex items-center gap-2">
+                  <ArrowUpRight className="h-4 w-4" />
+                  <span>Pendapatan Retail (Pemasukan)</span>
                 </div>
-                {errors.jenis_transaksi && (
-                  <p className="text-xs text-rose-500 dark:text-rose-400 mt-1">{errors.jenis_transaksi}</p>
-                )}
               </div>
 
               {/* Tanggal & Kategori */}

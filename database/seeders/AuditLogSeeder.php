@@ -14,7 +14,6 @@ class AuditLogSeeder extends Seeder
     public function run(): void
     {
         $admin = User::where('role', 'admin')->first();
-        $supervisor = User::where('role', 'supervisor')->first();
         $staff = User::where('role', 'staff')->first();
 
         if (AuditLog::count() === 0) {
@@ -24,15 +23,15 @@ class AuditLogSeeder extends Seeder
                 'user_role' => 'staff',
                 'action' => 'CREATE',
                 'module' => 'Transaksi',
-                'description' => 'Mencatat transaksi pengeluaran baru (TRX-20260730-02B5) nominal Rp 600.000 [Status: Pending]',
+                'description' => 'Mencatat transaksi pengeluaran baru (TRX-20260730-02B5) nominal Rp 600.000',
                 'ip_address' => '127.0.0.1',
                 'created_at' => now()->subMinutes(45),
             ]);
 
             AuditLog::create([
-                'user_id' => $supervisor ? $supervisor->id : null,
-                'user_name' => $supervisor ? $supervisor->name : 'Supervisor Keuangan',
-                'user_role' => 'supervisor',
+                'user_id' => $admin ? $admin->id : null,
+                'user_name' => $admin ? $admin->name : 'Admin Utama',
+                'user_role' => 'admin',
                 'action' => 'APPROVE',
                 'module' => 'Transaksi',
                 'description' => 'Menyetujui (Approve) transaksi (TRX-20260730-02B5) nominal Rp 600.000',

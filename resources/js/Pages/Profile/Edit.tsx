@@ -42,7 +42,6 @@ interface Transaction {
 interface FinancialStats {
   total_input: number;
   total_pemasukan: number;
-  total_pengeluaran: number;
   approved_count: number;
   pending_count: number;
   rejected_count: number;
@@ -58,7 +57,7 @@ interface PageProps {
       id: number;
       name: string;
       email: string;
-      role: 'admin' | 'supervisor' | 'staff';
+      role: 'admin' | 'staff';
       created_at: string;
     };
   };
@@ -96,7 +95,6 @@ export default function Edit() {
 
   const roleLabelMap = {
     admin: { label: 'Administrator Utama', color: 'bg-orange-500/10 text-orange-400 border-orange-500/30' },
-    supervisor: { label: 'Supervisor Keuangan', color: 'bg-blue-500/10 text-blue-400 border-blue-500/30' },
     staff: { label: 'Staff Keuangan', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' },
   };
 
@@ -195,22 +193,14 @@ export default function Edit() {
                 </div>
               </div>
 
-              {/* Card 2: Total Nominal Input Pemasukan & Pengeluaran */}
-              <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-5 relative overflow-hidden space-y-3 shadow-sm">
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Volume Akumulasi Kas</span>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-                      <ArrowUpRight className="h-3 w-3" /> Pemasukan
-                    </span>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">{formatRupiah(financialStats.total_pemasukan)}</p>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-rose-600 dark:text-rose-400 font-semibold flex items-center gap-1">
-                      <ArrowDownLeft className="h-3 w-3" /> Pengeluaran
-                    </span>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">{formatRupiah(financialStats.total_pengeluaran)}</p>
-                  </div>
+              {/* Card 2: Total Pendapatan Retail */}
+              <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-5 relative overflow-hidden space-y-2 shadow-sm">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Total Pendapatan Retail</span>
+                <div>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                    <ArrowUpRight className="h-3 w-3" /> Akumulasi Pemasukan
+                  </span>
+                  <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{formatRupiah(financialStats.total_pemasukan)}</p>
                 </div>
               </div>
 

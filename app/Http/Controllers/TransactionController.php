@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Branch;
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -62,13 +63,12 @@ class TransactionController extends Controller
     {
         $validated = $request->validate([
             'tanggal' => 'nullable|date',
-            'jenis_transaksi' => 'required|in:pemasukan,pengeluaran',
+            'jenis_transaksi' => 'nullable|in:pemasukan,pengeluaran',
             'kategori_id' => 'required|exists:categories,id',
             'nominal' => 'required|numeric|min:0',
             'keterangan' => 'nullable|string',
             'bukti_transaksi' => 'required|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
         ], [
-            'jenis_transaksi.required' => 'Jenis transaksi wajib dipilih.',
             'kategori_id.required' => 'Kategori wajib dipilih.',
             'nominal.required' => 'Nominal transaksi wajib diisi.',
             'bukti_transaksi.required' => 'Bukti transaksi (foto/PDF) wajib diunggah.',
@@ -92,37 +92,33 @@ class TransactionController extends Controller
         $randomSuffix = strtoupper(substr(uniqid(), -4));
         $nomorTransaksi = 'TRX-' . $dateStr . '-' . $randomSuffix;
 
-        // Staff entries require Admin/Supervisor approval (status = pending)
-        // Admin or Supervisor entries are automatically approved
-        $userRole = $request->user()->role;
-        $status = ($userRole === 'staff') ? 'pending' : 'approved';
+        // Semua penambahan transaksi baru dengan bukti transaksi langsung disetujui (status = approved)
+        $status = 'approved';
 
-        $transaction = Transaction::create([
-            'nomor_transaksi' => $nomorTransaksi,
-            'tanggal' => $dateInput,
-            'jenis_transaksi' => $validated['jenis_transaksi'],
-            'kategori_id' => $validated['kategori_id'],
-            'cabang_id' => $branch->id,
-            'user_id' => $request->user()->id,
-            'nominal' => $validated['nominal'],
-            'keterangan' => $validated['keterangan'] ?? null,
-            'status' => $status,
-            'bukti_transaksi' => $buktiPath,
-        ]);
+        DB::transaction(function () use ($validated, $dateInput, $branch, $buktiPath, $nomorTransaksi, $status, $request) {
+            Transaction::create([
+                'nomor_transaksi' => $nomorTransaksi,
+                'tanggal' => $dateInput,
+                'jenis_transaksi' => 'pemasukan',
+                'kategori_id' => $validated['kategori_id'],
+                'cabang_id' => $branch->id,
+                'user_id' => $request->user()->id,
+                'nominal' => $validated['nominal'],
+                'keterangan' => $validated['keterangan'] ?? null,
+                'status' => $status,
+                'bukti_transaksi' => $buktiPath,
+            ]);
 
-        // Record Audit Log
-        AuditLog::record(
-            'CREATE',
-            'Transaksi',
-            "Mencatat transaksi {$validated['jenis_transaksi']} baru ({$nomorTransaksi}) nominal Rp " . number_format($validated['nominal'], 0, ',', '.') . " [Status: " . ucfirst($status) . "]",
-            $request->user()
-        );
+            // Record Audit Log
+            AuditLog::record(
+                'CREATE',
+                'Transaksi',
+                "Mencatat pendapatan retail baru ({$nomorTransaksi}) nominal Rp " . number_format($validated['nominal'], 0, ',', '.') . " [Status: Approved]",
+                $request->user()
+            );
+        });
 
-        $msg = ($status === 'pending') 
-            ? 'Transaksi berhasil dicatat dan menunggu persetujuan (approval) Admin/Supervisor.' 
-            : 'Transaksi berhasil dicatat.';
-
-        return redirect()->back()->with('success', $msg);
+        return redirect()->back()->with('success', 'Pendapatan retail berhasil dicatat.');
     }
 
     public function update(Request $request, $id)
@@ -135,13 +131,12 @@ class TransactionController extends Controller
 
         $validated = $request->validate([
             'tanggal' => 'nullable|date',
-            'jenis_transaksi' => 'required|in:pemasukan,pengeluaran',
+            'jenis_transaksi' => 'nullable|in:pemasukan,pengeluaran',
             'kategori_id' => 'required|exists:categories,id',
             'nominal' => 'required|numeric|min:0',
             'keterangan' => 'nullable|string',
             'bukti_transaksi' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
         ], [
-            'jenis_transaksi.required' => 'Jenis transaksi wajib dipilih.',
             'kategori_id.required' => 'Kategori wajib dipilih.',
             'nominal.required' => 'Nominal transaksi wajib diisi.',
             'bukti_transaksi.mimes' => 'Bukti transaksi harus berupa foto (JPG, PNG, WEBP) atau dokumen PDF.',
@@ -149,7 +144,7 @@ class TransactionController extends Controller
         ]);
 
         $data = [
-            'jenis_transaksi' => $validated['jenis_transaksi'],
+            'jenis_transaksi' => 'pemasukan',
             'kategori_id' => $validated['kategori_id'],
             'nominal' => $validated['nominal'],
             'keterangan' => $validated['keterangan'] ?? null,
@@ -166,15 +161,17 @@ class TransactionController extends Controller
             $data['bukti_transaksi'] = $request->file('bukti_transaksi')->store('bukti_transaksi', 'public');
         }
 
-        $transaction->update($data);
+        DB::transaction(function () use ($transaction, $data, $request) {
+            $transaction->update($data);
 
-        // Record Audit Log
-        AuditLog::record(
-            'UPDATE',
-            'Transaksi',
-            "Memperbarui rincian data transaksi ({$transaction->nomor_transaksi}) nominal Rp " . number_format($transaction->nominal, 0, ',', '.'),
-            $request->user()
-        );
+            // Record Audit Log
+            AuditLog::record(
+                'UPDATE',
+                'Transaksi',
+                "Memperbarui rincian data transaksi ({$transaction->nomor_transaksi}) nominal Rp " . number_format($transaction->nominal, 0, ',', '.'),
+                $request->user()
+            );
+        });
 
         return redirect()->back()->with('success', 'Transaksi berhasil diperbarui.');
     }
@@ -192,103 +189,102 @@ class TransactionController extends Controller
         }
 
         $nomor = $transaction->nomor_transaksi;
-        $transaction->delete();
 
-        // Record Audit Log
-        AuditLog::record(
-            'DELETE',
-            'Transaksi',
-            "Menghapus data transaksi ({$nomor}) dari sistem",
-            $request->user()
-        );
+        DB::transaction(function () use ($transaction, $nomor, $request) {
+            $transaction->delete();
+
+            // Record Audit Log
+            AuditLog::record(
+                'DELETE',
+                'Transaksi',
+                "Menghapus data transaksi ({$nomor}) dari sistem",
+                $request->user()
+            );
+        });
 
         return redirect()->back()->with('success', 'Transaksi berhasil dihapus.');
     }
 
     public function approve(Request $request, $id)
     {
-        if (!in_array($request->user()->role, ['admin', 'supervisor'])) {
-            abort(403, 'Hanya Admin dan Supervisor yang dapat menyetujui transaksi.');
-        }
-
         $transaction = Transaction::findOrFail($id);
-        $transaction->update(['status' => 'approved']);
 
-        // Record Audit Log
-        AuditLog::record(
-            'APPROVE',
-            'Transaksi',
-            "Menyetujui (Approve) transaksi ({$transaction->nomor_transaksi}) nominal Rp " . number_format($transaction->nominal, 0, ',', '.'),
-            $request->user()
-        );
+        DB::transaction(function () use ($transaction, $request) {
+            $transaction->update(['status' => 'approved']);
+
+            // Record Audit Log
+            AuditLog::record(
+                'APPROVE',
+                'Transaksi',
+                "Menyetujui (Approve) transaksi ({$transaction->nomor_transaksi}) nominal Rp " . number_format($transaction->nominal, 0, ',', '.'),
+                $request->user()
+            );
+        });
 
         return redirect()->back()->with('success', 'Transaksi ' . $transaction->nomor_transaksi . ' berhasil disetujui (Approved).');
     }
 
     public function reject(Request $request, $id)
     {
-        if (!in_array($request->user()->role, ['admin', 'supervisor'])) {
-            abort(403, 'Hanya Admin dan Supervisor yang dapat menolak transaksi.');
-        }
-
         $transaction = Transaction::findOrFail($id);
-        $transaction->update(['status' => 'rejected']);
 
-        // Record Audit Log
-        AuditLog::record(
-            'REJECT',
-            'Transaksi',
-            "Menolak (Reject) transaksi ({$transaction->nomor_transaksi}) nominal Rp " . number_format($transaction->nominal, 0, ',', '.'),
-            $request->user()
-        );
+        DB::transaction(function () use ($transaction, $request) {
+            $transaction->update(['status' => 'rejected']);
+
+            // Record Audit Log
+            AuditLog::record(
+                'REJECT',
+                'Transaksi',
+                "Menolak (Reject) transaksi ({$transaction->nomor_transaksi}) nominal Rp " . number_format($transaction->nominal, 0, ',', '.'),
+                $request->user()
+            );
+        });
 
         return redirect()->back()->with('success', 'Transaksi ' . $transaction->nomor_transaksi . ' ditolak (Rejected).');
     }
 
     public function bulkApprove(Request $request)
     {
-        if (!in_array($request->user()->role, ['admin', 'supervisor'])) {
-            abort(403, 'Hanya Admin dan Supervisor yang dapat menyetujui transaksi.');
-        }
-
         $validated = $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'exists:transactions,id',
         ]);
 
         $count = count($validated['ids']);
-        Transaction::whereIn('id', $validated['ids'])->update(['status' => 'approved']);
 
-        AuditLog::record(
-            'BULK_APPROVE',
-            'Transaksi',
-            "Menyetujui secara massal {$count} transaksi yang dipilih.",
-            $request->user()
-        );
+        DB::transaction(function () use ($validated, $count, $request) {
+            Transaction::whereIn('id', $validated['ids'])->update(['status' => 'approved']);
+
+            AuditLog::record(
+                'BULK_APPROVE',
+                'Transaksi',
+                "Menyetujui secara massal {$count} transaksi yang dipilih.",
+                $request->user()
+            );
+        });
 
         return redirect()->back()->with('success', "{$count} transaksi berhasil disetujui (Approved).");
     }
 
     public function bulkReject(Request $request)
     {
-        if (!in_array($request->user()->role, ['admin', 'supervisor'])) {
-            abort(403, 'Hanya Admin dan Supervisor yang dapat menolak transaksi.');
-        }
-
         $validated = $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'exists:transactions,id',
         ]);
 
         $count = count($validated['ids']);
-        Transaction::whereIn('id', $validated['ids'])->update(['status' => 'rejected']);
 
-        AuditLog::record(
-            'BULK_REJECT',
-            'Transaksi',
-            "Menolak secara massal {$count} transaksi yang dipilih.",
-            $request->user()
-        );
+        DB::transaction(function () use ($validated, $count, $request) {
+            Transaction::whereIn('id', $validated['ids'])->update(['status' => 'rejected']);
+
+            AuditLog::record(
+                'BULK_REJECT',
+                'Transaksi',
+                "Menolak secara massal {$count} transaksi yang dipilih.",
+                $request->user()
+            );
+        });
 
         return redirect()->back()->with('success', "{$count} transaksi ditolak (Rejected).");
     }
@@ -313,14 +309,16 @@ class TransactionController extends Controller
             }
         }
 
-        Transaction::whereIn('id', $validated['ids'])->delete();
+        DB::transaction(function () use ($validated, $count, $request) {
+            Transaction::whereIn('id', $validated['ids'])->delete();
 
-        AuditLog::record(
-            'BULK_DELETE',
-            'Transaksi',
-            "Menghapus secara massal {$count} transaksi dari sistem.",
-            $request->user()
-        );
+            AuditLog::record(
+                'BULK_DELETE',
+                'Transaksi',
+                "Menghapus secara massal {$count} transaksi dari sistem.",
+                $request->user()
+            );
+        });
 
         return redirect()->back()->with('success', "{$count} transaksi berhasil dihapus.");
     }

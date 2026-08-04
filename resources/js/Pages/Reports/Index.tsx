@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, usePage, router } from '@inertiajs/react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
+import LoadingSpinner from '@/Components/LoadingSpinner';
 import { 
   FileSpreadsheet, 
   FileText, 
@@ -208,12 +209,14 @@ export default function Index() {
             <button
               onClick={handleExportExcel}
               disabled={downloadingFormat !== null}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-xs rounded-xl shadow-lg shadow-emerald-950/50 transition-all cursor-pointer"
+              className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-xs rounded-xl shadow-lg shadow-emerald-950/50 transition-all cursor-pointer ${
+                downloadingFormat === 'excel' ? 'ring-2 ring-emerald-400 shadow-emerald-500/40 animate-pulse' : ''
+              }`}
             >
               {downloadingFormat === 'excel' ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Mengunduh...</span>
+                  <LoadingSpinner size="sm" color="white" />
+                  <span>Mengunduh Excel...</span>
                 </>
               ) : (
                 <>
@@ -225,12 +228,14 @@ export default function Index() {
             <button
               onClick={handleExportPdf}
               disabled={downloadingFormat !== null}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-xs rounded-xl shadow-lg shadow-orange-950/50 transition-all cursor-pointer"
+              className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-600 hover:bg-orange-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-xs rounded-xl shadow-lg shadow-orange-950/50 transition-all cursor-pointer ${
+                downloadingFormat === 'pdf' ? 'ring-2 ring-orange-400 shadow-orange-500/40 animate-pulse' : ''
+              }`}
             >
               {downloadingFormat === 'pdf' ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Mengunduh...</span>
+                  <LoadingSpinner size="sm" color="white" />
+                  <span>Menyiapkan PDF...</span>
                 </>
               ) : (
                 <>
@@ -241,6 +246,27 @@ export default function Index() {
             </button>
           </div>
         </div>
+
+        {/* Active Download Progress Indicator Banner */}
+        {downloadingFormat !== null && (
+          <div className="relative overflow-hidden bg-gradient-to-r from-orange-500/10 via-emerald-500/10 to-amber-500/10 border border-orange-500/30 dark:border-orange-500/40 rounded-xl p-4 text-slate-900 dark:text-slate-100 shadow-lg animate-fadeIn">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 via-emerald-500 to-amber-500 animate-pulse" />
+            <div className="flex items-center gap-3">
+              <LoadingSpinner size="md" color={downloadingFormat === 'excel' ? 'emerald' : 'primary'} />
+              <div>
+                <h4 className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                  <span>Sedang Mengunduh Laporan {downloadingFormat === 'excel' ? 'Excel (.xlsx)' : 'PDF'}</span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-orange-500/20 text-orange-600 dark:text-orange-300 animate-pulse">
+                    Memproses File Berukuran Besar...
+                  </span>
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Server sedang mengompilasi seluruh data rekapitulasi keuangan untuk periode {startDate || 'terpilih'} s/d {endDate || 'terpilih'}. File akan diunduh secara otomatis setelah proses selesai.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Validation Warning Alert */}
         {errorMessage && (
@@ -350,53 +376,29 @@ export default function Index() {
           </div>
         </div>
 
-        {/* 3 Summary Metric Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        {/* Summary Metric Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800 rounded-2xl p-5 relative overflow-hidden shadow-sm">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Total Pemasukan</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Total Pendapatan Retail</span>
               <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
                 <TrendingUp className="h-4 w-4" />
               </div>
             </div>
             <h3 className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{formatRupiah(summary.total_pemasukan)}</h3>
-            <p className="text-[11px] text-slate-500 mt-1">Total pemasukan kas tercatat</p>
+            <p className="text-[11px] text-slate-500 mt-1">Total omset pendapatan retail disetujui</p>
           </div>
 
           <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800 rounded-2xl p-5 relative overflow-hidden shadow-sm">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Total Pengeluaran</span>
-              <div className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400">
-                <TrendingDown className="h-4 w-4" />
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Total Catatan Transaksi</span>
+              <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400">
+                <Receipt className="h-4 w-4" />
               </div>
             </div>
-            <h3 className="text-xl font-bold text-rose-600 dark:text-rose-400">{formatRupiah(summary.total_pengeluaran)}</h3>
-            <p className="text-[11px] text-slate-500 mt-1">Total pengeluaran kas tercatat</p>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white">{summary.total_item} <span className="text-sm font-normal text-slate-500">Transaksi</span></h3>
+            <p className="text-[11px] text-slate-500 mt-1">Total jumlah rekaman transaksi retail</p>
           </div>
-
-          {(() => {
-            const isPositive = (summary?.saldo || 0) >= 0;
-            return (
-              <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800 rounded-2xl p-5 relative overflow-hidden shadow-sm">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Saldo Bersih (Net)</span>
-                  <div className={`p-2 rounded-xl border ${
-                    isPositive
-                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
-                      : 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
-                  }`}>
-                    <Wallet className="h-4 w-4" />
-                  </div>
-                </div>
-                <h3 className={`text-xl font-bold ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                  {formatRupiah(summary.saldo)}
-                </h3>
-                <p className={`text-[11px] font-medium mt-1 ${isPositive ? 'text-emerald-600/80 dark:text-emerald-400/80' : 'text-rose-600/80 dark:text-rose-400/80'}`}>
-                  {isPositive ? 'Surplus' : 'Defisit'} ({summary.total_item} transaksi)
-                </p>
-              </div>
-            );
-          })()}
         </div>
 
         {/* Live Data Preview Table */}

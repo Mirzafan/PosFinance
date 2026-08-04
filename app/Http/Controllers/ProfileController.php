@@ -25,8 +25,7 @@ class ProfileController extends Controller
         $userQuery = Transaction::where('user_id', $user->id);
 
         $totalInput = (clone $userQuery)->count();
-        $totalPemasukan = (float) (clone $userQuery)->where('jenis_transaksi', 'pemasukan')->sum('nominal');
-        $totalPengeluaran = (float) (clone $userQuery)->where('jenis_transaksi', 'pengeluaran')->sum('nominal');
+        $totalPemasukan = (float) (clone $userQuery)->sum('nominal');
 
         $approvedCount = (clone $userQuery)->where('status', 'approved')->count();
         $pendingCount = (clone $userQuery)->where('status', 'pending')->count();
@@ -46,7 +45,6 @@ class ProfileController extends Controller
             'financialStats' => [
                 'total_input' => $totalInput,
                 'total_pemasukan' => $totalPemasukan,
-                'total_pengeluaran' => $totalPengeluaran,
                 'approved_count' => $approvedCount,
                 'pending_count' => $pendingCount,
                 'rejected_count' => $rejectedCount,

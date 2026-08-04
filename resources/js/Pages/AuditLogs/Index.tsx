@@ -70,7 +70,7 @@ interface PageProps {
       id: number;
       name: string;
       email: string;
-      role: 'admin' | 'supervisor' | 'staff';
+      role: 'admin' | 'staff';
     };
   };
 }
@@ -194,8 +194,6 @@ export default function Index() {
     switch (role?.toLowerCase()) {
       case 'admin':
         return 'bg-orange-500/15 text-orange-400 border-orange-500/30';
-      case 'supervisor':
-        return 'bg-blue-500/15 text-blue-400 border-blue-500/30';
       case 'staff':
         return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
       default:
