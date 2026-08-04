@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
@@ -20,22 +22,9 @@ class UserController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'role' => 'required|in:admin,staff',
-        ], [
-            'name.required' => 'Nama lengkap wajib diisi.',
-            'email.required' => 'Alamat email wajib diisi.',
-            'email.lowercase' => 'Alamat email tidak boleh mengandung huruf kapital.',
-            'email.unique' => 'Alamat email ini sudah terdaftar.',
-            'password.required' => 'Kata sandi wajib diisi.',
-            'password.min' => 'Kata sandi minimal 8 karakter.',
-            'role.required' => 'Role hak akses wajib dipilih.',
-        ]);
+        $validated = $request->validated();
 
         DB::transaction(function () use ($validated, $request) {
             $newUser = User::create([
@@ -49,30 +38,20 @@ class UserController extends Controller
                 'CREATE',
                 'User',
                 "Menambahkan akun pengguna baru: {$newUser->name} ({$newUser->email}) [Role: " . strtoupper($newUser->role) . "]",
-                $request->user()
+                $request->user(),
+                null,
+                $newUser->only(['name', 'email', 'role'])
             );
         });
 
         return redirect()->back()->with('success', 'Pengguna ' . $validated['name'] . ' berhasil ditambahkan.');
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateUserRequest $request, $id)
     {
         $user = User::findOrFail($id);
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:users,email,' . $user->id,
-            'password' => 'nullable|string|min:8',
-            'role' => 'required|in:admin,staff',
-        ], [
-            'name.required' => 'Nama lengkap wajib diisi.',
-            'email.required' => 'Alamat email wajib diisi.',
-            'email.lowercase' => 'Alamat email tidak boleh mengandung huruf kapital.',
-            'email.unique' => 'Alamat email ini sudah digunakan oleh akun lain.',
-            'password.min' => 'Kata sandi minimal 8 karakter.',
-            'role.required' => 'Role hak akses wajib dipilih.',
-        ]);
+        $validated = $request->validated();
 
         $data = [
             'name' => $validated['name'],
@@ -84,14 +63,18 @@ class UserController extends Controller
             $data['password'] = Hash::make($validated['password']);
         }
 
-        DB::transaction(function () use ($user, $data, $request) {
+        $oldValues = $user->only(['name', 'email', 'role']);
+
+        DB::transaction(function () use ($user, $data, $oldValues, $request) {
             $user->update($data);
 
             AuditLog::record(
                 'UPDATE',
                 'User',
                 "Memperbarui data akun pengguna {$user->name} ({$user->email}) [Role: " . strtoupper($user->role) . "]",
-                $request->user()
+                $request->user(),
+                $oldValues,
+                $user->only(['name', 'email', 'role'])
             );
         });
 
@@ -107,15 +90,18 @@ class UserController extends Controller
         $user = User::findOrFail($id);
         $name = $user->name;
         $email = $user->email;
+        $oldValues = $user->only(['name', 'email', 'role']);
 
-        DB::transaction(function () use ($user, $name, $email, $request) {
+        DB::transaction(function () use ($user, $name, $email, $oldValues, $request) {
             $user->delete();
 
             AuditLog::record(
                 'DELETE',
                 'User',
                 "Menghapus akun pengguna {$name} ({$email})",
-                $request->user()
+                $request->user(),
+                $oldValues,
+                null
             );
         });
 

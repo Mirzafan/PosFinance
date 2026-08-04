@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreTransactionRequest;
+use App\Http\Requests\UpdateTransactionRequest;
 use App\Models\Transaction;
 use App\Models\Category;
 use App\Models\Branch;
@@ -59,29 +61,13 @@ class TransactionController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreTransactionRequest $request)
     {
-        $validated = $request->validate([
-            'tanggal' => 'nullable|date',
-            'jenis_transaksi' => 'nullable|in:pemasukan,pengeluaran',
-            'kategori_id' => 'required|exists:categories,id',
-            'nominal' => 'required|numeric|min:0',
-            'keterangan' => 'nullable|string',
-            'bukti_transaksi' => 'required|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
-        ], [
-            'kategori_id.required' => 'Kategori wajib dipilih.',
-            'nominal.required' => 'Nominal transaksi wajib diisi.',
-            'bukti_transaksi.required' => 'Bukti transaksi (foto/PDF) wajib diunggah.',
-            'bukti_transaksi.mimes' => 'Bukti transaksi harus berupa foto (JPG, PNG, WEBP) atau dokumen PDF.',
-            'bukti_transaksi.max' => 'Ukuran file bukti transaksi maksimal 10 MB.',
-        ]);
+        $validated = $request->validated();
 
-        $dateInput = !empty($request->input('tanggal')) ? date('Y-m-d', strtotime($request->input('tanggal'))) : date('Y-m-d');
+        $dateInput = !empty($validated['tanggal']) ? date('Y-m-d', strtotime($validated['tanggal'])) : date('Y-m-d');
 
-        $branch = Branch::first();
-        if (!$branch) {
-            $branch = Branch::create(['nama_cabang' => 'Pos Indonesia Kantor Regional IV Semarang']);
-        }
+        $branch = Branch::first() ?? Branch::create(['nama_cabang' => 'Pos Indonesia Kantor Regional IV Semarang']);
 
         $buktiPath = null;
         if ($request->hasFile('bukti_transaksi')) {
@@ -92,11 +78,10 @@ class TransactionController extends Controller
         $randomSuffix = strtoupper(substr(uniqid(), -4));
         $nomorTransaksi = 'TRX-' . $dateStr . '-' . $randomSuffix;
 
-        // Semua penambahan transaksi baru dengan bukti transaksi langsung disetujui (status = approved)
         $status = 'approved';
 
         DB::transaction(function () use ($validated, $dateInput, $branch, $buktiPath, $nomorTransaksi, $status, $request) {
-            Transaction::create([
+            $transaction = Transaction::create([
                 'nomor_transaksi' => $nomorTransaksi,
                 'tanggal' => $dateInput,
                 'jenis_transaksi' => 'pemasukan',
@@ -109,39 +94,25 @@ class TransactionController extends Controller
                 'bukti_transaksi' => $buktiPath,
             ]);
 
-            // Record Audit Log
+            // Record Audit Log with new values
             AuditLog::record(
                 'CREATE',
                 'Transaksi',
                 "Mencatat pendapatan retail baru ({$nomorTransaksi}) nominal Rp " . number_format($validated['nominal'], 0, ',', '.') . " [Status: Approved]",
-                $request->user()
+                $request->user(),
+                null,
+                $transaction->only(['nomor_transaksi', 'tanggal', 'jenis_transaksi', 'kategori_id', 'nominal', 'status'])
             );
         });
 
         return redirect()->back()->with('success', 'Pendapatan retail berhasil dicatat.');
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateTransactionRequest $request, $id)
     {
-        if ($request->user()->role === 'staff') {
-            abort(403, 'Staff hanya dapat menambah dan melihat data transaksi.');
-        }
-
         $transaction = Transaction::findOrFail($id);
 
-        $validated = $request->validate([
-            'tanggal' => 'nullable|date',
-            'jenis_transaksi' => 'nullable|in:pemasukan,pengeluaran',
-            'kategori_id' => 'required|exists:categories,id',
-            'nominal' => 'required|numeric|min:0',
-            'keterangan' => 'nullable|string',
-            'bukti_transaksi' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
-        ], [
-            'kategori_id.required' => 'Kategori wajib dipilih.',
-            'nominal.required' => 'Nominal transaksi wajib diisi.',
-            'bukti_transaksi.mimes' => 'Bukti transaksi harus berupa foto (JPG, PNG, WEBP) atau dokumen PDF.',
-            'bukti_transaksi.max' => 'Ukuran file bukti transaksi maksimal 10 MB.',
-        ]);
+        $validated = $request->validated();
 
         $data = [
             'jenis_transaksi' => 'pemasukan',
@@ -161,15 +132,19 @@ class TransactionController extends Controller
             $data['bukti_transaksi'] = $request->file('bukti_transaksi')->store('bukti_transaksi', 'public');
         }
 
-        DB::transaction(function () use ($transaction, $data, $request) {
+        $oldValues = $transaction->only(['nomor_transaksi', 'tanggal', 'kategori_id', 'nominal', 'keterangan', 'status']);
+
+        DB::transaction(function () use ($transaction, $data, $oldValues, $request) {
             $transaction->update($data);
 
-            // Record Audit Log
+            // Record Audit Log with old & new values
             AuditLog::record(
                 'UPDATE',
                 'Transaksi',
                 "Memperbarui rincian data transaksi ({$transaction->nomor_transaksi}) nominal Rp " . number_format($transaction->nominal, 0, ',', '.'),
-                $request->user()
+                $request->user(),
+                $oldValues,
+                $transaction->only(['nomor_transaksi', 'tanggal', 'kategori_id', 'nominal', 'keterangan', 'status'])
             );
         });
 
@@ -189,8 +164,9 @@ class TransactionController extends Controller
         }
 
         $nomor = $transaction->nomor_transaksi;
+        $oldValues = $transaction->only(['nomor_transaksi', 'tanggal', 'kategori_id', 'nominal', 'status']);
 
-        DB::transaction(function () use ($transaction, $nomor, $request) {
+        DB::transaction(function () use ($transaction, $nomor, $oldValues, $request) {
             $transaction->delete();
 
             // Record Audit Log
@@ -198,7 +174,9 @@ class TransactionController extends Controller
                 'DELETE',
                 'Transaksi',
                 "Menghapus data transaksi ({$nomor}) dari sistem",
-                $request->user()
+                $request->user(),
+                $oldValues,
+                null
             );
         });
 

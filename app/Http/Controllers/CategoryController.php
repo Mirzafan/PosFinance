@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreCategoryRequest;
+use App\Http\Requests\UpdateCategoryRequest;
 use App\Models\Category;
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
@@ -19,14 +21,9 @@ class CategoryController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreCategoryRequest $request)
     {
-        $validated = $request->validate([
-            'nama_kategori' => 'required|string|max:255|unique:categories,nama_kategori',
-        ], [
-            'nama_kategori.required' => 'Nama kategori wajib diisi.',
-            'nama_kategori.unique' => 'Nama kategori ini sudah ada.',
-        ]);
+        $validated = $request->validated();
 
         DB::transaction(function () use ($validated, $request) {
             $cat = Category::create([
@@ -37,26 +34,24 @@ class CategoryController extends Controller
                 'CREATE',
                 'Kategori',
                 "Menambahkan kategori transaksi baru: '{$cat->nama_kategori}'",
-                $request->user()
+                $request->user(),
+                null,
+                $cat->only(['nama_kategori'])
             );
         });
 
         return redirect()->back()->with('success', 'Kategori transaksi berhasil ditambahkan.');
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateCategoryRequest $request, $id)
     {
         $category = Category::findOrFail($id);
         $oldName = $category->nama_kategori;
+        $oldValues = $category->only(['nama_kategori']);
 
-        $validated = $request->validate([
-            'nama_kategori' => 'required|string|max:255|unique:categories,nama_kategori,' . $id,
-        ], [
-            'nama_kategori.required' => 'Nama kategori wajib diisi.',
-            'nama_kategori.unique' => 'Nama kategori ini sudah ada.',
-        ]);
+        $validated = $request->validated();
 
-        DB::transaction(function () use ($category, $oldName, $validated, $request) {
+        DB::transaction(function () use ($category, $oldName, $oldValues, $validated, $request) {
             $category->update([
                 'nama_kategori' => trim($validated['nama_kategori']),
             ]);
@@ -65,7 +60,9 @@ class CategoryController extends Controller
                 'UPDATE',
                 'Kategori',
                 "Memperbarui nama kategori transaksi dari '{$oldName}' menjadi '{$category->nama_kategori}'",
-                $request->user()
+                $request->user(),
+                $oldValues,
+                $category->only(['nama_kategori'])
             );
         });
 
@@ -76,8 +73,9 @@ class CategoryController extends Controller
     {
         $category = Category::findOrFail($id);
         $name = $category->nama_kategori;
+        $oldValues = $category->only(['nama_kategori']);
 
-        DB::transaction(function () use ($category, $name, $request) {
+        DB::transaction(function () use ($category, $name, $oldValues, $request) {
             // Hapus seluruh transaksi terkait kategori ini terlebih dahulu
             $category->transactions()->delete();
             // Hapus kategori transaksi
@@ -87,7 +85,9 @@ class CategoryController extends Controller
                 'DELETE',
                 'Kategori',
                 "Menghapus kategori transaksi: '{$name}' beserta seluruh transaksi terkait",
-                $request->user()
+                $request->user(),
+                $oldValues,
+                null
             );
         });
 
