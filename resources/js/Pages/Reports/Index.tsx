@@ -140,7 +140,6 @@ export default function Index() {
     const defaultEnd = getTodayString();
     setStartDate('');
     setEndDate(defaultEnd);
-    setSelectedType('');
     setSelectedCategory('');
     setErrorMessage('');
     router.get('/dashboard/reports', {

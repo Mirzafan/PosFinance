@@ -168,16 +168,17 @@ class TransactionController extends Controller
 
         $oldValues = $transaction->only(['nomor_transaksi', 'tanggal', 'kategori_id', 'nominal', 'keterangan', 'status']);
 
-        DB::transaction(function () use ($transaction, $data, $oldValues, $request) {
+        DB::transaction(function () use ($transaction, $data, $oldValues, $request, $ongkir, $asuransi) {
             $transaction->update($data);
 
-        // Record Audit Log
-        AuditLog::record(
-            'UPDATE',
-            'Transaksi',
-            "Memperbarui data transaksi ({$transaction->nomor_transaksi}) ongkir Rp " . number_format($ongkir, 0, ',', '.') . " & asuransi Rp " . number_format($asuransi, 0, ',', '.'),
-            $request->user()
-        );
+            // Record Audit Log
+            AuditLog::record(
+                'UPDATE',
+                'Transaksi',
+                "Memperbarui data transaksi ({$transaction->nomor_transaksi}) ongkir Rp " . number_format($ongkir, 0, ',', '.') . " & asuransi Rp " . number_format($asuransi, 0, ',', '.'),
+                $request->user()
+            );
+        });
 
         return redirect()->back()->with('success', 'Transaksi berhasil diperbarui.');
     }

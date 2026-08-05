@@ -5,12 +5,13 @@ import {
   TrendingUp,
   TrendingDown,
   Wallet,
-  ArrowUpRight,
   Plus,
   BarChart2,
+  PieChart as PieChartIcon,
   Lock,
   CheckCircle2,
-  Box
+  Box,
+  Layers
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -19,7 +20,10 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell
 } from 'recharts';
 
 interface ProductBreakdownItem {
@@ -81,6 +85,8 @@ interface DashboardProps {
   };
 }
 
+const CATEGORY_COLORS = ['#ff6600', '#0ea5e9', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899', '#64748b'];
+
 export default function Dashboard({ summary, charts, productBreakdown, recentTransactions, filters }: DashboardProps) {
   const [isMounted, setIsMounted] = useState(false);
   const activePeriod = filters?.period || summary?.period || 'monthly';
@@ -117,7 +123,11 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
 
   const activeTrendData = getActiveTrendData();
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  // Category Pie Data Filter
+  const pieData = (productBreakdown || []).filter(item => item.total_ongkir > 0 || item.count > 0);
+  const totalPieOngkir = pieData.reduce((acc, curr) => acc + curr.total_ongkir, 0);
+
+  const CustomTrendTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-slate-900 border border-slate-700 text-white p-3 rounded-xl shadow-xl text-xs space-y-1.5">
@@ -137,12 +147,37 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
     return null;
   };
 
+  const CustomPieTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      const percentage = totalPieOngkir > 0 ? ((data.total_ongkir / totalPieOngkir) * 100).toFixed(1) : 0;
+      return (
+        <div className="bg-slate-900 border border-slate-700 text-white p-3 rounded-xl shadow-xl text-xs space-y-1">
+          <p className="font-bold text-orange-400 border-b border-slate-700 pb-1">{data.name}</p>
+          <div className="flex items-center justify-between gap-4 pt-0.5">
+            <span className="text-slate-400">Total Ongkir:</span>
+            <span className="font-bold text-emerald-400">{formatRupiah(data.total_ongkir)}</span>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-slate-400">Jumlah Paket:</span>
+            <span className="font-bold text-slate-200">{data.count} Paket</span>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-slate-400">Pangsa Pasar:</span>
+            <span className="font-bold text-amber-400">{percentage}%</span>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <DashboardLayout>
       <Head title="Dashboard Financial & Revenue - PosFinance Regional IV" />
 
       <div className="space-y-8 animate-fadeIn">
-        {/* Title Header & Period Filters */}
+        {/* Title Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans flex items-center gap-2">
@@ -224,77 +259,143 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
         </div>
 
         {/* ========================================================================= */}
-        {/* GRAFIK TREN PENDAPATAN & ASURANSI (HARIAN, MINGGUAN, BULANAN) */}
+        {/* CHARTS GRID: TREN BAR CHART + DISTRIBUSI LAYANAN PIE/DONUT CHART */}
         {/* ========================================================================= */}
-        <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 shadow-sm space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
-            <div>
-              <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <BarChart2 className="h-5 w-5 text-orange-500" />
-                Grafik Tren Pendapatan & Pengeluaran Asuransi
-              </h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Perbandingan omset ongkir (hijau) vs biaya asuransi (merah) per periode
-              </p>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Chart: Tren Pendapatan & Asuransi */}
+          <div className="lg:col-span-7 xl:col-span-8 bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+              <div>
+                <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <BarChart2 className="h-5 w-5 text-orange-500" />
+                  Grafik Tren Pendapatan & Pengeluaran Asuransi
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Omset ongkir (hijau) vs biaya asuransi (merah)
+                </p>
+              </div>
+
+              {/* Interactive Chart Tab Selector */}
+              <div className="bg-slate-100 dark:bg-slate-950 p-1 rounded-xl flex items-center gap-1 self-start sm:self-auto border border-slate-200 dark:border-slate-800">
+                <button
+                  onClick={() => setChartTab('daily')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    chartTab === 'daily'
+                      ? 'bg-slate-900 text-white dark:bg-orange-500 shadow'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  Harian
+                </button>
+                <button
+                  onClick={() => setChartTab('weekly')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    chartTab === 'weekly'
+                      ? 'bg-slate-900 text-white dark:bg-orange-500 shadow'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  Mingguan
+                </button>
+                <button
+                  onClick={() => setChartTab('monthly')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    chartTab === 'monthly'
+                      ? 'bg-slate-900 text-white dark:bg-orange-500 shadow'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  Bulanan
+                </button>
+              </div>
             </div>
 
-            {/* Interactive Chart Tab Selector */}
-            <div className="bg-slate-100 dark:bg-slate-950 p-1 rounded-xl flex items-center gap-1 self-start sm:self-auto border border-slate-200 dark:border-slate-800">
-              <button
-                onClick={() => setChartTab('daily')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                  chartTab === 'daily'
-                    ? 'bg-slate-900 text-white dark:bg-orange-500 shadow'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                Harian (Tgl 1-31)
-              </button>
-              <button
-                onClick={() => setChartTab('weekly')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                  chartTab === 'weekly'
-                    ? 'bg-slate-900 text-white dark:bg-orange-500 shadow'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                Mingguan (W1-W5)
-              </button>
-              <button
-                onClick={() => setChartTab('monthly')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                  chartTab === 'monthly'
-                    ? 'bg-slate-900 text-white dark:bg-orange-500 shadow'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                Bulanan (Jan-Des)
-              </button>
+            <div className="h-[280px] w-full pt-2">
+              {isMounted && activeTrendData && activeTrendData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={activeTrendData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-800" vertical={false} />
+                    <XAxis dataKey="label" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                    <YAxis
+                      stroke="#64748b"
+                      fontSize={10}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(val) => val >= 1000000 ? `Rp ${(val / 1000000).toFixed(0)}Jt` : `Rp ${(val / 1000).toFixed(0)}k`}
+                    />
+                    <Tooltip content={<CustomTrendTooltip />} />
+                    <Bar dataKey="ongkir" name="Ongkir (Pemasukan)" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={28} />
+                    <Bar dataKey="asuransi" name="Asuransi (Pengeluaran)" fill="#f43f5e" radius={[4, 4, 0, 0]} maxBarSize={28} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-xs text-slate-500">
+                  <BarChart2 className="h-8 w-8 text-slate-400 mb-2" />
+                  <span>Belum ada data grafik untuk periode ini.</span>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="h-[300px] w-full pt-2">
-            {isMounted && activeTrendData && activeTrendData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={activeTrendData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-800" vertical={false} />
-                  <XAxis dataKey="label" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
-                  <YAxis
-                    stroke="#64748b"
-                    fontSize={10}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(val) => val >= 1000000 ? `Rp ${(val / 1000000).toFixed(0)}Jt` : `Rp ${(val / 1000).toFixed(0)}k`}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="ongkir" name="Ongkir (Pemasukan)" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={30} />
-                  <Bar dataKey="asuransi" name="Asuransi (Pengeluaran)" fill="#f43f5e" radius={[4, 4, 0, 0]} maxBarSize={30} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-xs text-slate-500">
-                <BarChart2 className="h-8 w-8 text-slate-400 mb-2" />
-                <span>Belum ada data grafik untuk periode ini.</span>
+          {/* Right Chart: Distribusi Kategori Layanan (Pie / Donut Chart) */}
+          <div className="lg:col-span-5 xl:col-span-4 bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 shadow-sm flex flex-col justify-between space-y-4">
+            <div className="border-b border-slate-200 dark:border-slate-800 pb-3">
+              <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <PieChartIcon className="h-5 w-5 text-orange-500" />
+                Distribusi Layanan Kurir
+              </h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Proporsi omset ongkir per kategori layanan
+              </p>
+            </div>
+
+            <div className="h-[180px] w-full flex items-center justify-center relative">
+              {isMounted && pieData && pieData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Tooltip content={<CustomPieTooltip />} />
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={75}
+                      paddingAngle={3}
+                      dataKey="total_ongkir"
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-xs text-slate-500">
+                  <Layers className="h-8 w-8 text-slate-400 mb-2" />
+                  <span>Belum ada distribusi layanan.</span>
+                </div>
+              )}
+            </div>
+
+            {/* Category Share Legend List */}
+            {pieData && pieData.length > 0 && (
+              <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800/80">
+                {pieData.slice(0, 5).map((item, idx) => {
+                  const pct = totalPieOngkir > 0 ? ((item.total_ongkir / totalPieOngkir) * 100).toFixed(1) : '0';
+                  const color = CATEGORY_COLORS[idx % CATEGORY_COLORS.length];
+                  return (
+                    <div key={item.id} className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2 overflow-hidden pr-2">
+                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                        <span className="font-semibold text-slate-700 dark:text-slate-300 truncate">{item.name}</span>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0 font-mono">
+                        <span className="text-slate-500 dark:text-slate-400">{pct}%</span>
+                        <span className="font-bold text-slate-900 dark:text-white">{formatRupiah(item.total_ongkir)}</span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

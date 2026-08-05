@@ -20,7 +20,7 @@ interface PageProps {
 }
 
 export default function Index() {
-  const { categories, auth } = usePage<any>().props as unknown as PageProps;
+  const { categories, auth, flash } = usePage<any>().props as unknown as PageProps & { flash?: { error?: string } };
   const canManage = auth?.user?.role === 'admin';
 
   const [search, setSearch] = useState('');
@@ -71,12 +71,20 @@ export default function Index() {
     });
   };
 
-  const handleDelete = (cat: Category) => {
-    if (!confirm(`Apakah Anda yakin ingin menghapus kategori "${cat.nama_kategori}"? Semua transaksi dalam kategori ini juga akan terhapus.`)) return;
-    destroyAction(`/dashboard/categories/${cat.id}`, {
+  const promptDeleteCategory = (cat: Category) => {
+    setCategoryToDelete(cat);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteCategory = () => {
+    if (!categoryToDelete) return;
+    const catName = categoryToDelete.nama_kategori;
+    destroyAction(`/dashboard/categories/${categoryToDelete.id}`, {
       onSuccess: () => {
+        setShowDeleteModal(false);
+        setCategoryToDelete(null);
         setSuccessModalTitle('Berhasil Menghapus Kategori');
-        setSuccessModalMessage(`Kategori transaksi "${cat.nama_kategori}" telah sukses dihapus.`);
+        setSuccessModalMessage(`Kategori transaksi "${catName}" telah sukses dihapus.`);
         setShowSuccessModal(true);
       }
     });
@@ -174,7 +182,7 @@ export default function Index() {
                     <Edit2 className="h-4 w-4" />
                   </button>
                   <button
-                    onClick={() => handleDelete(cat)}
+                    onClick={() => promptDeleteCategory(cat)}
                     className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-500/10 dark:hover:text-red-400 transition-colors cursor-pointer"
                     title="Hapus Kategori"
                   >
