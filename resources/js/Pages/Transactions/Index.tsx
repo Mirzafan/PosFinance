@@ -140,7 +140,7 @@ export default function Index() {
       setOngkirDisplay(formattedOngkir);
 
       if (useInsurance) {
-        const autoAsuransi = Math.round(ongkirNum * 0.02);
+        const autoAsuransi = Math.round(ongkirNum * 0.025);
         const formattedAsuransi = new Intl.NumberFormat('id-ID').format(autoAsuransi);
         setAsuransiDisplay(formattedAsuransi);
         setData(prev => ({
@@ -237,18 +237,21 @@ export default function Index() {
 
   // Open Modal Edit
   const openEditModal = (trx: Transaction) => {
-    if (isStaff) return;
     setEditingTrx(trx);
     clearErrors();
-    const rawOngkir = String(trx.nominal_ongkir || trx.nominal || 0);
-    const rawAsuransi = String(trx.nominal_asuransi || 0);
+    const rawOngkir = String(trx.nominal_ongkir || trx.nominal || 0).split('.')[0];
+    const rawAsuransi = String(trx.nominal_asuransi || 0).split('.')[0];
     const hasAsuransi = Number(rawAsuransi) > 0;
 
     setUseInsurance(hasAsuransi);
 
+    const formattedTanggal = trx.tanggal
+      ? trx.tanggal.split('T')[0].split(' ')[0]
+      : new Date().toISOString().split('T')[0];
+
     setData({
-      tanggal: trx.tanggal ? trx.tanggal.split('T')[0] : new Date().toISOString().split('T')[0],
-      jenis_transaksi: trx.jenis_transaksi,
+      tanggal: formattedTanggal,
+      jenis_transaksi: trx.jenis_transaksi || 'pemasukan',
       kategori_id: String(trx.kategori_id),
       nominal: rawOngkir,
       nominal_ongkir: rawOngkir,
@@ -292,16 +295,23 @@ export default function Index() {
     e.preventDefault();
 
     if (editingTrx) {
-      router.post(`/dashboard/transactions/${editingTrx.id}`, {
+      const updateData: any = {
         _method: 'PUT',
         tanggal: data.tanggal,
         jenis_transaksi: data.jenis_transaksi,
         kategori_id: data.kategori_id,
+        nominal: data.nominal_ongkir,
         nominal_ongkir: data.nominal_ongkir,
         nominal_asuransi: data.nominal_asuransi,
         keterangan: data.keterangan,
-        bukti_transaksi: data.bukti_transaksi,
-      }, {
+      };
+
+      if (data.bukti_transaksi) {
+        updateData.bukti_transaksi = data.bukti_transaksi;
+      }
+
+      router.post(`/dashboard/transactions/${editingTrx.id}`, updateData, {
+        forceFormData: true,
         onSuccess: () => {
           setIsModalOpen(false);
           setSuccessModalTitle('Berhasil Perbarui Transaksi');
@@ -312,6 +322,7 @@ export default function Index() {
       });
     } else {
       post('/dashboard/transactions', {
+        forceFormData: true,
         onSuccess: () => {
           setIsModalOpen(false);
           setSuccessModalTitle('Berhasil Menambahkan Transaksi');
@@ -607,6 +618,12 @@ export default function Index() {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 text-slate-700 dark:text-slate-300 text-sm">
+              {Object.keys(errors).length > 0 && (
+                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs">
+                  {Object.values(errors)[0]}
+                </div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
@@ -670,9 +687,9 @@ export default function Index() {
                         setUseInsurance(checked);
                         if (checked) {
                           const ongkirNum = Number(data.nominal_ongkir || 0);
-                          const calc2Pct = Math.round(ongkirNum * 0.02);
-                          setAsuransiDisplay(calc2Pct > 0 ? formatNumberWithDots(calc2Pct) : '');
-                          setData('nominal_asuransi', String(calc2Pct));
+                          const calcAsuransi = Math.round(ongkirNum * 0.025);
+                          setAsuransiDisplay(calcAsuransi > 0 ? formatNumberWithDots(calcAsuransi) : '');
+                          setData('nominal_asuransi', String(calcAsuransi));
                         } else {
                           setAsuransiDisplay('');
                           setData('nominal_asuransi', '0');
@@ -680,11 +697,11 @@ export default function Index() {
                       }}
                       className="w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer"
                     />
-                    <span>Tambahkan Pengeluaran Asuransi Paket (2% dari Ongkir)</span>
+                    <span>Tambahkan Pengeluaran Asuransi Paket (2,5% dari Ongkir)</span>
                   </label>
                   {useInsurance && (
                     <span className="text-[10px] font-extrabold text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-950/60 px-2.5 py-0.5 rounded-full border border-orange-300">
-                      Auto 2% Ongkir
+                      Auto 2,5% Ongkir
                     </span>
                   )}
                 </div>
@@ -706,18 +723,18 @@ export default function Index() {
                       />
                     </div>
                     <div className="flex items-center justify-between text-[10px]">
-                      <span className="text-slate-400">Dihitung 2% dari nominal ongkir</span>
+                      <span className="text-slate-400">Dihitung 2,5% dari nominal ongkir</span>
                       <button
                         type="button"
                         onClick={() => {
                           const ongkirNum = Number(data.nominal_ongkir || 0);
-                          const calc2Pct = Math.round(ongkirNum * 0.02);
-                          setAsuransiDisplay(formatNumberWithDots(calc2Pct));
-                          setData('nominal_asuransi', String(calc2Pct));
+                          const calcAsuransi = Math.round(ongkirNum * 0.025);
+                          setAsuransiDisplay(formatNumberWithDots(calcAsuransi));
+                          setData('nominal_asuransi', String(calcAsuransi));
                         }}
                         className="font-bold text-orange-600 dark:text-orange-400 hover:underline cursor-pointer"
                       >
-                        Reset 2% Auto
+                        Reset 2,5% Auto
                       </button>
                     </div>
                   </div>
@@ -788,6 +805,60 @@ export default function Index() {
               ) : (
                 <img src={activePreview.url} alt="Bukti Foto" className="max-h-full max-w-full object-contain" />
               )}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalOpen && trxToDelete && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative text-center space-y-5 animate-zoomIn">
+            <button
+              type="button"
+              onClick={() => setDeleteModalOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto text-rose-500 shadow-lg shadow-rose-950/20">
+              <AlertCircle className="h-9 w-9 text-rose-500 animate-pulse" />
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+                Hapus Record Transaksi Paket?
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                Apakah Anda yakin ingin menghapus transaksi <span className="font-mono font-bold text-slate-900 dark:text-white">{trxToDelete.nomor_transaksi}</span>?
+              </p>
+            </div>
+
+            <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-3 text-left text-rose-600 dark:text-rose-300 text-xs flex items-start gap-2.5">
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+              <span>
+                Data transaksi yang sudah dihapus tidak dapat dikembalikan ke sistem PosFinance.
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeleteModalOpen(false)}
+                className="flex-1 py-2.5 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs rounded-xl transition-all cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={executeDelete}
+                className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-rose-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span>Ya, Hapus Transaksi</span>
+              </button>
             </div>
           </div>
         </div>,

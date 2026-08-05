@@ -30,6 +30,13 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/dashboard/transactions/bulk-delete', [TransactionController::class, 'bulkDelete'])->name('transactions.bulk-delete');
     Route::post('/dashboard/transactions/daily-closing', [TransactionController::class, 'dailyClosing'])->name('transactions.daily-closing');
     
+    Route::resource('dashboard/categories', CategoryController::class)->only(['index', 'store', 'update', 'destroy'])->names([
+        'index' => 'categories.index',
+        'store' => 'categories.store',
+        'update' => 'categories.update',
+        'destroy' => 'categories.destroy',
+    ]);
+
     Route::resource('dashboard/users', UserController::class)->only(['index', 'store', 'update', 'destroy'])->names([
         'index' => 'users.index',
         'store' => 'users.store',

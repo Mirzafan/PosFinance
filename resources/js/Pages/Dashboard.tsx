@@ -102,6 +102,9 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
   }, [activePeriod]);
 
   const changePeriod = (p: string) => {
+    if (p === 'daily' || p === 'weekly' || p === 'monthly') {
+      setChartTab(p as any);
+    }
     router.get('/dashboard', { period: p }, { preserveState: true, replace: true });
   };
 
@@ -278,7 +281,7 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
               {/* Interactive Chart Tab Selector */}
               <div className="bg-slate-100 dark:bg-slate-950 p-1 rounded-xl flex items-center gap-1 self-start sm:self-auto border border-slate-200 dark:border-slate-800">
                 <button
-                  onClick={() => setChartTab('daily')}
+                  onClick={() => changePeriod('daily')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                     chartTab === 'daily'
                       ? 'bg-slate-900 text-white dark:bg-orange-500 shadow'
@@ -288,7 +291,7 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
                   Harian
                 </button>
                 <button
-                  onClick={() => setChartTab('weekly')}
+                  onClick={() => changePeriod('weekly')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                     chartTab === 'weekly'
                       ? 'bg-slate-900 text-white dark:bg-orange-500 shadow'
@@ -298,7 +301,7 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
                   Mingguan
                 </button>
                 <button
-                  onClick={() => setChartTab('monthly')}
+                  onClick={() => changePeriod('monthly')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                     chartTab === 'monthly'
                       ? 'bg-slate-900 text-white dark:bg-orange-500 shadow'
@@ -410,7 +413,7 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
                 Rekapitulasi Pendapatan per Jenis Layanan
               </h4>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Breakdown detail pendapatan ongkir & pengeluaran asuransi untuk setiap layanan kurir (Periode: {activePeriod.toUpperCase()})
+                Breakdown detail pendapatan ongkir & pengeluaran asuransi untuk setiap layanan kurir
               </p>
             </div>
           </div>

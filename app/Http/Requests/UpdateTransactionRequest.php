@@ -9,7 +9,7 @@ class UpdateTransactionRequest extends FormRequest
     // Determine if the user is authorized to make this request.
     public function authorize(): bool
     {
-        return $this->user() && $this->user()->role !== 'staff';
+        return $this->user() !== null;
     }
 
     // Get the validation rules that apply to the request.
@@ -19,7 +19,9 @@ class UpdateTransactionRequest extends FormRequest
             'tanggal' => 'nullable|date',
             'jenis_transaksi' => 'nullable|in:pemasukan,pengeluaran',
             'kategori_id' => 'required|exists:categories,id',
-            'nominal' => 'required|numeric|min:0',
+            'nominal' => 'nullable|numeric|min:0',
+            'nominal_ongkir' => 'required|numeric|min:0',
+            'nominal_asuransi' => 'nullable|numeric|min:0',
             'keterangan' => 'nullable|string',
             'bukti_transaksi' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
         ];
@@ -31,8 +33,8 @@ class UpdateTransactionRequest extends FormRequest
         return [
             'kategori_id.required' => 'Kategori wajib dipilih.',
             'kategori_id.exists' => 'Kategori yang dipilih tidak valid.',
-            'nominal.required' => 'Nominal transaksi wajib diisi.',
-            'nominal.min' => 'Nominal transaksi tidak boleh kurang dari 0.',
+            'nominal_ongkir.required' => 'Nominal pendapatan (ongkir) wajib diisi.',
+            'nominal_ongkir.min' => 'Nominal pendapatan (ongkir) tidak boleh kurang dari 0.',
             'bukti_transaksi.mimes' => 'Bukti transaksi harus berupa foto (JPG, PNG, WEBP) atau dokumen PDF.',
             'bukti_transaksi.max' => 'Ukuran file bukti transaksi maksimal 10 MB.',
         ];
