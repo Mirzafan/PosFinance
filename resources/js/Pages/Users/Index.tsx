@@ -33,6 +33,11 @@ export default function Index() {
   const [selectedUser, setSelectedUser] = useState<UserItem | null>(null);
   const [userToDelete, setUserToDelete] = useState<UserItem | null>(null);
 
+  // Success Pop Up Modal State
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successModalTitle, setSuccessModalTitle] = useState('');
+  const [successModalMessage, setSuccessModalMessage] = useState('');
+
   const { data, setData, post, put, delete: destroyAction, processing, errors, reset, clearErrors } = useForm({
     name: '',
     email: '',
@@ -54,9 +59,14 @@ export default function Index() {
 
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const name = data.name;
+    const email = data.email;
     post('/dashboard/users', {
       onSuccess: () => {
         setShowAddModal(false);
+        setSuccessModalTitle('Berhasil Menambahkan Pengguna');
+        setSuccessModalMessage(`Akun pengguna baru "${name}" (${email}) telah sukses terdaftar dalam sistem PosFinance.`);
+        setShowSuccessModal(true);
         reset();
       }
     });
@@ -65,9 +75,13 @@ export default function Index() {
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUser) return;
+    const name = data.name;
     put(`/dashboard/users/${selectedUser.id}`, {
       onSuccess: () => {
         setShowEditModal(false);
+        setSuccessModalTitle('Berhasil Perbarui Pengguna');
+        setSuccessModalMessage(`Data akun pengguna "${name}" telah sukses diperbarui.`);
+        setShowSuccessModal(true);
         setSelectedUser(null);
         reset();
       }
@@ -85,10 +99,14 @@ export default function Index() {
 
   const executeDelete = () => {
     if (!userToDelete) return;
-    destroyAction(`/dashboard/users/${userToDelete.id}`, {
+    const targetUser = userToDelete;
+    destroyAction(`/dashboard/users/${targetUser.id}`, {
       onSuccess: () => {
         setShowDeleteModal(false);
         setUserToDelete(null);
+        setSuccessModalTitle('Berhasil Menghapus Pengguna');
+        setSuccessModalMessage(`Akun pengguna "${targetUser.name}" (${targetUser.email}) telah sukses dihapus secara permanen.`);
+        setShowSuccessModal(true);
       }
     });
   };
@@ -110,7 +128,7 @@ export default function Index() {
     u.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  const roleLabelMap = {
+  const roleLabelMap: Record<string, string> = {
     admin: 'Admin Utama',
     staff: 'Staff Keuangan',
   };
@@ -321,8 +339,8 @@ export default function Index() {
                     onChange={(e) => setData('role', e.target.value as any)}
                     className="block w-full px-3 py-2.5 bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-orange-500 cursor-pointer"
                   >
-                    <option value="staff">Staff Keuangan (Input Transaksi)</option>
-                    <option value="admin">Admin Utama (Kelola Pengguna, Kategori & Approve)</option>
+                    <option value="staff">Staff Keuangan (Pencatatan & Jurnal Transaksi)</option>
+                    <option value="admin">Admin Utama (Kelola Pengguna & Sistem)</option>
                   </select>
                 </div>
 
@@ -422,8 +440,8 @@ export default function Index() {
                     onChange={(e) => setData('role', e.target.value as any)}
                     className="block w-full px-3 py-2.5 bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-orange-500 cursor-pointer"
                   >
-                    <option value="staff">Staff Keuangan (Input Transaksi)</option>
-                    <option value="admin">Admin Utama (Kelola Pengguna, Kategori & Approve)</option>
+                    <option value="staff">Staff Keuangan (Pencatatan & Jurnal Transaksi)</option>
+                    <option value="admin">Admin Utama (Kelola Pengguna & Sistem)</option>
                   </select>
                 </div>
 
@@ -450,7 +468,7 @@ export default function Index() {
         )}
 
         {/* Delete Confirmation Modal */}
-        {showDeleteModal && userToDelete && (
+        {showDeleteModal && userToDelete && typeof window !== 'undefined' && createPortal(
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
             <div className="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-3xl p-6 w-full max-w-md z-10 relative overflow-hidden shadow-2xl space-y-5">
               <div className="flex items-start gap-4">
@@ -518,7 +536,39 @@ export default function Index() {
                 </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
+        )}
+
+        {/* MODAL SUCCESS NOTIFIKASI POP-UP */}
+        {showSuccessModal && typeof window !== 'undefined' && createPortal(
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+            <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center space-y-4 relative overflow-hidden animate-zoomIn">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400 shadow-lg shadow-emerald-950/25">
+                <CheckCircle2 className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+                  {successModalTitle}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  {successModalMessage}
+                </p>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSuccessModal(false)}
+                  className="w-full py-2.5 px-4 bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-semibold text-xs rounded-xl shadow-lg shadow-orange-950/25 transition-all cursor-pointer"
+                >
+                  Mengerti & Tutup
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
         )}
       </div>
     </DashboardLayout>

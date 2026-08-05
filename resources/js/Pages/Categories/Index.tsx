@@ -20,7 +20,7 @@ interface PageProps {
 }
 
 export default function Index() {
-  const { categories, auth, flash } = usePage<any>().props as unknown as PageProps & { flash?: { success?: string; error?: string } };
+  const { categories, auth } = usePage<any>().props as unknown as PageProps;
   const canManage = auth?.user?.role === 'admin';
 
   const [search, setSearch] = useState('');
@@ -71,24 +71,13 @@ export default function Index() {
     });
   };
 
-  const openDeleteModal = (cat: Category) => {
-    setCategoryToDelete(cat);
-    setShowDeleteModal(true);
-  };
-
-  const confirmDeleteCategory = () => {
-    if (!categoryToDelete) return;
-    const catName = categoryToDelete.nama_kategori;
-    destroyAction(`/dashboard/categories/${categoryToDelete.id}`, {
+  const handleDelete = (cat: Category) => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus kategori "${cat.nama_kategori}"? Semua transaksi dalam kategori ini juga akan terhapus.`)) return;
+    destroyAction(`/dashboard/categories/${cat.id}`, {
       onSuccess: () => {
-        setShowDeleteModal(false);
-        setCategoryToDelete(null);
         setSuccessModalTitle('Berhasil Menghapus Kategori');
-        setSuccessModalMessage(`Kategori transaksi "${catName}" beserta seluruh transaksi terkait telah sukses dihapus dari sistem.`);
+        setSuccessModalMessage(`Kategori transaksi "${cat.nama_kategori}" telah sukses dihapus.`);
         setShowSuccessModal(true);
-      },
-      onError: () => {
-        setShowDeleteModal(false);
       }
     });
   };
@@ -110,7 +99,7 @@ export default function Index() {
 
   return (
     <DashboardLayout>
-      <Head title="Kategori Transaksi - PosFinance Regional IV Semarang" />
+      <Head title="Kategori Layanan - PosFinance Regional IV Semarang" />
 
       <div className="space-y-6 animate-fadeIn">
         {/* Header */}
@@ -118,10 +107,10 @@ export default function Index() {
           <div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Tag className="h-6 w-6 text-orange-500" />
-              Kategori Transaksi
+              Kategori Layanan
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Kelola kategori pencatatan pendapatan dan keuntungan retail PosFinance.
+              Daftar kategori layanan (POSSAMEDAY, POSNEXTDAY, & POSREGULER) PosFinance.
             </p>
           </div>
 
@@ -185,7 +174,7 @@ export default function Index() {
                     <Edit2 className="h-4 w-4" />
                   </button>
                   <button
-                    onClick={() => openDeleteModal(cat)}
+                    onClick={() => handleDelete(cat)}
                     className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-500/10 dark:hover:text-red-400 transition-colors cursor-pointer"
                     title="Hapus Kategori"
                   >
@@ -215,7 +204,7 @@ export default function Index() {
               >
                 <X className="h-5 w-5" />
               </button>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Tambah Kategori Transaksi</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Tambah Kategori Layanan</h3>
 
               {errors.nama_kategori && (
                 <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs">
@@ -231,7 +220,7 @@ export default function Index() {
                   <input
                     type="text"
                     required
-                    placeholder="Contoh: Logistik"
+                    placeholder="Contoh: POSSAMEDAY"
                     value={data.nama_kategori}
                     onChange={(e) => setData('nama_kategori', e.target.value)}
                     className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
@@ -271,7 +260,7 @@ export default function Index() {
               >
                 <X className="h-5 w-5" />
               </button>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Ubah Kategori Transaksi</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Ubah Kategori Layanan</h3>
 
               {errors.nama_kategori && (
                 <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs">
@@ -287,7 +276,7 @@ export default function Index() {
                   <input
                     type="text"
                     required
-                    placeholder="Contoh: Logistik"
+                    placeholder="Contoh: POSSAMEDAY"
                     value={data.nama_kategori}
                     onChange={(e) => setData('nama_kategori', e.target.value)}
                     className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"

@@ -1,27 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 import {
   TrendingUp,
   TrendingDown,
   Wallet,
-  Receipt,
   ArrowUpRight,
-  ArrowDownLeft,
-  ArrowRight,
   Plus,
   BarChart2,
-  PieChart as PieIcon,
-  FileText,
-  Image as ImageIcon,
-  Eye,
-  Download,
-  ExternalLink,
-  X,
-  Clock,
+  Lock,
   CheckCircle2,
-  XCircle,
-  Calculator
+  Box
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -30,59 +19,85 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
-  PieChart,
-  Pie,
-  Cell
+  Tooltip
 } from 'recharts';
+
+interface ProductBreakdownItem {
+  id: number;
+  name: string;
+  total_ongkir: number;
+  total_asuransi: number;
+  net_revenue: number;
+  count: number;
+  value: number;
+}
+
+interface TrendItem {
+  label: string;
+  key: string;
+  ongkir: number;
+  asuransi: number;
+  net: number;
+}
 
 interface DashboardProps {
   summary: {
-    total_pemasukan: number;
-    saldo: number;
+    period: 'daily' | 'weekly' | 'monthly' | 'all';
+    total_ongkir: number;
+    total_asuransi: number;
+    net_revenue: number;
     total_transaksi: number;
-    avg_transaksi?: number;
+    today_count: number;
+    today_closed_count: number;
+    is_today_closed: boolean;
   };
   charts: {
-    monthly_trends: Array<{
-      label: string;
-      month_key: string;
-      pemasukan: number;
-    }>;
-    category_breakdown: Array<{
-      name: string;
-      value: number;
-      jenis_transaksi: string;
-    }>;
+    daily_trends?: TrendItem[];
+    weekly_trends?: TrendItem[];
+    monthly_trends?: TrendItem[];
+    category_breakdown?: ProductBreakdownItem[];
   };
+  productBreakdown: ProductBreakdownItem[];
   recentTransactions: Array<{
     id: number;
     nomor_transaksi: string;
     tanggal: string;
     jenis_transaksi: 'pemasukan' | 'pengeluaran';
     nominal: number;
+    nominal_ongkir?: number;
+    nominal_asuransi?: number;
+    net_revenue?: number;
     keterangan: string;
     status?: 'pending' | 'approved' | 'rejected';
+    closed_at?: string | null;
     bukti_transaksi?: string | null;
     bukti_transaksi_url?: string | null;
     category?: {
       nama_kategori: string;
     };
   }>;
+  filters: {
+    period: 'daily' | 'weekly' | 'monthly' | 'all';
+  };
 }
 
-const CATEGORY_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316'];
-
-export default function Dashboard({ summary, charts, recentTransactions }: DashboardProps) {
+export default function Dashboard({ summary, charts, productBreakdown, recentTransactions, filters }: DashboardProps) {
   const [isMounted, setIsMounted] = useState(false);
+  const activePeriod = filters?.period || summary?.period || 'monthly';
 
-  // Bukti Preview Modal State
-  const [previewModalOpen, setPreviewModalOpen] = useState(false);
-  const [activePreview, setActivePreview] = useState<{ url: string; isPdf: boolean; nomor: string } | null>(null);
+  // Chart Tab View State (daily, weekly, monthly)
+  const [chartTab, setChartTab] = useState<'daily' | 'weekly' | 'monthly'>('monthly');
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    if (activePeriod === 'daily' || activePeriod === 'weekly' || activePeriod === 'monthly') {
+      setChartTab(activePeriod);
+    }
+  }, [activePeriod]);
+
+  const changePeriod = (p: string) => {
+    router.get('/dashboard', { period: p }, { preserveState: true, replace: true });
+  };
 
   const formatRupiah = (val: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -93,29 +108,27 @@ export default function Dashboard({ summary, charts, recentTransactions }: Dashb
     }).format(val || 0);
   };
 
-  const openProofPreview = (trx: any) => {
-    if (!trx.bukti_transaksi_url) return;
-    const isPdf = trx.bukti_transaksi_url.toLowerCase().endsWith('.pdf');
-    setActivePreview({
-      url: trx.bukti_transaksi_url,
-      isPdf,
-      nomor: trx.nomor_transaksi
-    });
-    setPreviewModalOpen(true);
+  // Get active dataset for trend chart
+  const getActiveTrendData = () => {
+    if (chartTab === 'daily') return charts?.daily_trends || [];
+    if (chartTab === 'weekly') return charts?.weekly_trends || [];
+    return charts?.monthly_trends || [];
   };
+
+  const activeTrendData = getActiveTrendData();
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white border border-slate-200 text-slate-900 dark:bg-[#0f172a] dark:border-slate-700/80 dark:text-slate-100 p-3 rounded-xl shadow-xl text-xs space-y-1.5">
-          <p className="font-semibold text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700/50 pb-1">{label}</p>
+        <div className="bg-slate-900 border border-slate-700 text-white p-3 rounded-xl shadow-xl text-xs space-y-1.5">
+          <p className="font-semibold text-slate-300 border-b border-slate-700 pb-1">{label}</p>
           {payload.map((entry: any, index: number) => (
             <div key={`item-${index}`} className="flex items-center justify-between gap-4">
               <span className="flex items-center gap-1.5" style={{ color: entry.color }}>
                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
                 {entry.name}:
               </span>
-              <span className="font-bold text-slate-900 dark:text-white">{formatRupiah(entry.value)}</span>
+              <span className="font-bold">{formatRupiah(entry.value)}</span>
             </div>
           ))}
         </div>
@@ -126,27 +139,24 @@ export default function Dashboard({ summary, charts, recentTransactions }: Dashb
 
   return (
     <DashboardLayout>
-      <Head title="Dashboard - PosFinance Regional IV Semarang" />
+      <Head title="Dashboard Financial & Revenue - PosFinance Regional IV" />
 
       <div className="space-y-8 animate-fadeIn">
-        {/* Title Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        {/* Title Header & Period Filters */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans flex items-center gap-2">
-              Ringkasan Keuangan
+              Dashboard Pendapatan & Financial Logistik
             </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">PT Pos Indonesia - Kantor Regional IV Semarang</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
+              PT Pos Indonesia (Persero) Kantor Regional IV Semarang
+            </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 text-xs font-semibold px-3.5 py-2 rounded-xl">
-              <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-              <span>Regional IV Semarang</span>
-            </div>
-
             <Link
               href="/dashboard/transactions"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 shadow-md shadow-orange-600/20 transition-all duration-150 active:scale-95"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 shadow-md transition-all active:scale-95 cursor-pointer"
             >
               <Plus className="h-4 w-4" />
               Catat Transaksi
@@ -154,307 +164,192 @@ export default function Dashboard({ summary, charts, recentTransactions }: Dashb
           </div>
         </div>
 
-        {/* 3 Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Card 1: Total Pendapatan Retail */}
-          <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-5 relative overflow-hidden group hover:border-emerald-500/30 transition-all duration-300 shadow-sm">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all" />
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Pendapatan Retail</span>
-              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-                <TrendingUp className="h-5 w-5" />
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {/* Card 1: Total Pendapatan Ongkir */}
+          <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-5 relative overflow-hidden shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Pendapatan Ongkir</span>
+              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                <TrendingUp className="h-4 w-4" />
               </div>
             </div>
-            <div className="space-y-1">
-              <h3 className="text-xl lg:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-                {formatRupiah(summary?.total_pemasukan || 0)}
-              </h3>
-              <p className="text-[11px] text-emerald-600/90 dark:text-emerald-400/90 font-medium flex items-center gap-1">
-                <ArrowUpRight className="h-3.5 w-3.5" />
-                Pendapatan retail disetujui (2026)
-              </p>
-            </div>
+            <h3 className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
+              {formatRupiah(summary?.total_ongkir || 0)}
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-1 font-medium">Pemasukan Ongkir Layanan Kurir</p>
           </div>
 
-          {/* Card 2: Total Transaksi */}
-          <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-5 relative overflow-hidden group hover:border-amber-500/30 transition-all duration-300 shadow-sm">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-all" />
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Transaksi</span>
-              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400">
-                <Receipt className="h-5 w-5" />
+          {/* Card 2: Pengeluaran Asuransi Paket */}
+          <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-5 relative overflow-hidden shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Pengeluaran Asuransi</span>
+              <div className="p-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                <TrendingDown className="h-4 w-4" />
               </div>
             </div>
-            <div className="space-y-1">
-              <h3 className="text-xl lg:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-                {summary?.total_transaksi || 0} <span className="text-sm font-normal text-slate-500 dark:text-slate-400">Transaksi</span>
-              </h3>
-              <p className="text-[11px] text-amber-600/90 dark:text-amber-400/90 font-medium">
-                Tercatat resmi PosFinance
-              </p>
-            </div>
+            <h3 className="text-2xl font-extrabold text-rose-600 dark:text-rose-400 tracking-tight">
+              {formatRupiah(summary?.total_asuransi || 0)}
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-1 font-medium">Asuransi Terbayar Paket</p>
           </div>
 
-          {/* Card 3: Rata-Rata Transaksi */}
-          <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-5 relative overflow-hidden group hover:border-cyan-500/30 transition-all duration-300 shadow-sm">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/5 rounded-full blur-2xl group-hover:bg-cyan-500/10 transition-all" />
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Rata-Rata Transaksi</span>
-              <div className="p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400">
-                <Calculator className="h-5 w-5" />
+          {/* Card 3: Pendapatan Bersih (Net Revenue) */}
+          <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-5 relative overflow-hidden shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Net Revenue (Pendapatan Bersih)</span>
+              <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                <Wallet className="h-4 w-4" />
               </div>
             </div>
-            <div className="space-y-1">
-              <h3 className="text-xl lg:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-                {formatRupiah(summary?.avg_transaksi || 0)}
-              </h3>
-              <p className="text-[11px] text-cyan-600/90 dark:text-cyan-400/90 font-medium">
-                Rata-rata nominal per transaksi retail
-              </p>
+            <h3 className="text-2xl font-extrabold text-blue-600 dark:text-blue-400 tracking-tight">
+              {formatRupiah(summary?.net_revenue || 0)}
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-1 font-medium">Ongkir Dikurangi Asuransi</p>
+          </div>
+
+          {/* Card 4: Total Transaksi Paket */}
+          <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-5 relative overflow-hidden shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Transaksi Paket</span>
+              <div className="p-2 rounded-xl bg-orange-500/10 text-orange-600 border border-orange-500/20">
+                <Box className="h-4 w-4" />
+              </div>
             </div>
+            <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+              {summary?.total_transaksi || 0} <span className="text-xs font-normal text-slate-500">Paket</span>
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-1 font-medium">Tercatat Resmi PosFinance</p>
           </div>
         </div>
 
-        {/* Middle Section (Charts) */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Area Chart (2/3 width) */}
-          <div className="lg:col-span-2 bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 relative overflow-hidden flex flex-col justify-between shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <BarChart2 className="h-4 w-4 text-orange-500" />
-                  Tren Pendapatan Retail Bulanan (2026)
-                </h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Perkembangan omset pendapatan retail per bulan</p>
-              </div>
-
-              <div className="flex items-center gap-4 text-xs font-medium">
-                <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                  Pendapatan Retail
-                </span>
-              </div>
+        {/* ========================================================================= */}
+        {/* GRAFIK TREN PENDAPATAN & ASURANSI (HARIAN, MINGGUAN, BULANAN) */}
+        {/* ========================================================================= */}
+        <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+            <div>
+              <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <BarChart2 className="h-5 w-5 text-orange-500" />
+                Grafik Tren Pendapatan & Pengeluaran Asuransi
+              </h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Perbandingan omset ongkir (hijau) vs biaya asuransi (merah) per periode
+              </p>
             </div>
 
-            <div className="h-[280px] w-full flex items-center justify-center">
-              {isMounted && charts?.monthly_trends && charts.monthly_trends.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={charts.monthly_trends} margin={{ top: 10, right: 10, left: -10, bottom: 0 }} barGap={6}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-800" vertical={false} />
-                    <XAxis dataKey="label" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
-                    <YAxis
-                      stroke="#64748b"
-                      fontSize={10}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(val) => `Rp ${(val / 1000000).toFixed(0)}Jt`}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar
-                      dataKey="pemasukan"
-                      name="Pendapatan Retail"
-                      fill="#10b981"
-                      radius={[6, 6, 0, 0]}
-                      maxBarSize={45}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="w-full flex flex-col items-center justify-center text-slate-500 space-y-2 border border-dashed border-slate-300 dark:border-slate-800/80 rounded-2xl p-6 bg-slate-50 dark:bg-slate-950/20">
-                  <BarChart2 className="h-8 w-8 text-slate-400 dark:text-slate-600/60 stroke-[1.5]" />
-                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Belum Ada Data Arus Kas</span>
-                  <span className="text-[11px] text-slate-500 text-center max-w-xs">Data grafik tren akan otomatis muncul setelah transaksi keuangan dicatat.</span>
-                </div>
-              )}
+            {/* Interactive Chart Tab Selector */}
+            <div className="bg-slate-100 dark:bg-slate-950 p-1 rounded-xl flex items-center gap-1 self-start sm:self-auto border border-slate-200 dark:border-slate-800">
+              <button
+                onClick={() => setChartTab('daily')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  chartTab === 'daily'
+                    ? 'bg-slate-900 text-white dark:bg-orange-500 shadow'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                Harian (Tgl 1-31)
+              </button>
+              <button
+                onClick={() => setChartTab('weekly')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  chartTab === 'weekly'
+                    ? 'bg-slate-900 text-white dark:bg-orange-500 shadow'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                Mingguan (W1-W5)
+              </button>
+              <button
+                onClick={() => setChartTab('monthly')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  chartTab === 'monthly'
+                    ? 'bg-slate-900 text-white dark:bg-orange-500 shadow'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                Bulanan (Jan-Des)
+              </button>
             </div>
           </div>
 
-          {/* Right Pie/Donut Chart (1/3 width) */}
-          <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 relative overflow-hidden flex flex-col justify-between shadow-sm">
-            <div>
-              <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <PieIcon className="h-4 w-4 text-orange-500" />
-                Distribusi Kategori
-              </h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Proporsi nominal per kategori keuangan</p>
-            </div>
-
-            <div className="h-[220px] w-full my-auto flex items-center justify-center">
-              {isMounted && charts?.category_breakdown && charts.category_breakdown.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={charts.category_breakdown}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={55}
-                      outerRadius={80}
-                      paddingAngle={4}
-                      dataKey="value"
-                    >
-                      {charts.category_breakdown.map((_entry, index) => (
-                        <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(val: any) => [formatRupiah(val), 'Nominal']}
-                      contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px', fontSize: '12px', color: '#0f172a' }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="w-full flex flex-col items-center justify-center text-slate-500 space-y-2 border border-dashed border-slate-300 dark:border-slate-800/80 rounded-2xl p-6 bg-slate-50 dark:bg-slate-950/20">
-                  <PieIcon className="h-8 w-8 text-slate-400 dark:text-slate-600/60 stroke-[1.5]" />
-                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Belum Ada Data Kategori</span>
-                  <span className="text-[11px] text-slate-500 text-center max-w-xs">Grafik proporsi kategori akan aktif setelah ada transaksi.</span>
-                </div>
-              )}
-            </div>
-
-            {/* Legend List */}
-            {charts?.category_breakdown && charts.category_breakdown.length > 0 && (
-              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 dark:border-slate-800/60 max-h-24 overflow-y-auto">
-                {charts.category_breakdown.map((cat, idx) => (
-                  <div key={idx} className="flex items-center gap-1.5 text-[11px]">
-                    <span
-                      className="w-2 h-2 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: CATEGORY_COLORS[idx % CATEGORY_COLORS.length] }}
-                    />
-                    <span className="text-slate-600 dark:text-slate-400 truncate">{cat.name}</span>
-                  </div>
-                ))}
+          <div className="h-[300px] w-full pt-2">
+            {isMounted && activeTrendData && activeTrendData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={activeTrendData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-800" vertical={false} />
+                  <XAxis dataKey="label" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                  <YAxis
+                    stroke="#64748b"
+                    fontSize={10}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(val) => val >= 1000000 ? `Rp ${(val / 1000000).toFixed(0)}Jt` : `Rp ${(val / 1000).toFixed(0)}k`}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="ongkir" name="Ongkir (Pemasukan)" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={30} />
+                  <Bar dataKey="asuransi" name="Asuransi (Pengeluaran)" fill="#f43f5e" radius={[4, 4, 0, 0]} maxBarSize={30} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-xs text-slate-500">
+                <BarChart2 className="h-8 w-8 text-slate-400 mb-2" />
+                <span>Belum ada data grafik untuk periode ini.</span>
               </div>
             )}
           </div>
         </div>
 
-        {/* Bottom Section (Recent Transactions Table with Status & Proof Preview) */}
-        <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 relative overflow-hidden space-y-4 shadow-sm">
+        {/* Tabel Rekapitulasi Pendapatan per Jenis Layanan */}
+        <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Receipt className="h-4 w-4 text-orange-500" />
-                Transaksi Terbaru
+                <Box className="h-4 w-4 text-orange-500" />
+                Rekapitulasi Pendapatan per Jenis Layanan
               </h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">5 transaksi arus kas terakhir yang dicatat dalam sistem</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Breakdown detail pendapatan ongkir & pengeluaran asuransi untuk setiap layanan kurir (Periode: {activePeriod.toUpperCase()})
+              </p>
             </div>
-
-            <Link
-              href="/dashboard/transactions"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-orange-600 hover:text-orange-500 dark:text-orange-400 dark:hover:text-orange-300 transition-colors"
-            >
-              Lihat Semua Transaksi
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left border-collapse">
+            <table className="w-full text-xs text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 font-semibold text-xs uppercase tracking-wider bg-slate-50 dark:bg-slate-950/40">
-                  <th className="py-3 pl-4 pr-4 whitespace-nowrap">No. Transaksi</th>
-                  <th className="py-3 px-4 whitespace-nowrap">Tanggal</th>
-                  <th className="py-3 px-4 whitespace-nowrap">Kategori</th>
-                  <th className="py-3 px-4 whitespace-nowrap">Status</th>
-                  <th className="py-3 px-4 min-w-[160px]">Keterangan</th>
-                  <th className="py-3 px-4 text-center whitespace-nowrap">Bukti Transaksi</th>
-                  <th className="py-3 pr-4 pl-4 text-right whitespace-nowrap">Nominal</th>
+                <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider bg-slate-50 dark:bg-slate-950/40">
+                  <th className="py-3 pl-4 pr-2">Jenis Layanan</th>
+                  <th className="py-3 px-2 text-center">Jumlah Paket</th>
+                  <th className="py-3 px-2 text-right">Ongkir (Pemasukan)</th>
+                  <th className="py-3 px-2 text-right">Asuransi (Pengeluaran)</th>
+                  <th className="py-3 pr-4 pl-2 text-right">Net Revenue</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-800/40">
-                {recentTransactions && recentTransactions.length > 0 ? (
-                  recentTransactions.map((trx) => {
-                    const isPdf = trx.bukti_transaksi_url ? trx.bukti_transaksi_url.toLowerCase().endsWith('.pdf') : false;
-
-                    return (
-                      <tr key={trx.id} className="text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                        <td className="py-3.5 pl-4 pr-4 font-mono text-xs font-bold text-slate-900 dark:text-white whitespace-nowrap">
-                          {trx.nomor_transaksi}
-                        </td>
-                        <td className="py-3.5 px-4 text-xs text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                          {new Date(trx.tanggal).toLocaleDateString('id-ID', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric'
-                          })}
-                        </td>
-                        <td className="py-3.5 px-4 whitespace-nowrap">
-                          <span className="inline-block text-[10px] font-bold text-slate-700 bg-slate-100 dark:text-slate-300 dark:bg-slate-800/80 px-2.5 py-0.5 rounded-full border border-slate-200 dark:border-slate-700/50">
-                            {trx.category?.nama_kategori || '-'}
-                          </span>
-                        </td>
-                        {/* Status Persetujuan Column */}
-                        <td className="py-3.5 px-4 text-xs whitespace-nowrap">
-                          {trx.status === 'approved' ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
-                              <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
-                              Disetujui
-                            </span>
-                          ) : trx.status === 'pending' ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/30 animate-pulse">
-                              <Clock className="h-3 w-3 text-amber-600 dark:text-amber-400" />
-                              Pending
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 px-2.5 py-0.5 rounded-full border border-rose-500/30">
-                              <XCircle className="h-3 w-3 text-rose-600 dark:text-rose-400" />
-                              Ditolak
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-3.5 text-xs max-w-xs truncate text-slate-700 dark:text-slate-300">
-                          {trx.keterangan || '-'}
-                        </td>
-                        {/* Bukti Transaksi Column */}
-                        <td className="py-3.5 text-center">
-                          {trx.bukti_transaksi_url ? (
-                            <button
-                              onClick={() => openProofPreview(trx)}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 border transition-all hover:scale-105 cursor-pointer"
-                              title="Lihat Pratinjau Bukti"
-                            >
-                              {isPdf ? (
-                                <>
-                                  <FileText className="h-3.5 w-3.5 text-rose-500 dark:text-rose-400" />
-                                  <span>PDF</span>
-                                </>
-                              ) : (
-                                <>
-                                  <ImageIcon className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
-                                  <span>Foto</span>
-                                </>
-                              )}
-                              <Eye className="h-3 w-3 text-slate-400 ml-0.5" />
-                            </button>
-                          ) : (
-                            <span className="text-[11px] text-slate-400 dark:text-slate-600 font-italic">-</span>
-                          )}
-                        </td>
-                        <td className="py-3.5 pr-4 text-right font-bold">
-                          {trx.jenis_transaksi === 'pemasukan' ? (
-                            <span className="text-emerald-600 dark:text-emerald-400 text-xs inline-flex items-center">
-                              <ArrowUpRight className="h-3.5 w-3.5 mr-0.5" />
-                              {formatRupiah(trx.nominal)}
-                            </span>
-                          ) : (
-                            <span className="text-rose-600 dark:text-rose-400 text-xs inline-flex items-center">
-                              <ArrowDownLeft className="h-3.5 w-3.5 mr-0.5" />
-                              {formatRupiah(trx.nominal)}
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800/50">
+                {productBreakdown && productBreakdown.length > 0 ? (
+                  productBreakdown.map((prod) => (
+                    <tr key={prod.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="py-3 pl-4 pr-2 font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-orange-500" />
+                        {prod.name}
+                      </td>
+                      <td className="py-3 px-2 text-center font-semibold text-slate-700 dark:text-slate-300">
+                        {prod.count} Paket
+                      </td>
+                      <td className="py-3 px-2 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                        {formatRupiah(prod.total_ongkir)}
+                      </td>
+                      <td className="py-3 px-2 text-right font-bold text-rose-600 dark:text-rose-400">
+                        {formatRupiah(prod.total_asuransi)}
+                      </td>
+                      <td className="py-3 pr-4 pl-2 text-right font-extrabold text-blue-600 dark:text-blue-400">
+                        {formatRupiah(prod.net_revenue)}
+                      </td>
+                    </tr>
+                  ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center text-xs text-slate-500">
-                      <div className="flex flex-col items-center justify-center space-y-2">
-                        <Receipt className="h-6 w-6 text-slate-400 dark:text-slate-600/60" />
-                        <p className="font-semibold text-slate-600 dark:text-slate-400">Belum ada transaksi tercatat</p>
-                        <p className="text-[11px] text-slate-400 dark:text-slate-600">Gunakan tombol "Catat Transaksi" untuk menambahkan data arus kas baru.</p>
-                      </div>
-                    </td>
+                    <td colSpan={5} className="py-8 text-center text-slate-500">Belum ada data layanan.</td>
                   </tr>
                 )}
               </tbody>
@@ -462,73 +357,6 @@ export default function Dashboard({ summary, charts, recentTransactions }: Dashb
           </div>
         </div>
       </div>
-
-      {/* ========================================================================= */}
-      {/* PRATINJAU BUKTI TRANSAKSI MODAL (DASHBOARD) */}
-      {/* ========================================================================= */}
-      {previewModalOpen && activePreview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/70">
-              <div className="flex items-center gap-2">
-                {activePreview.isPdf ? (
-                  <FileText className="h-5 w-5 text-rose-500 dark:text-rose-400" />
-                ) : (
-                  <ImageIcon className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-                )}
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Pratinjau Bukti Transaksi</h3>
-                  <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400">{activePreview.nomor}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <a
-                  href={activePreview.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:text-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  Buka Tab Baru
-                </a>
-                <a
-                  href={activePreview.url}
-                  download
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white bg-orange-600 hover:bg-orange-500 rounded-lg shadow-md transition-colors"
-                >
-                  <Download className="h-3.5 w-3.5" />
-                  Unduh
-                </a>
-                <button
-                  onClick={() => setPreviewModalOpen(false)}
-                  className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ml-2 cursor-pointer"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Modal Content */}
-            <div className="p-6 bg-slate-100 dark:bg-slate-950 flex items-center justify-center overflow-auto max-h-[78vh]">
-              {activePreview.isPdf ? (
-                <iframe
-                  src={activePreview.url}
-                  title={`Bukti Transaksi ${activePreview.nomor}`}
-                  className="w-full h-[70vh] rounded-xl border border-slate-300 dark:border-slate-800 shadow-2xl"
-                />
-              ) : (
-                <img
-                  src={activePreview.url}
-                  alt={`Bukti Transaksi ${activePreview.nomor}`}
-                  className="max-h-[70vh] max-w-full rounded-xl object-contain shadow-2xl border border-slate-300 dark:border-slate-800"
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </DashboardLayout>
   );
 }

@@ -53,7 +53,6 @@ class AuditLogController extends Controller
         // Statistical summary counts
         $totalLogs = AuditLog::count();
         $transaksiLogsCount = AuditLog::where('module', 'Transaksi')->count();
-        $approvalLogsCount = AuditLog::whereIn('action', ['APPROVE', 'REJECT'])->count();
         $userLogsCount = AuditLog::where('module', 'User')->count();
 
         return Inertia::render('AuditLogs/Index', [
@@ -61,7 +60,6 @@ class AuditLogController extends Controller
             'stats' => [
                 'total_logs' => $totalLogs,
                 'transaksi_count' => $transaksiLogsCount,
-                'approval_count' => $approvalLogsCount,
                 'user_count' => $userLogsCount,
             ],
             'filters' => $request->only(['search', 'module', 'action', 'start_date', 'end_date']),

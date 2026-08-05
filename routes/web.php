@@ -23,31 +23,19 @@ Route::middleware(['auth'])->group(function () {
         'update' => 'transactions.update',
         'destroy' => 'transactions.destroy',
     ]);
-    // Admin Only Routes
-    Route::middleware(['role:admin'])->group(function () {
-        Route::post('/dashboard/transactions/bulk-delete', [TransactionController::class, 'bulkDelete'])->name('transactions.bulk-delete');
-
-        // Categories Management
-        Route::resource('dashboard/categories', CategoryController::class)->only(['index', 'store', 'update', 'destroy'])->names([
-            'index' => 'categories.index',
-            'store' => 'categories.store',
-            'update' => 'categories.update',
-            'destroy' => 'categories.destroy',
-        ]);
-
-        // Transaction Approvals
-        Route::post('/dashboard/transactions/{id}/approve', [TransactionController::class, 'approve'])->name('transactions.approve');
-        Route::post('/dashboard/transactions/{id}/reject', [TransactionController::class, 'reject'])->name('transactions.reject');
-        Route::post('/dashboard/transactions/bulk-approve', [TransactionController::class, 'bulkApprove'])->name('transactions.bulk-approve');
-        Route::post('/dashboard/transactions/bulk-reject', [TransactionController::class, 'bulkReject'])->name('transactions.bulk-reject');
-
-        // User Management
-        Route::resource('dashboard/users', UserController::class)->only(['index', 'store', 'update', 'destroy'])->names([
-            'index' => 'users.index',
-            'store' => 'users.store',
-            'update' => 'users.update',
-            'destroy' => 'users.destroy',
-        ]);
+    Route::post('/dashboard/transactions/{id}/approve', [TransactionController::class, 'approve'])->name('transactions.approve');
+    Route::post('/dashboard/transactions/{id}/reject', [TransactionController::class, 'reject'])->name('transactions.reject');
+    Route::post('/dashboard/transactions/bulk-approve', [TransactionController::class, 'bulkApprove'])->name('transactions.bulk-approve');
+    Route::post('/dashboard/transactions/bulk-reject', [TransactionController::class, 'bulkReject'])->name('transactions.bulk-reject');
+    Route::post('/dashboard/transactions/bulk-delete', [TransactionController::class, 'bulkDelete'])->name('transactions.bulk-delete');
+    Route::post('/dashboard/transactions/daily-closing', [TransactionController::class, 'dailyClosing'])->name('transactions.daily-closing');
+    
+    Route::resource('dashboard/users', UserController::class)->only(['index', 'store', 'update', 'destroy'])->names([
+        'index' => 'users.index',
+        'store' => 'users.store',
+        'update' => 'users.update',
+        'destroy' => 'users.destroy',
+    ]);
 
         // Audit Logs
         Route::get('/dashboard/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');

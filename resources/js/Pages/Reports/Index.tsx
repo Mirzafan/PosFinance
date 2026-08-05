@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Head, usePage, router } from '@inertiajs/react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 import LoadingSpinner from '@/Components/LoadingSpinner';
@@ -11,8 +12,6 @@ import {
   TrendingDown, 
   Wallet, 
   Receipt,
-  ArrowUpRight,
-  ArrowDownLeft,
   Filter,
   Eye,
   Download,
@@ -20,7 +19,8 @@ import {
   ImageIcon,
   X,
   AlertTriangle,
-  Loader2
+  Loader2,
+  Box
 } from 'lucide-react';
 
 interface Transaction {
@@ -30,7 +30,12 @@ interface Transaction {
   jenis_transaksi: 'pemasukan' | 'pengeluaran';
   kategori_id: number;
   nominal: number;
+  nominal_ongkir?: number;
+  nominal_asuransi?: number;
+  net_revenue?: number;
   keterangan: string | null;
+  status: string;
+  closed_at?: string | null;
   bukti_transaksi: string | null;
   bukti_transaksi_url: string | null;
   category?: { nama_kategori: string };
@@ -41,14 +46,27 @@ interface Category {
   nama_kategori: string;
 }
 
+interface ProductSummaryItem {
+  id?: number;
+  nama_kategori: string;
+  count: number;
+  total_ongkir: number;
+  total_asuransi: number;
+  net_revenue: number;
+}
+
 interface PageProps {
   transactions: Transaction[];
   summary: {
     total_pemasukan: number;
+    total_ongkir?: number;
+    total_asuransi?: number;
     total_pengeluaran: number;
     saldo: number;
+    net_revenue?: number;
     total_item: number;
   };
+  productSummary?: ProductSummaryItem[];
   categories: Category[];
   filters: {
     start_date?: string;
@@ -74,11 +92,10 @@ const getFirstDayOfMonthString = () => {
 };
 
 export default function Index() {
-  const { transactions, summary, categories, filters } = usePage<any>().props as unknown as PageProps;
+  const { transactions, summary, productSummary, categories, filters } = usePage<any>().props as unknown as PageProps;
 
   const [startDate, setStartDate] = useState(filters.start_date || '');
   const [endDate, setEndDate] = useState(filters.end_date || getTodayString());
-  const [selectedType, setSelectedType] = useState(filters.jenis_transaksi || '');
   const [selectedCategory, setSelectedCategory] = useState(filters.kategori_id || '');
 
   // Validation & Loading state
@@ -111,7 +128,6 @@ export default function Index() {
       start_date: startDate,
       end_date: endDate,
     };
-    if (selectedType) params.jenis_transaksi = selectedType;
     if (selectedCategory) params.kategori_id = selectedCategory;
 
     router.get('/dashboard/reports', params, {
@@ -136,7 +152,6 @@ export default function Index() {
     const params = new URLSearchParams();
     params.append('start_date', startDate);
     params.append('end_date', endDate);
-    if (selectedType) params.append('jenis_transaksi', selectedType);
     if (selectedCategory) params.append('kategori_id', selectedCategory);
     return params.toString();
   };
@@ -219,17 +234,15 @@ export default function Index() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans">Laporan & Rekapitulasi Keuangan</h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Silakan tentukan periode Tanggal Mulai dan Tanggal Akhir untuk mengunduh laporan.</p>
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans">Laporan Keuangan & Rekapitulasi Layanan</h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">Tentukan periode Tanggal Mulai dan Tanggal Akhir untuk memuat dan mengunduh laporan resmi.</p>
           </div>
 
           <div className="flex items-center gap-3">
             <button
               onClick={handleExportExcel}
               disabled={downloadingFormat !== null}
-              className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-xs rounded-xl shadow-lg shadow-emerald-950/50 transition-all cursor-pointer ${
-                downloadingFormat === 'excel' ? 'ring-2 ring-emerald-400 shadow-emerald-500/40 animate-pulse' : ''
-              }`}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-xs rounded-xl shadow-lg transition-all cursor-pointer"
             >
               {downloadingFormat === 'excel' ? (
                 <>
@@ -246,9 +259,7 @@ export default function Index() {
             <button
               onClick={handleExportPdf}
               disabled={downloadingFormat !== null}
-              className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-600 hover:bg-orange-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-xs rounded-xl shadow-lg shadow-orange-950/50 transition-all cursor-pointer ${
-                downloadingFormat === 'pdf' ? 'ring-2 ring-orange-400 shadow-orange-500/40 animate-pulse' : ''
-              }`}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-xs rounded-xl shadow-lg transition-all cursor-pointer"
             >
               {downloadingFormat === 'pdf' ? (
                 <>
@@ -258,7 +269,7 @@ export default function Index() {
               ) : (
                 <>
                   <FileText className="h-4 w-4" />
-                  <span>Cetak PDF</span>
+                  <span>Cetak PDF Resmi</span>
                 </>
               )}
             </button>
@@ -288,8 +299,8 @@ export default function Index() {
 
         {/* Validation Warning Alert */}
         {errorMessage && (
-          <div className="bg-rose-500/10 border border-rose-500/40 rounded-xl p-4 flex items-center gap-3 text-rose-600 dark:text-rose-300 text-xs font-semibold shadow-lg animate-fadeIn">
-            <AlertTriangle className="h-5 w-5 text-rose-500 dark:text-rose-400 shrink-0" />
+          <div className="bg-rose-500/10 border border-rose-500/40 rounded-xl p-4 flex items-center gap-3 text-rose-600 dark:text-rose-300 text-xs font-semibold shadow-lg">
+            <AlertTriangle className="h-5 w-5 text-rose-500 shrink-0" />
             <span>{errorMessage}</span>
           </div>
         )}
@@ -299,7 +310,7 @@ export default function Index() {
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-2">
               <Filter className="h-4 w-4 text-orange-500" />
-              Filter & Periode Laporan
+              Filter Periode & Jenis Layanan
             </h3>
             <div className="flex items-center gap-2">
               <button
@@ -311,7 +322,7 @@ export default function Index() {
               </button>
               <button
                 onClick={resetFilters}
-                className="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-900 dark:text-slate-400 cursor-pointer"
               >
                 Reset Filter
               </button>
@@ -320,7 +331,7 @@ export default function Index() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
             <div>
-              <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1 flex items-center gap-1">
+              <label className="block text-[11px] font-semibold text-slate-500 uppercase mb-1 flex items-center gap-1">
                 <Calendar className="h-3 w-3 text-orange-500" />
                 Mulai Tanggal <span className="text-rose-500">*</span>
               </label>
@@ -331,17 +342,13 @@ export default function Index() {
                   setStartDate(e.target.value);
                   if (errorMessage) setErrorMessage('');
                 }}
-                className={`w-full bg-slate-50 border rounded-xl px-3 py-2 text-xs text-slate-900 dark:bg-slate-950 dark:text-slate-200 focus:outline-none transition-all ${
-                  errorMessage && !startDate
-                    ? 'border-rose-500 ring-2 ring-rose-500/40 bg-rose-50 dark:bg-rose-950/20'
-                    : 'border-slate-300 dark:border-slate-800 focus:border-orange-500'
-                }`}
+                className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-200"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1 flex items-center gap-1">
+              <label className="block text-[11px] font-semibold text-slate-500 uppercase mb-1 flex items-center gap-1">
                 <Calendar className="h-3 w-3 text-orange-500" />
                 Sampai Tanggal <span className="text-rose-500">*</span>
               </label>
@@ -352,25 +359,21 @@ export default function Index() {
                   setEndDate(e.target.value);
                   if (errorMessage) setErrorMessage('');
                 }}
-                className={`w-full bg-slate-50 border rounded-xl px-3 py-2 text-xs text-slate-900 dark:bg-slate-950 dark:text-slate-200 focus:outline-none transition-all ${
-                  errorMessage && !endDate
-                    ? 'border-rose-500 ring-2 ring-rose-500/40 bg-rose-50 dark:bg-rose-950/20'
-                    : 'border-slate-300 dark:border-slate-800 focus:border-orange-500'
-                }`}
+                className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-200"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">
-                Kategori
+              <label className="block text-[11px] font-semibold text-slate-500 uppercase mb-1">
+                Jenis Layanan / Kategori
               </label>
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-orange-500 cursor-pointer"
+                className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-200 cursor-pointer"
               >
-                <option value="">Semua Kategori</option>
+                <option value="">Semua Jenis Layanan</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>{c.nama_kategori}</option>
                 ))}
@@ -379,39 +382,85 @@ export default function Index() {
           </div>
         </div>
 
-        {/* Summary Metric Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800 rounded-2xl p-5 relative overflow-hidden shadow-sm">
+        {/* 3 Summary Metric Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Total Pendapatan Retail</span>
-              <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+              <span className="text-xs font-semibold text-slate-500 uppercase">Total Pendapatan Ongkir</span>
+              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600">
                 <TrendingUp className="h-4 w-4" />
               </div>
             </div>
-            <h3 className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{formatRupiah(summary.total_pemasukan)}</h3>
-            <p className="text-[11px] text-slate-500 mt-1">Total omset pendapatan retail disetujui</p>
+            <h3 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatRupiah(summary.total_ongkir || summary.total_pemasukan)}</h3>
+            <p className="text-[11px] text-slate-500 mt-1">Total Ongkir Terkumpul</p>
           </div>
 
-          <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800 rounded-2xl p-5 relative overflow-hidden shadow-sm">
+          <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Total Catatan Transaksi</span>
-              <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400">
-                <Receipt className="h-4 w-4" />
+              <span className="text-xs font-semibold text-slate-500 uppercase">Total Pengeluaran Asuransi</span>
+              <div className="p-2 rounded-xl bg-rose-500/10 text-rose-600">
+                <TrendingDown className="h-4 w-4" />
               </div>
             </div>
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white">{summary.total_item} <span className="text-sm font-normal text-slate-500">Transaksi</span></h3>
-            <p className="text-[11px] text-slate-500 mt-1">Total jumlah rekaman transaksi retail</p>
+            <h3 className="text-2xl font-bold text-rose-600 dark:text-rose-400">{formatRupiah(summary.total_asuransi || 0)}</h3>
+            <p className="text-[11px] text-slate-500 mt-1">Biaya Asuransi Paket</p>
+          </div>
+
+          <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-slate-500 uppercase">Pendapatan Bersih (Net Revenue)</span>
+              <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600">
+                <Wallet className="h-4 w-4" />
+              </div>
+            </div>
+            <h3 className="text-2xl font-bold text-blue-600 dark:text-blue-400">{formatRupiah(summary.net_revenue || summary.saldo)}</h3>
+            <p className="text-[11px] text-slate-500 mt-1">Ongkir - Asuransi</p>
           </div>
         </div>
+
+        {/* Tabel Rekapitulasi per Jenis Layanan */}
+        {productSummary && productSummary.length > 0 && (
+          <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800/80 rounded-2xl p-6 space-y-4 shadow-sm">
+            <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Box className="h-4 w-4 text-orange-500" />
+              Rekapitulasi Pendapatan per Jenis Layanan
+            </h4>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 uppercase tracking-wider bg-slate-50 dark:bg-slate-950/40">
+                    <th className="py-3 pl-4 pr-2">Jenis Layanan</th>
+                    <th className="py-3 px-2 text-center">Jumlah Paket</th>
+                    <th className="py-3 px-2 text-right">Ongkir (IDR)</th>
+                    <th className="py-3 px-2 text-right">Asuransi (IDR)</th>
+                    <th className="py-3 pr-4 pl-2 text-right">Net Revenue</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800/50">
+                  {productSummary.map((prod, idx) => (
+                    <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="py-3 pl-4 pr-2 font-bold text-slate-900 dark:text-white">{prod.nama_kategori}</td>
+                      <td className="py-3 px-2 text-center font-semibold text-slate-700 dark:text-slate-300">{prod.count} Paket</td>
+                      <td className="py-3 px-2 text-right font-bold text-emerald-600 dark:text-emerald-400">{formatRupiah(prod.total_ongkir)}</td>
+                      <td className="py-3 px-2 text-right font-bold text-rose-600 dark:text-rose-400">{formatRupiah(prod.total_asuransi)}</td>
+                      <td className="py-3 pr-4 pl-2 text-right font-extrabold text-orange-600 dark:text-orange-400">{formatRupiah(prod.net_revenue)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Live Data Preview Table */}
         <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800/80 rounded-2xl overflow-hidden flex flex-col shadow-sm">
           <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 flex items-center justify-between">
             <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Receipt className="h-4 w-4 text-orange-500" />
-              Pratinjau Rekapitulasi Data Laporan
+              Pratinjau Data Jurnal Transaksi
             </h4>
-            <span className="text-xs text-slate-500 dark:text-slate-400">
+            <span className="text-xs text-slate-500">
               Total: <strong className="text-slate-900 dark:text-white">{summary.total_item}</strong> transaksi
             </span>
           </div>
@@ -419,76 +468,44 @@ export default function Index() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-xs uppercase tracking-wider bg-slate-50 dark:bg-slate-950/20">
+                <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 text-xs uppercase tracking-wider bg-slate-50 dark:bg-slate-950/20">
                   <th className="py-3.5 pl-6">No. Transaksi</th>
                   <th className="py-3.5">Tanggal</th>
-                  <th className="py-3.5">Jenis</th>
-                  <th className="py-3.5">Kategori</th>
-                  <th className="py-3.5">Keterangan</th>
-                  <th className="py-3.5 text-center">Bukti</th>
-                  <th className="py-3.5 pr-6 text-right">Nominal</th>
+                  <th className="py-3.5">Jenis Layanan</th>
+                  <th className="py-3.5 text-right">Ongkir</th>
+                  <th className="py-3.5 text-right">Asuransi</th>
+                  <th className="py-3.5 text-right">Net Revenue</th>
+                  <th className="py-3.5 pr-6 text-center">Bukti</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-800/40">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800/40 text-xs">
                 {transactions.map((trx) => {
                   const isPdf = trx.bukti_transaksi_url ? trx.bukti_transaksi_url.toLowerCase().endsWith('.pdf') : false;
+                  const ongkir = Number((trx.nominal_ongkir && trx.nominal_ongkir > 0) ? trx.nominal_ongkir : (trx.nominal || 0));
+                  const asuransi = Number(trx.nominal_asuransi || 0);
+                  const net = ongkir - asuransi;
 
                   return (
-                    <tr key={trx.id} className="text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                      <td className="py-3.5 pl-6 font-mono text-xs font-bold text-slate-900 dark:text-white">
-                        {trx.nomor_transaksi}
-                      </td>
-                      <td className="py-3.5 text-xs font-medium text-slate-600 dark:text-slate-300">
-                        {new Date(trx.tanggal).toLocaleDateString('id-ID', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric'
-                        })}
-                      </td>
-                      <td className="py-3.5 text-xs">
-                        {trx.jenis_transaksi === 'pemasukan' ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                            <ArrowUpRight className="h-3 w-3" />
-                            Pemasukan
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">
-                            <ArrowDownLeft className="h-3 w-3" />
-                            Pengeluaran
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3.5">
-                        <span className="inline-block text-[10px] font-bold text-slate-700 bg-slate-100 border-slate-200 dark:text-slate-300 dark:bg-slate-800 px-2 py-0.5 rounded-full border dark:border-slate-700/50">
+                    <tr key={trx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                      <td className="py-3 pl-6 font-mono font-bold text-slate-900 dark:text-white">{trx.nomor_transaksi}</td>
+                      <td className="py-3">{new Date(trx.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                      <td className="py-3">
+                        <span className="inline-block text-[10px] font-bold text-slate-700 bg-slate-100 dark:text-slate-300 dark:bg-slate-800 px-2 py-0.5 rounded-full">
                           {trx.category?.nama_kategori || '-'}
                         </span>
                       </td>
-                      <td className="py-3.5 text-xs max-w-xs truncate text-slate-700 dark:text-slate-300">
-                        {trx.keterangan || '-'}
-                      </td>
-                      <td className="py-3.5 text-center">
+                      <td className="py-3 text-right font-bold text-emerald-600 dark:text-emerald-400">{formatRupiah(ongkir)}</td>
+                      <td className="py-3 text-right font-bold text-rose-600 dark:text-rose-400">{asuransi > 0 ? formatRupiah(asuransi) : '-'}</td>
+                      <td className="py-3 text-right font-extrabold text-slate-900 dark:text-white">{formatRupiah(net)}</td>
+                      <td className="py-3 pr-6 text-center">
                         {trx.bukti_transaksi_url ? (
                           <button
                             onClick={() => openProofPreview(trx)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 border transition-all hover:scale-105 cursor-pointer"
+                            className="px-2 py-0.5 text-[11px] rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 cursor-pointer"
                           >
-                            {isPdf ? (
-                              <FileText className="h-3.5 w-3.5 text-rose-500 dark:text-rose-400" />
-                            ) : (
-                              <ImageIcon className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
-                            )}
-                            <Eye className="h-3 w-3 text-slate-400" />
+                            <Eye className="h-3 w-3 inline" />
                           </button>
-                        ) : (
-                          <span className="text-[11px] text-slate-400 dark:text-slate-600 font-italic">-</span>
-                        )}
-                      </td>
-                      <td className="py-3.5 pr-6 text-right font-bold">
-                        {trx.jenis_transaksi === 'pemasukan' ? (
-                          <span className="text-emerald-600 dark:text-emerald-400 text-xs">{formatRupiah(trx.nominal)}</span>
-                        ) : (
-                          <span className="text-rose-600 dark:text-rose-400 text-xs">{formatRupiah(trx.nominal)}</span>
-                        )}
+                        ) : '-'}
                       </td>
                     </tr>
                   );
@@ -496,7 +513,7 @@ export default function Index() {
 
                 {transactions.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center text-xs text-slate-500">
+                    <td colSpan={8} className="py-12 text-center text-xs text-slate-500">
                       Silakan tentukan rentang tanggal untuk menampilkan data transaksi.
                     </td>
                   </tr>
@@ -508,66 +525,25 @@ export default function Index() {
       </div>
 
       {/* Pratinjau Modal */}
-      {previewModalOpen && activePreview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+      {previewModalOpen && activePreview && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
           <div className="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/70">
-              <div className="flex items-center gap-2">
-                {activePreview.isPdf ? (
-                  <FileText className="h-5 w-5 text-rose-500 dark:text-rose-400" />
-                ) : (
-                  <ImageIcon className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-                )}
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Pratinjau Bukti Transaksi</h3>
-                  <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400">{activePreview.nomor}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <a
-                  href={activePreview.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:text-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  Buka Tab Baru
-                </a>
-                <a
-                  href={activePreview.url}
-                  download
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white bg-orange-600 hover:bg-orange-500 rounded-lg shadow-md transition-colors"
-                >
-                  <Download className="h-3.5 w-3.5" />
-                  Unduh
-                </a>
-                <button
-                  onClick={() => setPreviewModalOpen(false)}
-                  className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ml-2 cursor-pointer"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Pratinjau Bukti #{activePreview.nomor}</h3>
+              <button onClick={() => setPreviewModalOpen(false)} className="text-slate-400 hover:text-white cursor-pointer">
+                <X className="h-5 w-5" />
+              </button>
             </div>
-
             <div className="p-6 bg-slate-100 dark:bg-slate-950 flex items-center justify-center overflow-auto max-h-[78vh]">
               {activePreview.isPdf ? (
-                <iframe
-                  src={activePreview.url}
-                  title={`Bukti Transaksi ${activePreview.nomor}`}
-                  className="w-full h-[70vh] rounded-xl border border-slate-300 dark:border-slate-800 shadow-2xl"
-                />
+                <iframe src={activePreview.url} className="w-full h-[70vh] rounded-xl border border-slate-300 shadow-2xl" title="Bukti PDF" />
               ) : (
-                <img
-                  src={activePreview.url}
-                  alt={`Bukti Transaksi ${activePreview.nomor}`}
-                  className="max-h-[70vh] max-w-full rounded-xl object-contain shadow-2xl border border-slate-300 dark:border-slate-800"
-                />
+                <img src={activePreview.url} alt="Bukti Foto" className="max-h-[70vh] max-w-full object-contain rounded-xl shadow-2xl" />
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </DashboardLayout>
   );

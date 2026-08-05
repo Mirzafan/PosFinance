@@ -41,13 +41,13 @@ class DatabaseSeeder extends Seeder
         // Seed Branches (Single Dedicated Regional Branch)
         $branch = Branch::create(['nama_cabang' => 'Pos Indonesia Kantor Regional IV Semarang']);
 
-        // Seed Categories (Pure Retail Revenue Categories)
+        // Seed Official PosAja! Application Product Categories
         $categoriesData = [
-            'Meterai & Prangko (Retail)',
-            'Benda Pos & Souvenir',
-            'Kemasan & Packing Material',
-            'Konsinyasi & Produk UMKM Binaan',
-            'Layanan Pos Retail Lainnya'
+            'POSSAMEDAY',
+            'POSNEXTDAY',
+            'POSREGULER',
+            'POSKARGO',
+            'POS EXPRESS',
         ];
 
         $categories = [];

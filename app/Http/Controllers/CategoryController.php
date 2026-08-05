@@ -23,28 +23,37 @@ class CategoryController extends Controller
 
     public function store(StoreCategoryRequest $request)
     {
-        $validated = $request->validated();
+        if ($request->user()->role !== 'admin') {
+            abort(403, 'Akses ditolak. Hanya Admin yang dapat mengelola kategori transaksi.');
+        }
 
-        DB::transaction(function () use ($validated, $request) {
-            $cat = Category::create([
-                'nama_kategori' => trim($validated['nama_kategori']),
-            ]);
+        $validated = $request->validate([
+            'nama_kategori' => 'required|string|max:255|unique:categories,nama_kategori',
+        ], [
+            'nama_kategori.required' => 'Nama kategori wajib diisi.',
+            'nama_kategori.unique' => 'Nama kategori ini sudah ada.',
+        ]);
 
-            AuditLog::record(
-                'CREATE',
-                'Kategori',
-                "Menambahkan kategori transaksi baru: '{$cat->nama_kategori}'",
-                $request->user(),
-                null,
-                $cat->only(['nama_kategori'])
-            );
-        });
+        $cat = Category::create([
+            'nama_kategori' => trim($validated['nama_kategori']),
+        ]);
+
+        AuditLog::record(
+            'CREATE',
+            'Kategori',
+            "Menambahkan kategori transaksi baru: '{$cat->nama_kategori}'",
+            $request->user()
+        );
 
         return redirect()->back()->with('success', 'Kategori transaksi berhasil ditambahkan.');
     }
 
     public function update(UpdateCategoryRequest $request, $id)
     {
+        if ($request->user()->role !== 'admin') {
+            abort(403, 'Akses ditolak. Hanya Admin yang dapat mengelola kategori transaksi.');
+        }
+
         $category = Category::findOrFail($id);
         $oldName = $category->nama_kategori;
         $oldValues = $category->only(['nama_kategori']);
@@ -71,6 +80,10 @@ class CategoryController extends Controller
 
     public function destroy(Request $request, $id)
     {
+        if ($request->user()->role !== 'admin') {
+            abort(403, 'Akses ditolak. Hanya Admin yang dapat mengelola kategori transaksi.');
+        }
+
         $category = Category::findOrFail($id);
         $name = $category->nama_kategori;
         $oldValues = $category->only(['nama_kategori']);

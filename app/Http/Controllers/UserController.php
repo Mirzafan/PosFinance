@@ -24,25 +24,38 @@ class UserController extends Controller
 
     public function store(StoreUserRequest $request)
     {
-        $validated = $request->validated();
+        if ($request->user()->role !== 'admin') {
+            abort(403, 'Hanya Admin yang dapat menambah pengguna.');
+        }
 
-        DB::transaction(function () use ($validated, $request) {
-            $newUser = User::create([
-                'name' => $validated['name'],
-                'email' => strtolower($validated['email']),
-                'password' => Hash::make($validated['password']),
-                'role' => $validated['role'],
-            ]);
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|lowercase|email|max:255|unique:users',
+            'password' => 'required|string|min:8',
+            'role' => 'required|in:admin,staff',
+        ], [
+            'name.required' => 'Nama lengkap wajib diisi.',
+            'email.required' => 'Alamat email wajib diisi.',
+            'email.lowercase' => 'Alamat email tidak boleh mengandung huruf kapital.',
+            'email.unique' => 'Alamat email ini sudah terdaftar.',
+            'password.required' => 'Kata sandi wajib diisi.',
+            'password.min' => 'Kata sandi minimal 8 karakter.',
+            'role.required' => 'Role hak akses wajib dipilih.',
+        ]);
 
-            AuditLog::record(
-                'CREATE',
-                'User',
-                "Menambahkan akun pengguna baru: {$newUser->name} ({$newUser->email}) [Role: " . strtoupper($newUser->role) . "]",
-                $request->user(),
-                null,
-                $newUser->only(['name', 'email', 'role'])
-            );
-        });
+        $newUser = User::create([
+            'name' => $validated['name'],
+            'email' => strtolower($validated['email']),
+            'password' => Hash::make($validated['password']),
+            'role' => $validated['role'],
+        ]);
+
+        AuditLog::record(
+            'CREATE',
+            'User',
+            "Menambahkan akun pengguna baru: {$newUser->name} ({$newUser->email}) [Role: " . strtoupper($newUser->role) . "]",
+            $request->user()
+        );
 
         return redirect()->back()->with('success', 'Pengguna ' . $validated['name'] . ' berhasil ditambahkan.');
     }
@@ -51,7 +64,19 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
 
-        $validated = $request->validated();
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|lowercase|email|max:255|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:8',
+            'role' => 'required|in:admin,staff',
+        ], [
+            'name.required' => 'Nama lengkap wajib diisi.',
+            'email.required' => 'Alamat email wajib diisi.',
+            'email.lowercase' => 'Alamat email tidak boleh mengandung huruf kapital.',
+            'email.unique' => 'Alamat email ini sudah digunakan oleh akun lain.',
+            'password.min' => 'Kata sandi minimal 8 karakter.',
+            'role.required' => 'Role hak akses wajib dipilih.',
+        ]);
 
         $data = [
             'name' => $validated['name'],

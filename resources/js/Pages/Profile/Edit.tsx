@@ -193,21 +193,14 @@ export default function Edit() {
                 </div>
               </div>
 
-              {/* Card 2: Total Pendapatan Retail */}
+              {/* Card 2: Total Nominal Input Pendapatan */}
               <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-5 relative overflow-hidden shadow-sm">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Pendapatan Retail</span>
-                  <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-                    <TrendingUp className="h-5 w-5" />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <h3 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">
-                    {formatRupiah(financialStats.total_pemasukan)}
-                  </h3>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                    <ArrowUpRight className="h-3 w-3 text-emerald-500" /> Total akumulasi pemasukan retail
-                  </p>
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-3">Total Pendapatan Layanan</span>
+                <div>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                    <ArrowUpRight className="h-3 w-3" /> Jasa Kurir & Logistik
+                  </span>
+                  <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{formatRupiah(financialStats.total_pemasukan)}</p>
                 </div>
               </div>
             </div>
@@ -230,7 +223,6 @@ export default function Edit() {
                       <th className="py-3 px-2 whitespace-nowrap">Tanggal</th>
                       <th className="py-3 px-2 whitespace-nowrap">Jenis</th>
                       <th className="py-3 px-2 whitespace-nowrap">Kategori</th>
-                      <th className="py-3 px-2 whitespace-nowrap">Status</th>
                       <th className="py-3 px-2 min-w-[150px]">Keterangan</th>
                       <th className="py-3 px-2 text-right whitespace-nowrap">Nominal</th>
                       <th className="py-3 pr-4 pl-2 text-center whitespace-nowrap">Bukti</th>
@@ -270,25 +262,6 @@ export default function Edit() {
                               <span className="inline-block text-[10px] font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700/50">
                                 {trx.category?.nama_kategori || '-'}
                               </span>
-                            </td>
-                            {/* Status Persetujuan Column */}
-                            <td className="py-3 px-2 text-xs whitespace-nowrap">
-                              {trx.status === 'approved' ? (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                                  <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
-                                  Disetujui
-                                </span>
-                              ) : trx.status === 'pending' ? (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30 animate-pulse">
-                                  <Clock className="h-3 w-3 text-amber-600 dark:text-amber-400" />
-                                  Pending
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/30">
-                                  <XCircle className="h-3 w-3 text-rose-600 dark:text-rose-400" />
-                                  Ditolak
-                                </span>
-                              )}
                             </td>
                             <td className="py-3 px-2 text-xs max-w-[150px] truncate text-slate-700 dark:text-slate-300">
                               {trx.keterangan || '-'}

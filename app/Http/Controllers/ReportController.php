@@ -40,18 +40,42 @@ class ReportController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-        $totalPemasukan = (float) $transactions->sum('nominal');
+        $totalOngkir = (float) $transactions->sum(function ($t) {
+            return $t->nominal_ongkir > 0 ? $t->nominal_ongkir : $t->nominal;
+        });
+        $totalAsuransi = (float) $transactions->sum('nominal_asuransi');
+        $netRevenue = $totalOngkir - $totalAsuransi;
 
+        // Product Breakdown Summary
         $categories = Category::orderBy('nama_kategori')->get();
+        $productSummary = $categories->map(function ($cat) use ($transactions) {
+            $catTrx = $transactions->where('kategori_id', $cat->id);
+            $ongkir = (float) $catTrx->sum(function ($t) {
+                return $t->nominal_ongkir > 0 ? $t->nominal_ongkir : $t->nominal;
+            });
+            $asuransi = (float) $catTrx->sum('nominal_asuransi');
+            return [
+                'id' => $cat->id,
+                'nama_kategori' => $cat->nama_kategori,
+                'count' => $catTrx->count(),
+                'total_ongkir' => $ongkir,
+                'total_asuransi' => $asuransi,
+                'net_revenue' => $ongkir - $asuransi,
+            ];
+        })->values();
 
         return Inertia::render('Reports/Index', [
             'transactions' => $transactions,
             'summary' => [
-                'total_pemasukan' => $totalPemasukan,
-                'net_profit' => $totalPemasukan,
-                'saldo' => $totalPemasukan,
+                'total_pemasukan' => $totalOngkir,
+                'total_ongkir' => $totalOngkir,
+                'total_asuransi' => $totalAsuransi,
+                'total_pengeluaran' => $totalAsuransi,
+                'saldo' => $netRevenue,
+                'net_revenue' => $netRevenue,
                 'total_item' => $transactions->count(),
             ],
+            'productSummary' => $productSummary,
             'categories' => $categories,
             'filters' => $request->only(['start_date', 'end_date', 'kategori_id']),
         ]);
@@ -95,16 +119,42 @@ class ReportController extends Controller
         $branchName = 'Pos Indonesia Kantor Regional IV Semarang';
 
         // Calculate Totals
-        $totalPemasukan = (float) $transactions->sum('nominal');
+        $totalOngkir = (float) $transactions->sum(function ($t) {
+            return $t->nominal_ongkir > 0 ? $t->nominal_ongkir : $t->nominal;
+        });
+        $totalAsuransi = (float) $transactions->sum('nominal_asuransi');
+        $netRevenue = $totalOngkir - $totalAsuransi;
+
+        // Product Summary
+        $categories = Category::orderBy('nama_kategori')->get();
+        $productSummary = $categories->map(function ($cat) use ($transactions) {
+            $catTrx = $transactions->where('kategori_id', $cat->id);
+            $ongkir = (float) $catTrx->sum(function ($t) {
+                return $t->nominal_ongkir > 0 ? $t->nominal_ongkir : $t->nominal;
+            });
+            $asuransi = (float) $catTrx->sum('nominal_asuransi');
+            return [
+                'nama_kategori' => $cat->nama_kategori,
+                'count' => $catTrx->count(),
+                'total_ongkir' => $ongkir,
+                'total_asuransi' => $asuransi,
+                'net_revenue' => $ongkir - $asuransi,
+            ];
+        })->values();
 
         $data = [
             'transactions' => $transactions,
             'start_date' => $startDate ? Carbon::parse($startDate)->format('d F Y') : 'Awal Catatan',
             'end_date' => $endDate ? Carbon::parse($endDate)->format('d F Y') : 'Semua Data',
             'branch_name' => $branchName,
-            'total_pemasukan' => $totalPemasukan,
-            'net_profit' => $totalPemasukan,
-            'saldo' => $totalPemasukan,
+            'jenis_transaksi' => 'Pendapatan Jasa Kurir & Logistik',
+            'total_ongkir' => $totalOngkir,
+            'total_asuransi' => $totalAsuransi,
+            'total_pemasukan' => $totalOngkir,
+            'total_pengeluaran' => $totalAsuransi,
+            'saldo' => $netRevenue,
+            'net_revenue' => $netRevenue,
+            'product_summary' => $productSummary,
             'printed_at' => Carbon::now()->format('d-m-Y H:i:s'),
         ];
 

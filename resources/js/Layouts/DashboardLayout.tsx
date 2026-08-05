@@ -54,49 +54,12 @@ interface PageProps {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const props = usePage<any>().props as unknown as PageProps;
   const user = props.auth.user;
-  const notifications: NotificationItem[] = props.notifications || [];
   const { theme, toggleTheme } = useTheme();
 
   const [currentDate, setCurrentDate] = useState('');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  // Notification State
-  const [notifOpen, setNotifOpen] = useState(false);
-  const [readNotifIds, setReadNotifIds] = useState<string[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('posfinance_read_notifications');
-        return saved ? JSON.parse(saved) : [];
-      } catch {
-        return [];
-      }
-    }
-    return [];
-  });
-
-  const unreadCount = notifications.filter(n => !readNotifIds.includes(n.id)).length;
-
-  const handleNotificationClick = (item: NotificationItem) => {
-    if (!readNotifIds.includes(item.id)) {
-      const updated = [...readNotifIds, item.id];
-      setReadNotifIds(updated);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('posfinance_read_notifications', JSON.stringify(updated));
-      }
-    }
-    setNotifOpen(false);
-    router.visit(item.link);
-  };
-
-  const markAllAsRead = () => {
-    const allIds = notifications.map(n => n.id);
-    const updated = Array.from(new Set([...readNotifIds, ...allIds]));
-    setReadNotifIds(updated);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('posfinance_read_notifications', JSON.stringify(updated));
-    }
-  };
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('posfinance_sidebar_open');
@@ -135,7 +98,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       roles: ['admin', 'staff'],
     },
     {
-      label: 'Kategori Transaksi',
+      label: 'Kategori Layanan',
       href: '/dashboard/categories',
       icon: Tag,
       roles: ['admin'],

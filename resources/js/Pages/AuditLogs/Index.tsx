@@ -55,7 +55,6 @@ interface PageProps {
   stats: {
     total_logs: number;
     transaksi_count: number;
-    approval_count: number;
     user_count: number;
   };
   filters: {
@@ -125,20 +124,6 @@ export default function Index() {
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-rose-400 bg-rose-500/10 border border-rose-500/30 rounded-full">
             <Trash2 className="h-3 w-3 text-rose-400" />
             DELETE
-          </span>
-        );
-      case 'APPROVE':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 rounded-full">
-            <CheckCircle2 className="h-3 w-3 text-cyan-400" />
-            APPROVE
-          </span>
-        );
-      case 'REJECT':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-red-400 bg-red-500/10 border border-red-500/30 rounded-full">
-            <XCircle className="h-3 w-3 text-red-400" />
-            REJECT
           </span>
         );
       default:
@@ -223,7 +208,7 @@ export default function Index() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-5 relative overflow-hidden shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Audit Log</span>
@@ -244,17 +229,6 @@ export default function Index() {
             </div>
             <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{stats.transaksi_count}</h3>
             <p className="text-[11px] text-slate-500 mt-1">Aktivitas input & edit transaksi</p>
-          </div>
-
-          <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-5 relative overflow-hidden shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Persetujuan (Approval)</span>
-              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 className="h-5 w-5" />
-              </div>
-            </div>
-            <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{stats.approval_count}</h3>
-            <p className="text-[11px] text-slate-500 mt-1">Status disetujui & ditolak</p>
           </div>
 
           <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-5 relative overflow-hidden shadow-sm">
@@ -310,8 +284,6 @@ export default function Index() {
                 <option value="CREATE">CREATE (Tambah Data)</option>
                 <option value="UPDATE">UPDATE (Edit Data)</option>
                 <option value="DELETE">DELETE (Hapus Data)</option>
-                <option value="APPROVE">APPROVE (Disetujui)</option>
-                <option value="REJECT">REJECT (Ditolak)</option>
               </select>
             </div>
 
