@@ -14,20 +14,14 @@ import {
   FileText,
   Image as ImageIcon,
   Eye,
-  Download,
-  ExternalLink,
   Edit3,
   Trash2,
   X,
-  UploadCloud,
-  CheckCircle2,
-  Clock,
-  Check,
-  XCircle,
   ShieldCheck,
-  AlertCircle,
-  CheckSquare,
-  Loader2
+  CheckCircle2,
+  Lock,
+  Calendar,
+  AlertCircle
 } from 'lucide-react';
 
 interface Transaction {
@@ -37,8 +31,12 @@ interface Transaction {
   jenis_transaksi: 'pemasukan' | 'pengeluaran';
   kategori_id: number;
   nominal: number;
+  nominal_ongkir?: number;
+  nominal_asuransi?: number;
+  net_revenue?: number;
   keterangan: string | null;
   status: 'pending' | 'approved' | 'rejected';
+  closed_at?: string | null;
   bukti_transaksi: string | null;
   bukti_transaksi_url: string | null;
   category?: { nama_kategori: string };
@@ -83,40 +81,26 @@ export default function Index() {
   const { auth, transactions, categories, filters, flash } = usePage<any>().props as unknown as PageProps;
   const userRole = auth.user.role;
   const isStaff = userRole === 'staff';
-  const canApprove = userRole === 'admin';
+  const isAdmin = userRole === 'admin';
 
   // Filter States
   const [search, setSearch] = useState(filters.search || '');
   const [startDate, setStartDate] = useState(filters.start_date || '');
   const [endDate, setEndDate] = useState(filters.end_date || '');
   const [selectedCategory, setSelectedCategory] = useState(filters.kategori_id || '');
-  const [selectedType, setSelectedType] = useState(filters.jenis_transaksi || '');
-  const [selectedStatus, setSelectedStatus] = useState(filters.status || '');
 
   // Form Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTrx, setEditingTrx] = useState<Transaction | null>(null);
   const [filePreview, setFilePreview] = useState<{ url: string; isPdf: boolean; name: string } | null>(null);
-  const [nominalDisplay, setNominalDisplay] = useState('');
+  
+  const [ongkirDisplay, setOngkirDisplay] = useState('');
+  const [asuransiDisplay, setAsuransiDisplay] = useState('');
+  const [useInsurance, setUseInsurance] = useState(false);
 
-  const formatNumberWithDots = (val: string | number) => {
-    if (!val && val !== 0) return '';
-    const digits = String(val).split('.')[0].replace(/\D/g, '');
-    if (!digits) return '';
-    return new Intl.NumberFormat('id-ID').format(Number(digits));
-  };
-
-  const handleNominalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value.replace(/\D/g, '');
-    if (!rawValue) {
-      setNominalDisplay('');
-      setData('nominal', '');
-    } else {
-      const formatted = new Intl.NumberFormat('id-ID').format(Number(rawValue));
-      setNominalDisplay(formatted);
-      setData('nominal', rawValue);
-    }
-  };
+  // Daily Closing Modal State
+  const [isClosingModalOpen, setIsClosingModalOpen] = useState(false);
+  const [closingDate, setClosingDate] = useState(new Date().toISOString().split('T')[0]);
 
   // Bukti Preview Modal State
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
@@ -128,60 +112,62 @@ export default function Index() {
 
   // Success Pop Up Modal State
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [successModalTitle, setSuccessModalTitle] = useState('Berhasil Menambahkan Transaksi');
+  const [successModalTitle, setSuccessModalTitle] = useState('Berhasil');
   const [successModalMessage, setSuccessModalMessage] = useState('');
 
-  // Bulk Selection & Action Loading State
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [bulkAction, setBulkAction] = useState<'approve' | 'reject' | 'delete' | null>(null);
-  const [actionLoading, setActionLoading] = useState<{ id: number; type: 'approve' | 'reject' } | null>(null);
+  const formatNumberWithDots = (val: string | number) => {
+    if (!val && val !== 0) return '';
+    const digits = String(val).split('.')[0].replace(/\D/g, '');
+    if (!digits) return '';
+    return new Intl.NumberFormat('id-ID').format(Number(digits));
+  };
 
-  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      setSelectedIds(transactions.data.map(t => t.id));
+  const handleOngkirChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/\D/g, '');
+    if (!rawValue) {
+      setOngkirDisplay('');
+      setAsuransiDisplay('');
+      setData(prev => ({
+        ...prev,
+        nominal_ongkir: '',
+        nominal: '',
+        nominal_asuransi: '0',
+      }));
     } else {
-      setSelectedIds([]);
+      const ongkirNum = Number(rawValue);
+      const formattedOngkir = new Intl.NumberFormat('id-ID').format(ongkirNum);
+      setOngkirDisplay(formattedOngkir);
+
+      if (useInsurance) {
+        const autoAsuransi = Math.round(ongkirNum * 0.02);
+        const formattedAsuransi = new Intl.NumberFormat('id-ID').format(autoAsuransi);
+        setAsuransiDisplay(formattedAsuransi);
+        setData(prev => ({
+          ...prev,
+          nominal_ongkir: rawValue,
+          nominal: rawValue,
+          nominal_asuransi: String(autoAsuransi),
+        }));
+      } else {
+        setData(prev => ({
+          ...prev,
+          nominal_ongkir: rawValue,
+          nominal: rawValue,
+          nominal_asuransi: '0',
+        }));
+      }
     }
   };
 
-  const handleSelectRow = (id: number) => {
-    setSelectedIds(prev => 
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-    );
-  };
-
-  const isAllSelected = transactions.data.length > 0 && selectedIds.length === transactions.data.length;
-
-  const handleBulkApprove = () => {
-    if (selectedIds.length === 0 || bulkAction !== null) return;
-    if (window.confirm(`Apakah Anda yakin ingin menyetujui ${selectedIds.length} transaksi terpilih?`)) {
-      router.post('/dashboard/transactions/bulk-approve', { ids: selectedIds }, {
-        onStart: () => setBulkAction('approve'),
-        onFinish: () => setBulkAction(null),
-        onSuccess: () => setSelectedIds([])
-      });
-    }
-  };
-
-  const handleBulkReject = () => {
-    if (selectedIds.length === 0 || bulkAction !== null) return;
-    if (window.confirm(`Apakah Anda yakin ingin menolak ${selectedIds.length} transaksi terpilih?`)) {
-      router.post('/dashboard/transactions/bulk-reject', { ids: selectedIds }, {
-        onStart: () => setBulkAction('reject'),
-        onFinish: () => setBulkAction(null),
-        onSuccess: () => setSelectedIds([])
-      });
-    }
-  };
-
-  const handleBulkDelete = () => {
-    if (selectedIds.length === 0 || bulkAction !== null) return;
-    if (window.confirm(`Apakah Anda yakin ingin menghapus ${selectedIds.length} transaksi terpilih secara permanen?`)) {
-      router.post('/dashboard/transactions/bulk-delete', { ids: selectedIds }, {
-        onStart: () => setBulkAction('delete'),
-        onFinish: () => setBulkAction(null),
-        onSuccess: () => setSelectedIds([])
-      });
+  const handleAsuransiChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/\D/g, '');
+    if (!rawValue) {
+      setAsuransiDisplay('');
+      setData('nominal_asuransi', '0');
+    } else {
+      const formatted = new Intl.NumberFormat('id-ID').format(Number(rawValue));
+      setAsuransiDisplay(formatted);
+      setData('nominal_asuransi', rawValue);
     }
   };
 
@@ -191,6 +177,8 @@ export default function Index() {
     jenis_transaksi: 'pemasukan' as 'pemasukan' | 'pengeluaran',
     kategori_id: categories.length > 0 ? String(categories[0].id) : '',
     nominal: '',
+    nominal_ongkir: '',
+    nominal_asuransi: '0',
     keterangan: '',
     bukti_transaksi: null as File | null,
   });
@@ -201,8 +189,6 @@ export default function Index() {
     if (startDate) params.start_date = startDate;
     if (endDate) params.end_date = endDate;
     if (selectedCategory) params.kategori_id = selectedCategory;
-    if (selectedType) params.jenis_transaksi = selectedType;
-    if (selectedStatus) params.status = selectedStatus;
 
     router.get('/dashboard/transactions', params, {
       preserveState: true,
@@ -210,19 +196,11 @@ export default function Index() {
     });
   };
 
-  const handleSearchKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      applyFilters(1);
-    }
-  };
-
   const resetFilters = () => {
     setSearch('');
     setStartDate('');
     setEndDate('');
     setSelectedCategory('');
-    setSelectedType('');
-    setSelectedStatus('');
     router.get('/dashboard/transactions', {}, { replace: true });
   };
 
@@ -239,34 +217,46 @@ export default function Index() {
   const openCreateModal = () => {
     setEditingTrx(null);
     clearErrors();
+    setUseInsurance(false);
     setData({
       tanggal: new Date().toISOString().split('T')[0],
       jenis_transaksi: 'pemasukan',
       kategori_id: categories.length > 0 ? String(categories[0].id) : '',
       nominal: '',
+      nominal_ongkir: '',
+      nominal_asuransi: '0',
       keterangan: '',
       bukti_transaksi: null,
     });
-    setNominalDisplay('');
+    setOngkirDisplay('');
+    setAsuransiDisplay('');
     setFilePreview(null);
     setIsModalOpen(true);
   };
 
-  // Open Modal Edit (Admin/Supervisor Only)
+  // Open Modal Edit
   const openEditModal = (trx: Transaction) => {
     if (isStaff) return;
     setEditingTrx(trx);
     clearErrors();
-    const rawNominal = String(trx.nominal);
+    const rawOngkir = String(trx.nominal_ongkir || trx.nominal || 0);
+    const rawAsuransi = String(trx.nominal_asuransi || 0);
+    const hasAsuransi = Number(rawAsuransi) > 0;
+
+    setUseInsurance(hasAsuransi);
+
     setData({
       tanggal: trx.tanggal ? trx.tanggal.split('T')[0] : new Date().toISOString().split('T')[0],
       jenis_transaksi: trx.jenis_transaksi,
       kategori_id: String(trx.kategori_id),
-      nominal: rawNominal,
+      nominal: rawOngkir,
+      nominal_ongkir: rawOngkir,
+      nominal_asuransi: hasAsuransi ? rawAsuransi : '0',
       keterangan: trx.keterangan || '',
       bukti_transaksi: null,
     });
-    setNominalDisplay(formatNumberWithDots(rawNominal));
+    setOngkirDisplay(formatNumberWithDots(rawOngkir));
+    setAsuransiDisplay(hasAsuransi ? formatNumberWithDots(rawAsuransi) : '');
 
     if (trx.bukti_transaksi_url) {
       const isPdf = trx.bukti_transaksi_url.toLowerCase().endsWith('.pdf');
@@ -306,14 +296,15 @@ export default function Index() {
         tanggal: data.tanggal,
         jenis_transaksi: data.jenis_transaksi,
         kategori_id: data.kategori_id,
-        nominal: data.nominal,
+        nominal_ongkir: data.nominal_ongkir,
+        nominal_asuransi: data.nominal_asuransi,
         keterangan: data.keterangan,
         bukti_transaksi: data.bukti_transaksi,
       }, {
         onSuccess: () => {
           setIsModalOpen(false);
           setSuccessModalTitle('Berhasil Perbarui Transaksi');
-          setSuccessModalMessage('Catatan transaksi telah sukses diperbarui pada jurnal PosFinance.');
+          setSuccessModalMessage('Catatan transaksi telah sukses diperbarui.');
           setShowSuccessModal(true);
           reset();
         }
@@ -323,7 +314,7 @@ export default function Index() {
         onSuccess: () => {
           setIsModalOpen(false);
           setSuccessModalTitle('Berhasil Menambahkan Transaksi');
-          setSuccessModalMessage('Catatan transaksi kas baru telah sukses disimpan dan ditambahkan ke dalam jurnal PosFinance.');
+          setSuccessModalMessage('Transaksi pendapatan baru berhasil dicatat dalam jurnal PosFinance.');
           setShowSuccessModal(true);
           reset();
         }
@@ -331,24 +322,19 @@ export default function Index() {
     }
   };
 
-  // Approve & Reject Actions
-  const handleApprove = (trx: Transaction) => {
-    router.post(`/dashboard/transactions/${trx.id}/approve`, {}, {
-      preserveScroll: true,
-      onStart: () => setActionLoading({ id: trx.id, type: 'approve' }),
-      onFinish: () => setActionLoading(null)
+  // Daily Closing Action
+  const handleDailyClosingSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    router.post('/dashboard/transactions/daily-closing', { tanggal: closingDate }, {
+      onSuccess: () => {
+        setIsClosingModalOpen(false);
+        setSuccessModalTitle('Daily Closing Berhasil');
+        setSuccessModalMessage(`Proses Closing Harian & Approval untuk tanggal ${closingDate} telah sukses dilaksanakan.`);
+        setShowSuccessModal(true);
+      }
     });
   };
 
-  const handleReject = (trx: Transaction) => {
-    router.post(`/dashboard/transactions/${trx.id}/reject`, {}, {
-      preserveScroll: true,
-      onStart: () => setActionLoading({ id: trx.id, type: 'reject' }),
-      onFinish: () => setActionLoading(null)
-    });
-  };
-
-  // Open Proof Preview Modal
   const openProofPreview = (trx: Transaction) => {
     if (!trx.bukti_transaksi_url) return;
     const isPdf = trx.bukti_transaksi_url.toLowerCase().endsWith('.pdf');
@@ -360,7 +346,6 @@ export default function Index() {
     setPreviewModalOpen(true);
   };
 
-  // Confirm Delete (Admin/Supervisor Only)
   const handleDeleteConfirm = (trx: Transaction) => {
     if (isStaff) return;
     setTrxToDelete(trx);
@@ -375,7 +360,7 @@ export default function Index() {
         setDeleteModalOpen(false);
         setTrxToDelete(null);
         setSuccessModalTitle('Berhasil Menghapus Transaksi');
-        setSuccessModalMessage(`Data transaksi ${nomorTrx} telah sukses dihapus secara permanen dari jurnal PosFinance.`);
+        setSuccessModalMessage(`Data transaksi ${nomorTrx} telah dihapus.`);
         setShowSuccessModal(true);
       }
     });
@@ -383,113 +368,112 @@ export default function Index() {
 
   return (
     <DashboardLayout>
-      <Head title="Transaksi - PosFinance Regional IV Semarang" />
+      <Head title="Jurnal Transaksi - PosFinance Regional IV" />
 
       <div className="space-y-6 animate-fadeIn">
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans flex items-center gap-2">
-              Jurnal & Daftar Transaksi
+              Jurnal & Daftar Transaksi Kurir
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-sm">
-              Pencatatan pendapatan harian layanan kurir & logistik (POSSAMEDAY, POSNEXTDAY, & POSREGULER) PT Pos Indonesia Kantor Regional IV Semarang.
+              Pencatatan pendapatan ongkir & pengeluaran asuransi paket (POSSAMEDAY, POSNEXTDAY, POSREGULER, POSKARGO, EXPRESS).
             </p>
           </div>
 
-          <button
-            onClick={openCreateModal}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold text-sm rounded-xl shadow-lg shadow-orange-900/30 hover:shadow-orange-900/50 transition-all duration-200 cursor-pointer"
-          >
-            <Plus className="h-4 w-4 stroke-[2.5]" />
-            Catat Transaksi Baru
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={openCreateModal}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold text-sm rounded-xl shadow-lg shadow-orange-900/30 transition-all cursor-pointer"
+            >
+              <Plus className="h-4 w-4 stroke-[2.5]" />
+              Catat Transaksi Paket
+            </button>
+          </div>
         </div>
 
-        {/* Search & Filters */}
-        <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800/80 rounded-2xl p-5 space-y-4 transition-colors">
+        {/* Filters */}
+        <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800/80 rounded-2xl p-5 space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {/* Quick Search */}
-            <div className="flex items-center w-full max-w-sm bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 focus-within:border-orange-500/60 transition-colors">
-              <Search className="h-4 w-4 text-slate-400 dark:text-slate-500 mr-2" />
+            <div className="flex items-center w-full max-w-sm bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2">
+              <Search className="h-4 w-4 text-slate-400 mr-2" />
               <input
                 type="text"
                 placeholder="Cari No. Transaksi atau keterangan..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                onKeyDown={handleSearchKeyPress}
-                className="bg-transparent text-sm text-slate-900 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none w-full"
+                onKeyDown={(e) => e.key === 'Enter' && applyFilters(1)}
+                className="bg-transparent text-sm text-slate-900 dark:text-slate-300 placeholder-slate-400 focus:outline-none w-full"
               />
             </div>
 
-            <div className="flex items-center gap-2 self-end md:self-auto">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => applyFilters(1)}
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:text-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-700/50 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:text-slate-300 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
                 Cari
               </button>
               <button
                 onClick={resetFilters}
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 cursor-pointer"
               >
                 Reset Filter
               </button>
             </div>
           </div>
 
-          {/* Filter Options */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2 border-t border-slate-200 dark:border-slate-800/50">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-200 dark:border-slate-800/50">
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Mulai Tanggal</label>
+              <label className="text-[10px] font-semibold text-slate-500 uppercase">Mulai Tanggal</label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                className="bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-300"
               />
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Sampai Tanggal</label>
+              <label className="text-[10px] font-semibold text-slate-500 uppercase">Sampai Tanggal</label>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                className="bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-300"
               />
             </div>
 
-
-
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Kategori</label>
+              <label className="text-[10px] font-semibold text-slate-500 uppercase">Jenis Produk</label>
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-900 dark:text-slate-300 focus:outline-none cursor-pointer"
+                className="bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-900 dark:text-slate-300 cursor-pointer"
               >
-                <option value="">Semua Kategori</option>
+                <option value="">Semua Jenis Produk</option>
                 {categories.map(c => (
                   <option key={c.id} value={c.id}>{c.nama_kategori}</option>
                 ))}
               </select>
-            </div>          </div>
+            </div>
+          </div>
         </div>
 
         {/* Data Table */}
-        <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800/80 rounded-2xl overflow-hidden flex flex-col transition-colors">
+        <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800/80 rounded-2xl overflow-hidden flex flex-col">
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider bg-slate-50 dark:bg-slate-950/40">
                   <th className="py-3 pl-4 pr-2 whitespace-nowrap">No. Transaksi</th>
                   <th className="py-3 px-2 whitespace-nowrap">Tanggal</th>
-                  <th className="py-3 px-2 whitespace-nowrap">Jenis</th>
-                  <th className="py-3 px-2 whitespace-nowrap">Kategori</th>
-                  <th className="py-3 px-2 min-w-[120px]">Keterangan</th>
-                  <th className="py-3 px-2 text-right whitespace-nowrap">Nominal</th>
+                  <th className="py-3 px-2 whitespace-nowrap">Jenis Produk</th>
+                  <th className="py-3 px-2 text-right whitespace-nowrap">Ongkir (Pemasukan)</th>
+                  <th className="py-3 px-2 text-right whitespace-nowrap">Asuransi (Pengeluaran)</th>
+                  <th className="py-3 px-2 text-right whitespace-nowrap">Net Revenue</th>
                   <th className="py-3 px-2 text-center whitespace-nowrap">Bukti</th>
                   {!isStaff && <th className="py-3 pr-4 pl-2 text-center whitespace-nowrap">Aksi</th>}
                 </tr>
@@ -497,97 +481,58 @@ export default function Index() {
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800/50">
                 {transactions.data.map((trx) => {
                   const isPdf = trx.bukti_transaksi_url ? trx.bukti_transaksi_url.toLowerCase().endsWith('.pdf') : false;
+                  const ongkir = Number((trx.nominal_ongkir && trx.nominal_ongkir > 0) ? trx.nominal_ongkir : (trx.nominal || 0));
+                  const asuransi = Number(trx.nominal_asuransi || 0);
+                  const net = ongkir - asuransi;
 
                   return (
-                    <tr 
-                      key={trx.id} 
-                      className="text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group"
-                    >
+                    <tr key={trx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                       <td className="py-3 pl-4 pr-2 font-mono text-[11px] font-bold text-slate-900 dark:text-white whitespace-nowrap">
                         {trx.nomor_transaksi}
                       </td>
-                      <td className="py-3 px-2 text-xs font-medium text-slate-700 dark:text-slate-200 whitespace-nowrap">
-                        {new Date(trx.tanggal).toLocaleDateString('id-ID', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric'
-                        })}
-                      </td>
-                      <td className="py-3 px-2 text-xs whitespace-nowrap">
-                        {trx.jenis_transaksi === 'pemasukan' ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                            <ArrowUpRight className="h-3 w-3 text-emerald-400" />
-                            Pemasukan
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">
-                            <ArrowDownLeft className="h-3 w-3 text-rose-400" />
-                            Pengeluaran
-                          </span>
-                        )}
+                      <td className="py-3 px-2 text-xs font-medium whitespace-nowrap">
+                        {new Date(trx.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </td>
                       <td className="py-3 px-2 whitespace-nowrap">
-                        <span className="inline-block text-[10px] font-bold text-slate-700 bg-slate-100 border-slate-200 dark:text-slate-300 dark:bg-slate-800 px-2 py-0.5 rounded-full border dark:border-slate-700/50">
+                        <span className="inline-block text-[10px] font-bold text-orange-700 bg-orange-100 dark:text-orange-300 dark:bg-orange-950/60 border border-orange-200 dark:border-orange-800/50 px-2.5 py-0.5 rounded-full">
                           {trx.category?.nama_kategori || '-'}
                         </span>
                       </td>
-
-                      <td className="py-3 px-2 text-xs max-w-[150px] truncate">
-                        {trx.keterangan || '-'}
+                      <td className="py-3 px-2 text-right font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                        {formatRupiah(ongkir)}
                       </td>
-                      <td className="py-3 px-2 text-right font-bold whitespace-nowrap">
-                        {trx.jenis_transaksi === 'pemasukan' ? (
-                          <span className="text-emerald-600 dark:text-emerald-400 text-xs inline-flex items-center justify-end font-semibold">
-                            {formatRupiah(trx.nominal)}
-                          </span>
-                        ) : (
-                          <span className="text-rose-600 dark:text-rose-400 text-xs inline-flex items-center justify-end font-semibold">
-                            {formatRupiah(trx.nominal)}
-                          </span>
-                        )}
+                      <td className="py-3 px-2 text-right font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">
+                        {asuransi > 0 ? formatRupiah(asuransi) : '-'}
                       </td>
-
-                      {/* Bukti Column */}
+                      <td className="py-3 px-2 text-right font-extrabold text-slate-900 dark:text-white whitespace-nowrap">
+                        {formatRupiah(net)}
+                      </td>
                       <td className="py-3 px-2 text-center whitespace-nowrap">
                         {trx.bukti_transaksi_url ? (
                           <button
                             onClick={() => openProofPreview(trx)}
-                            className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 border transition-all cursor-pointer"
-                            title="Lihat Pratinjau Bukti"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 cursor-pointer"
                           >
-                            {isPdf ? (
-                              <>
-                                <FileText className="h-3 w-3 text-rose-500 dark:text-rose-400" />
-                                <span>PDF</span>
-                              </>
-                            ) : (
-                              <>
-                                <ImageIcon className="h-3 w-3 text-cyan-600 dark:text-cyan-400" />
-                                <span>Foto</span>
-                              </>
-                            )}
+                            {isPdf ? <FileText className="h-3 w-3 text-rose-500" /> : <ImageIcon className="h-3 w-3 text-cyan-600" />}
                             <Eye className="h-3 w-3 text-slate-400" />
                           </button>
                         ) : (
-                          <span className="text-[11px] text-slate-400 dark:text-slate-600 italic">Tidak Ada</span>
+                          <span className="text-[11px] text-slate-400 italic">Tidak Ada</span>
                         )}
                       </td>
-
-                      {/* Actions Column (Admin & Supervisor Only) */}
                       {!isStaff && (
                         <td className="py-3 pr-4 pl-2 text-center whitespace-nowrap">
                           <div className="flex items-center justify-center gap-1">
-                            {/* Edit & Delete Buttons */}
                             <button
                               onClick={() => openEditModal(trx)}
-                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-amber-500/20 text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-300 border border-slate-200 dark:border-slate-700/50 transition-colors cursor-pointer"
+                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-amber-500/20 text-slate-500 dark:text-slate-400 hover:text-amber-600 transition-colors cursor-pointer"
                               title="Edit Transaksi"
                             >
                               <Edit3 className="h-3.5 w-3.5" />
                             </button>
                             <button
                               onClick={() => handleDeleteConfirm(trx)}
-                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/20 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700/50 transition-colors cursor-pointer"
+                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/20 text-slate-500 dark:text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
                               title="Hapus Transaksi"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -603,13 +548,9 @@ export default function Index() {
                   <tr>
                     <td colSpan={isStaff ? 8 : 9} className="py-16 text-center">
                       <div className="flex flex-col items-center justify-center max-w-sm mx-auto space-y-3">
-                        <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 shadow-inner">
-                          <Coins className="h-6 w-6 text-slate-400 dark:text-slate-600" />
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Belum Ada Transaksi Tercatat</h4>
-                          <p className="text-xs text-slate-500 mt-1">Klik tombol <strong>"Catat Transaksi Baru"</strong> di atas untuk menambah transaksi pertamamu.</p>
-                        </div>
+                        <Coins className="h-8 w-8 text-slate-400" />
+                        <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Belum Ada Transaksi Paket</h4>
+                        <p className="text-xs text-slate-500">Klik tombol "Catat Transaksi Paket" untuk menambahkan data.</p>
                       </div>
                     </td>
                   </tr>
@@ -620,31 +561,27 @@ export default function Index() {
 
           {/* Pagination */}
           {transactions.last_page > 1 && (
-            <div className="border-t border-slate-200 dark:border-slate-800/80 px-6 py-4 flex items-center justify-between bg-slate-50 dark:bg-slate-950/10">
+            <div className="border-t border-slate-200 dark:border-slate-800 px-6 py-4 flex items-center justify-between">
               <span className="text-xs text-slate-500 font-medium">
-                Menampilkan <span className="text-slate-900 dark:text-slate-300 font-semibold">{transactions.data.length}</span> dari{' '}
-                <span className="text-slate-900 dark:text-slate-300 font-semibold">{transactions.total}</span> transaksi
+                Menampilkan {transactions.data.length} dari {transactions.total} transaksi
               </span>
-
               <div className="flex items-center gap-2">
                 <button
                   disabled={transactions.current_page === 1}
                   onClick={() => applyFilters(transactions.current_page - 1)}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:text-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-800 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 disabled:opacity-35 cursor-pointer"
                 >
-                  <ChevronLeft className="h-3.5 w-3.5" />
-                  Sebelumnya
+                  <ChevronLeft className="h-3.5 w-3.5 inline" /> Sebelumnya
                 </button>
-                <span className="text-xs text-slate-500 dark:text-slate-400 px-2.5">
-                  Halaman <span className="text-slate-900 dark:text-slate-200 font-bold">{transactions.current_page}</span> dari {transactions.last_page}
+                <span className="text-xs text-slate-500 px-2">
+                  Halaman {transactions.current_page} dari {transactions.last_page}
                 </span>
                 <button
                   disabled={transactions.current_page === transactions.last_page}
                   onClick={() => applyFilters(transactions.current_page + 1)}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:text-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-800 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 disabled:opacity-35 cursor-pointer"
                 >
-                  Berikutnya
-                  <ChevronRight className="h-3.5 w-3.5" />
+                  Berikutnya <ChevronRight className="h-3.5 w-3.5 inline" />
                 </button>
               </div>
             </div>
@@ -656,190 +593,174 @@ export default function Index() {
       {/* MODAL 1: FORM CATAT / EDIT TRANSAKSI */}
       {/* ========================================================================= */}
       {isModalOpen && typeof window !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
           <div className="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Coins className="h-5 w-5 text-orange-500" />
-                {editingTrx ? 'Edit Record Transaksi' : 'Catat Transaksi Baru'}
+                {editingTrx ? 'Edit Record Transaksi Paket' : 'Catat Transaksi Paket Baru'}
               </h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              >
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white p-1 rounded-lg cursor-pointer">
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Modal Body / Form */}
             <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 text-slate-700 dark:text-slate-300 text-sm">
-              {/* Notice for Staff */}
-              {isStaff && (
-                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-center gap-2.5 text-amber-700 dark:text-amber-300 text-xs font-medium">
-                  <ShieldCheck className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                  <span>Transaksi yang diinput oleh Staff akan memerlukan persetujuan (approval) dari Admin atau Supervisor sebelum masuk ke laporan saldo resmi.</span>
-                </div>
-              )}
-
-              {/* Jenis Transaksi Info */}
-              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3 flex items-center justify-between text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
-                <div className="flex items-center gap-2">
-                  <ArrowUpRight className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                  <span>Jenis Transaksi: Pendapatan Layanan Kurir & Logistik</span>
-                </div>
-                <span className="bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 rounded-md text-[10px] uppercase font-bold tracking-wider">
-                  Pemasukan
-                </span>
-              </div>
-
-              {/* Tanggal & Kategori */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
                     Tanggal Transaksi <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="date"
                     value={data.tanggal}
                     onChange={(e) => setData('tanggal', e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:border-orange-500"
+                    className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-200"
                     required
                   />
-                  {errors.tanggal && <p className="text-xs text-rose-500 dark:text-rose-400 mt-1">{errors.tanggal}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                    Kategori <span className="text-rose-500">*</span>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                    Jenis Produk / Layanan <span className="text-rose-500">*</span>
                   </label>
                   <select
                     value={data.kategori_id}
                     onChange={(e) => setData('kategori_id', e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:border-orange-500 cursor-pointer"
+                    className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-200 cursor-pointer"
                     required
                   >
-                    <option value="">Pilih Kategori</option>
+                    <option value="">Pilih Jenis Produk</option>
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>{c.nama_kategori}</option>
                     ))}
                   </select>
-                  {errors.kategori_id && <p className="text-xs text-rose-500 dark:text-rose-400 mt-1">{errors.kategori_id}</p>}
                 </div>
               </div>
 
-              {/* Nominal */}
+              {/* Nominal Ongkir */}
               <div>
-                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Nominal (IDR) <span className="text-rose-500">*</span>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                  Pendapatan Ongkir (Pemasukan) <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <span className="absolute left-3.5 top-2.5 text-xs font-bold text-slate-500">Rp</span>
                   <input
                     type="text"
                     inputMode="numeric"
-                    placeholder="Contoh: 100.000"
-                    value={nominalDisplay}
-                    onChange={handleNominalChange}
-                    className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl pl-9 pr-3 py-2 text-sm text-slate-900 dark:text-slate-200 font-mono font-bold focus:outline-none focus:border-orange-500"
+                    placeholder="Contoh: 50.000"
+                    value={ongkirDisplay}
+                    onChange={handleOngkirChange}
+                    className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl pl-9 pr-3 py-2 text-sm font-mono font-bold text-slate-900 dark:text-white focus:outline-none"
                     required
                   />
                 </div>
-                {errors.nominal && <p className="text-xs text-rose-500 dark:text-rose-400 mt-1">{errors.nominal}</p>}
               </div>
 
-              {/* Keterangan */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Keterangan / Catatan
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="Contoh: Pendapatan harian transaksi pengiriman POSSAMEDAY / POSNEXTDAY..."
-                  value={data.keterangan}
-                  onChange={(e) => setData('keterangan', e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:border-orange-500"
-                />
-                {errors.keterangan && <p className="text-xs text-rose-500 dark:text-rose-400 mt-1">{errors.keterangan}</p>}
-              </div>
-
-              {/* Upload Bukti Transaksi */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                  Bukti Transaksi (Foto / PDF) {!editingTrx && <span className="text-rose-500">*</span>}
-                </label>
-
-                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 dark:border-slate-800 border-dashed rounded-xl bg-slate-50 dark:bg-slate-950/60 hover:border-slate-400 dark:hover:border-slate-700 transition-colors">
-                  <div className="space-y-2 text-center">
-                    {filePreview ? (
-                      <div className="flex flex-col items-center gap-2">
-                        {filePreview.isPdf ? (
-                          <div className="w-16 h-16 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-500 dark:text-rose-400">
-                            <FileText className="h-8 w-8" />
-                          </div>
-                        ) : (
-                          <div className="relative group">
-                            <img
-                              src={filePreview.url}
-                              alt="Preview Bukti"
-                              className="w-24 h-24 object-cover rounded-xl border border-slate-300 dark:border-slate-700 shadow-md"
-                            />
-                          </div>
-                        )}
-                        <span className="text-xs text-slate-700 dark:text-slate-300 font-medium truncate max-w-xs">{filePreview.name}</span>
-                        <label className="text-xs text-orange-600 dark:text-orange-400 hover:underline font-semibold cursor-pointer">
-                          Ganti File
-                          <input
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp,application/pdf"
-                            onChange={handleFileChange}
-                            className="hidden"
-                          />
-                        </label>
-                      </div>
-                    ) : (
-                      <>
-                        <UploadCloud className="mx-auto h-10 w-10 text-slate-400 dark:text-slate-500" />
-                        <div className="flex text-xs text-slate-500 dark:text-slate-400">
-                          <label className="relative cursor-pointer font-semibold text-orange-600 dark:text-orange-400 hover:underline focus-within:outline-none">
-                            <span>Pilih file foto atau PDF</span>
-                            <input
-                              type="file"
-                              accept="image/jpeg,image/png,image/webp,application/pdf"
-                              onChange={handleFileChange}
-                              required={!editingTrx}
-                              className="sr-only"
-                            />
-                          </label>
-                          <p className="pl-1">atau drag and drop</p>
-                        </div>
-                        <p className="text-[11px] text-slate-400 dark:text-slate-600">
-                          PNG, JPG, WEBP, atau PDF hingga 10 MB
-                        </p>
-                      </>
-                    )}
-                  </div>
+              {/* Opsi Tambahkan Asuransi Paket */}
+              <div className="bg-slate-50 border border-slate-200 dark:bg-slate-950 dark:border-slate-800 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-800 dark:text-slate-200">
+                    <input
+                      type="checkbox"
+                      checked={useInsurance}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setUseInsurance(checked);
+                        if (checked) {
+                          const ongkirNum = Number(data.nominal_ongkir || 0);
+                          const calc2Pct = Math.round(ongkirNum * 0.02);
+                          setAsuransiDisplay(calc2Pct > 0 ? formatNumberWithDots(calc2Pct) : '');
+                          setData('nominal_asuransi', String(calc2Pct));
+                        } else {
+                          setAsuransiDisplay('');
+                          setData('nominal_asuransi', '0');
+                        }
+                      }}
+                      className="w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer"
+                    />
+                    <span>Tambahkan Pengeluaran Asuransi Paket (2% dari Ongkir)</span>
+                  </label>
+                  {useInsurance && (
+                    <span className="text-[10px] font-extrabold text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-950/60 px-2.5 py-0.5 rounded-full border border-orange-300">
+                      Auto 2% Ongkir
+                    </span>
+                  )}
                 </div>
-                {errors.bukti_transaksi && (
-                  <p className="text-xs text-rose-500 dark:text-rose-400 mt-1">{errors.bukti_transaksi}</p>
+
+                {useInsurance && (
+                  <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2 animate-fadeIn">
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      Nominal Pengeluaran Asuransi Paket
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-2.5 text-xs font-bold text-slate-500">Rp</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="Contoh: 1.000"
+                        value={asuransiDisplay}
+                        onChange={handleAsuransiChange}
+                        className="w-full bg-white border border-slate-300 dark:bg-slate-900 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2 text-sm font-mono font-bold text-slate-900 dark:text-white focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-slate-400">Dihitung 2% dari nominal ongkir</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const ongkirNum = Number(data.nominal_ongkir || 0);
+                          const calc2Pct = Math.round(ongkirNum * 0.02);
+                          setAsuransiDisplay(formatNumberWithDots(calc2Pct));
+                          setData('nominal_asuransi', String(calc2Pct));
+                        }}
+                        className="font-bold text-orange-600 dark:text-orange-400 hover:underline cursor-pointer"
+                      >
+                        Reset 2% Auto
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
 
-              {/* Submit Buttons */}
-              <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Keterangan / Catatan</label>
+                <textarea
+                  rows={2}
+                  placeholder="Keterangan transaksi paket..."
+                  value={data.keterangan}
+                  onChange={(e) => setData('keterangan', e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                  Bukti Transaksi (Foto / PDF) {!editingTrx && <span className="text-rose-500">*</span>}
+                </label>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,application/pdf"
+                  onChange={handleFileChange}
+                  className="w-full text-xs text-slate-500 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl p-2"
+                  required={!editingTrx}
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={processing}
-                  className="px-5 py-2.5 bg-orange-600 hover:bg-orange-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-orange-950/25 disabled:opacity-50 transition-all cursor-pointer"
+                  className="px-5 py-2 bg-gradient-to-r from-orange-500 to-amber-600 text-white font-semibold text-xs rounded-xl shadow-md cursor-pointer"
                 >
-                  {processing ? 'Menyimpan...' : editingTrx ? 'Simpan Perubahan' : 'Catat Transaksi'}
+                  {editingTrx ? 'Simpan Perubahan' : 'Simpan Transaksi Paket'}
                 </button>
               </div>
             </form>
@@ -848,67 +769,23 @@ export default function Index() {
         document.body
       )}
 
-      {/* ========================================================================= */}
-      {/* MODAL 2: PRATINJAU BUKTI TRANSAKSI (FOTO / PDF VIEWER) */}
-      {/* ========================================================================= */}
+      {/* Proof Preview Modal */}
       {previewModalOpen && activePreview && typeof window !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/70">
-              <div className="flex items-center gap-2">
-                {activePreview.isPdf ? (
-                  <FileText className="h-5 w-5 text-rose-500 dark:text-rose-400" />
-                ) : (
-                  <ImageIcon className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-                )}
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Pratinjau Bukti Transaksi</h3>
-                  <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400">{activePreview.nomor}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <a
-                  href={activePreview.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:text-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  Buka Tab Baru
-                </a>
-                <a
-                  href={activePreview.url}
-                  download
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white bg-orange-600 hover:bg-orange-500 rounded-lg shadow-md transition-colors"
-                >
-                  <Download className="h-3.5 w-3.5" />
-                  Unduh
-                </a>
-                <button
-                  onClick={() => setPreviewModalOpen(false)}
-                  className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ml-2 cursor-pointer"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-3xl shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Pratinjau Bukti Transaksi #{activePreview.nomor}
+              </h3>
+              <button onClick={() => setPreviewModalOpen(false)} className="text-slate-400 hover:text-white cursor-pointer">
+                <X className="h-5 w-5" />
+              </button>
             </div>
-
-            {/* Modal Content */}
-            <div className="p-6 bg-slate-100 dark:bg-slate-950 flex items-center justify-center overflow-auto max-h-[78vh]">
+            <div className="h-[60vh] flex items-center justify-center bg-slate-950 rounded-xl overflow-hidden">
               {activePreview.isPdf ? (
-                <iframe
-                  src={activePreview.url}
-                  title={`Bukti Transaksi ${activePreview.nomor}`}
-                  className="w-full h-[70vh] rounded-xl border border-slate-300 dark:border-slate-800 shadow-2xl"
-                />
+                <iframe src={activePreview.url} className="w-full h-full border-none" title="Bukti PDF" />
               ) : (
-                <img
-                  src={activePreview.url}
-                  alt={`Bukti Transaksi ${activePreview.nomor}`}
-                  className="max-h-[70vh] max-w-full rounded-xl object-contain shadow-2xl border border-slate-300 dark:border-slate-800"
-                />
+                <img src={activePreview.url} alt="Bukti Foto" className="max-h-full max-w-full object-contain" />
               )}
             </div>
           </div>
@@ -916,87 +793,19 @@ export default function Index() {
         document.body
       )}
 
-      {/* ========================================================================= */}
-      {/* MODAL 3: KONFIRMASI HAPUS TRANSAKSI (ADMIN & SUPERVISOR ONLY) */}
-      {/* ========================================================================= */}
-      {deleteModalOpen && trxToDelete && !isStaff && typeof window !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0">
-                <Trash2 className="h-5 w-5" />
-              </div>
-              <div>
-                <h4 className="text-base font-bold text-slate-900 dark:text-white">Hapus Record Transaksi?</h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Nomor: <span className="font-mono font-bold text-slate-900 dark:text-slate-200">{trxToDelete.nomor_transaksi}</span>
-                </p>
-              </div>
-            </div>
-
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              Tindakan ini tidak dapat dibatalkan. Data transaksi beserta file bukti transaksi terkait akan dihapus secara permanen dari server.
-            </p>
-
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setDeleteModalOpen(false)}
-                className="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer"
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                onClick={executeDelete}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-rose-950/25 transition-all cursor-pointer"
-              >
-                Hapus Permanen
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* Pop Up Modal Success Transaksi */}
+      {/* Success Modal */}
       {showSuccessModal && typeof window !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative text-center space-y-5 animate-zoomIn">
-            {/* Close Button */}
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md p-6 text-center space-y-4 shadow-2xl">
+            <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto" />
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">{successModalTitle}</h3>
+            <p className="text-xs text-slate-500">{successModalMessage}</p>
             <button
-              type="button"
               onClick={() => setShowSuccessModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl cursor-pointer"
             >
-              <X className="h-5 w-5" />
+              Selesai
             </button>
-
-            {/* Success Icon */}
-            <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400 shadow-lg shadow-emerald-950/25">
-              <CheckCircle2 className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
-            </div>
-
-            {/* Header / Content Text */}
-            <div className="space-y-2">
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
-                {successModalTitle}
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                {successModalMessage}
-              </p>
-            </div>
-
-            {/* Submit Confirmation Button */}
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={() => setShowSuccessModal(false)}
-                className="w-full py-2.5 px-4 bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-semibold text-xs rounded-xl shadow-lg shadow-orange-950/25 transition-all cursor-pointer"
-              >
-                Mengerti & Tutup
-              </button>
-            </div>
           </div>
         </div>,
         document.body

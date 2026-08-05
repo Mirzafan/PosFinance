@@ -7,24 +7,24 @@
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             color: #333;
-            font-size: 11px;
+            font-size: 10px;
             line-height: 1.4;
             margin: 0;
             padding: 0;
         }
         .header {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             border-bottom: 3px solid #ff6600; /* Pos Indonesia Orange */
-            padding-bottom: 10px;
+            padding-bottom: 8px;
         }
         .logo-text {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
             color: #ff6600;
             margin: 0;
         }
         .logo-sub {
-            font-size: 10px;
+            font-size: 9px;
             color: #555;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -33,29 +33,30 @@
         .title {
             text-align: right;
             float: right;
-            margin-top: -45px;
+            margin-top: -40px;
         }
         .title h2 {
             margin: 0;
             color: #2c3e50;
-            font-size: 16px;
+            font-size: 15px;
         }
         .title p {
-            margin: 3px 0 0 0;
+            margin: 2px 0 0 0;
             color: #7f8c8d;
+            font-size: 9px;
         }
         .info-table {
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             border-spacing: 0;
         }
         .info-table td {
-            padding: 4px 0;
+            padding: 3px 0;
             vertical-align: top;
         }
         .summary-container {
             width: 100%;
-            margin-bottom: 25px;
+            margin-bottom: 15px;
             clear: both;
         }
         .summary-box {
@@ -63,7 +64,7 @@
             float: left;
             background-color: #f8f9fa;
             border-left: 4px solid #ccd1d1;
-            padding: 10px;
+            padding: 8px;
             margin-right: 3%;
         }
         .summary-box.income {
@@ -73,36 +74,44 @@
             border-left-color: #e74c3c; /* Red */
         }
         .summary-box.balance {
-            border-left-color: #3498db; /* Blue */
+            border-left-color: #ff6600; /* Orange */
         }
         .summary-box h3 {
-            margin: 0 0 5px 0;
-            font-size: 10px;
+            margin: 0 0 4px 0;
+            font-size: 9px;
             color: #7f8c8d;
             text-transform: uppercase;
         }
         .summary-box p {
             margin: 0;
-            font-size: 15px;
+            font-size: 13px;
             font-weight: bold;
             color: #2c3e50;
+        }
+        .section-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 15px 0 8px 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 4px;
         }
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 5px;
         }
         .data-table th {
             background-color: #2c3e50;
             color: #ffffff;
             font-weight: bold;
             text-align: left;
-            padding: 8px 6px;
-            font-size: 10px;
+            padding: 6px 5px;
+            font-size: 9px;
             text-transform: uppercase;
         }
         .data-table td {
-            padding: 8px 6px;
+            padding: 6px 5px;
             border-bottom: 1px solid #bdc3c7;
             vertical-align: top;
         }
@@ -112,27 +121,15 @@
         .text-right {
             text-align: right;
         }
-        .badge {
-            padding: 2px 5px;
-            border-radius: 3px;
-            font-size: 9px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        .badge-income {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .badge-expense {
-            background-color: #f8d7da;
-            color: #721c24;
+        .text-center {
+            text-align: center;
         }
         .footer {
             position: fixed;
-            bottom: -30px;
+            bottom: -20px;
             left: 0px;
             right: 0px;
-            height: 30px;
+            height: 25px;
             text-align: center;
             color: #bdc3c7;
             font-size: 8px;
@@ -151,7 +148,7 @@
             <p class="logo-sub">Kantor Regional IV Semarang - PosFinance</p>
         </div>
         <div class="title">
-            <h2>Laporan Keuangan Regional IV</h2>
+            <h2>Laporan Pendapatan Kurir & Logistik</h2>
             <p>Dicetak pada: {{ $printed_at }}</p>
         </div>
     </div>
@@ -160,65 +157,91 @@
         <tr>
             <td style="width: 15%;"><strong>Periode</strong></td>
             <td style="width: 35%;">: {{ $start_date }} s/d {{ $end_date }}</td>
-            <td style="width: 15%;"><strong>Filter Jenis</strong></td>
-            <td style="width: 35%;">: {{ ucfirst($jenis_transaksi) }}</td>
+            <td style="width: 15%;"><strong>Lokasi / Unit</strong></td>
+            <td style="width: 35%;">: {{ $branch_name }}</td>
         </tr>
         <tr>
-            <td><strong>Lokasi / Unit</strong></td>
-            <td>: {{ $branch_name }}</td>
-            <td><strong>Total Item</strong></td>
-            <td>: {{ count($transactions) }} Transaksi</td>
+            <td><strong>Layanan</strong></td>
+            <td>: {{ $jenis_transaksi }}</td>
+            <td><strong>Total Transaksi</strong></td>
+            <td>: {{ count($transactions) }} Paket / Resi</td>
         </tr>
     </table>
 
     <div class="summary-container">
-        <div class="summary-box income" style="width: 46%; float: left; margin-right: 4%;">
-            <h3>Total Pendapatan Layanan</h3>
-            <p>Rp {{ number_format($total_pemasukan, 2, ',', '.') }}</p>
+        <div class="summary-box income">
+            <h3>Total Pendapatan Ongkir</h3>
+            <p>Rp {{ number_format($total_ongkir ?? $total_pemasukan, 0, ',', '.') }}</p>
         </div>
-        <div class="summary-box balance" style="width: 46%; float: left; margin-right: 0; border-left-color: #ff6600;">
-            <h3>Total Rekaman Transaksi</h3>
-            <p>{{ count($transactions) }} Transaksi</p>
+        <div class="summary-box expense">
+            <h3>Total Pengeluaran Asuransi</h3>
+            <p>Rp {{ number_format($total_asuransi ?? 0, 0, ',', '.') }}</p>
+        </div>
+        <div class="summary-box balance" style="margin-right: 0;">
+            <h3>Pendapatan Bersih (Net)</h3>
+            <p>Rp {{ number_format($net_revenue ?? $saldo, 0, ',', '.') }}</p>
         </div>
         <div class="clearfix"></div>
     </div>
 
+    @if(isset($product_summary) && count($product_summary) > 0)
+        <div class="section-title">REKAPITULASI PENDAPATAN PER JENIS PRODUK</div>
+        <table class="data-table" style="margin-bottom: 15px;">
+            <thead>
+                <tr>
+                    <th style="width: 5%;">NO</th>
+                    <th style="width: 35%;">JENIS PRODUK / LAYANAN</th>
+                    <th style="width: 15%; text-align: center;">JUMLAH TRANSAKSI</th>
+                    <th style="width: 15%; text-align: right;">ONGKIR (IDR)</th>
+                    <th style="width: 15%; text-align: right;">ASURANSI (IDR)</th>
+                    <th style="width: 15%; text-align: right;">NET REVENUE (IDR)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($product_summary as $idx => $prod)
+                    <tr>
+                        <td class="text-center">{{ $idx + 1 }}</td>
+                        <td><strong>{{ $prod['nama_kategori'] }}</strong></td>
+                        <td class="text-center">{{ $prod['count'] }} Paket</td>
+                        <td class="text-right">Rp {{ number_format($prod['total_ongkir'], 0, ',', '.') }}</td>
+                        <td class="text-right">Rp {{ number_format($prod['total_asuransi'], 0, ',', '.') }}</td>
+                        <td class="text-right" style="font-weight: bold; color: #ff6600;">Rp {{ number_format($prod['net_revenue'], 0, ',', '.') }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @endif
+
+    <div class="section-title">RINCIAN JURNAL TRANSAKSI KEUANGAN</div>
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 15%;">No. Trx</th>
-                <th style="width: 11%;">Tanggal</th>
-                <th style="width: 11%;">Jenis</th>
-                <th style="width: 15%;">Kategori</th>
-                <th style="width: 25%;">Keterangan</th>
-                <th style="width: 8%; text-align: center;">Bukti</th>
-                <th style="width: 15%; text-align: right;">Nominal</th>
+                <th style="width: 20%;">NO. TRX</th>
+                <th style="width: 12%;">TANGGAL</th>
+                <th style="width: 20%;">JENIS PRODUK</th>
+                <th style="width: 16%; text-align: right;">ONGKIR</th>
+                <th style="width: 16%; text-align: right;">ASURANSI</th>
+                <th style="width: 16%; text-align: right;">NET REVENUE</th>
             </tr>
         </thead>
         <tbody>
             @forelse($transactions as $trx)
+                @php
+                    $ongkir = $trx->nominal_ongkir > 0 ? $trx->nominal_ongkir : $trx->nominal;
+                    $asuransi = $trx->nominal_asuransi ?? 0;
+                    $net = $ongkir - $asuransi;
+                @endphp
                 <tr>
                     <td><strong>{{ $trx->nomor_transaksi }}</strong></td>
                     <td>{{ $trx->tanggal ? \Carbon\Carbon::parse($trx->tanggal)->format('d-m-Y') : '-' }}</td>
-                    <td>
-                        <span class="badge {{ $trx->jenis_transaksi === 'pemasukan' ? 'badge-income' : 'badge-expense' }}">
-                            {{ $trx->jenis_transaksi }}
-                        </span>
-                    </td>
                     <td>{{ $trx->category->nama_kategori ?? '-' }}</td>
-                    <td>{{ $trx->keterangan ?? '-' }}</td>
-                    <td style="text-align: center;">
-                        @if($trx->bukti_transaksi)
-                            <span style="color: #27ae60; font-weight: bold;">Ada</span>
-                        @else
-                            <span style="color: #95a5a6;">Tidak Ada</span>
-                        @endif
-                    </td>
-                    <td class="text-right">Rp {{ number_format($trx->nominal, 2, ',', '.') }}</td>
+                    <td class="text-right">Rp {{ number_format($ongkir, 0, ',', '.') }}</td>
+                    <td class="text-right" style="color: #e74c3c;">Rp {{ number_format($asuransi, 0, ',', '.') }}</td>
+                    <td class="text-right" style="font-weight: bold;">Rp {{ number_format($net, 0, ',', '.') }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" style="text-align: center; padding: 20px; color: #7f8c8d;">
+                    <td colspan="6" style="text-align: center; padding: 15px; color: #7f8c8d;">
                         Tidak ada data transaksi yang ditemukan untuk kriteria ini.
                     </td>
                 </tr>

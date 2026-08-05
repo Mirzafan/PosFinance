@@ -64,12 +64,14 @@ class TransactionController extends Controller
             'tanggal' => 'nullable|date',
             'jenis_transaksi' => 'nullable|in:pemasukan,pengeluaran',
             'kategori_id' => 'required|exists:categories,id',
-            'nominal' => 'required|numeric|min:0',
+            'nominal' => 'nullable|numeric|min:0',
+            'nominal_ongkir' => 'required|numeric|min:0',
+            'nominal_asuransi' => 'nullable|numeric|min:0',
             'keterangan' => 'nullable|string',
             'bukti_transaksi' => 'required|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
         ], [
             'kategori_id.required' => 'Kategori wajib dipilih.',
-            'nominal.required' => 'Nominal transaksi wajib diisi.',
+            'nominal_ongkir.required' => 'Nominal pendapatan (ongkir) wajib diisi.',
             'bukti_transaksi.required' => 'Bukti transaksi (foto/PDF) wajib diunggah.',
             'bukti_transaksi.mimes' => 'Bukti transaksi harus berupa foto (JPG, PNG, WEBP) atau dokumen PDF.',
             'bukti_transaksi.max' => 'Ukuran file bukti transaksi maksimal 10 MB.',
@@ -92,6 +94,8 @@ class TransactionController extends Controller
         $nomorTransaksi = 'TRX-' . $dateStr . '-' . $randomSuffix;
 
         $status = 'approved';
+        $ongkir = (float) $validated['nominal_ongkir'];
+        $asuransi = (float) ($validated['nominal_asuransi'] ?? 0);
 
         $transaction = Transaction::create([
             'nomor_transaksi' => $nomorTransaksi,
@@ -100,7 +104,9 @@ class TransactionController extends Controller
             'kategori_id' => $validated['kategori_id'],
             'cabang_id' => $branch->id,
             'user_id' => $request->user()->id,
-            'nominal' => $validated['nominal'],
+            'nominal' => $ongkir,
+            'nominal_ongkir' => $ongkir,
+            'nominal_asuransi' => $asuransi,
             'keterangan' => $validated['keterangan'] ?? null,
             'status' => $status,
             'bukti_transaksi' => $buktiPath,
@@ -110,7 +116,7 @@ class TransactionController extends Controller
         AuditLog::record(
             'CREATE',
             'Transaksi',
-            "Mencatat pendapatan ritel jasa kurir ({$nomorTransaksi}) nominal Rp " . number_format($validated['nominal'], 0, ',', '.') . " [Status: Approved]",
+            "Mencatat transaksi pendapatan ongkir ({$nomorTransaksi}) Rp " . number_format($ongkir, 0, ',', '.') . " & asuransi Rp " . number_format($asuransi, 0, ',', '.'),
             $request->user()
         );
 
@@ -129,20 +135,27 @@ class TransactionController extends Controller
             'tanggal' => 'nullable|date',
             'jenis_transaksi' => 'nullable|in:pemasukan,pengeluaran',
             'kategori_id' => 'required|exists:categories,id',
-            'nominal' => 'required|numeric|min:0',
+            'nominal' => 'nullable|numeric|min:0',
+            'nominal_ongkir' => 'required|numeric|min:0',
+            'nominal_asuransi' => 'nullable|numeric|min:0',
             'keterangan' => 'nullable|string',
             'bukti_transaksi' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
         ], [
             'kategori_id.required' => 'Kategori wajib dipilih.',
-            'nominal.required' => 'Nominal transaksi wajib diisi.',
+            'nominal_ongkir.required' => 'Nominal pendapatan (ongkir) wajib diisi.',
             'bukti_transaksi.mimes' => 'Bukti transaksi harus berupa foto (JPG, PNG, WEBP) atau dokumen PDF.',
             'bukti_transaksi.max' => 'Ukuran file bukti transaksi maksimal 10 MB.',
         ]);
 
+        $ongkir = (float) $validated['nominal_ongkir'];
+        $asuransi = (float) ($validated['nominal_asuransi'] ?? 0);
+
         $data = [
             'jenis_transaksi' => 'pemasukan',
             'kategori_id' => $validated['kategori_id'],
-            'nominal' => $validated['nominal'],
+            'nominal' => $ongkir,
+            'nominal_ongkir' => $ongkir,
+            'nominal_asuransi' => $asuransi,
             'keterangan' => $validated['keterangan'] ?? null,
         ];
 
@@ -163,7 +176,7 @@ class TransactionController extends Controller
         AuditLog::record(
             'UPDATE',
             'Transaksi',
-            "Memperbarui rincian data transaksi ({$transaction->nomor_transaksi}) nominal Rp " . number_format($transaction->nominal, 0, ',', '.'),
+            "Memperbarui data transaksi ({$transaction->nomor_transaksi}) ongkir Rp " . number_format($ongkir, 0, ',', '.') . " & asuransi Rp " . number_format($asuransi, 0, ',', '.'),
             $request->user()
         );
 
@@ -314,5 +327,35 @@ class TransactionController extends Controller
         );
 
         return redirect()->back()->with('success', "{$count} transaksi berhasil dihapus.");
+    }
+
+    public function dailyClosing(Request $request)
+    {
+        if ($request->user()->role !== 'admin') {
+            abort(403, 'Hanya Admin yang dapat melakukan Closing Harian.');
+        }
+
+        $date = $request->input('tanggal', date('Y-m-d'));
+
+        $query = Transaction::whereDate('tanggal', $date);
+        $count = $query->count();
+
+        if ($count === 0) {
+            return redirect()->back()->with('error', "Tidak ada transaksi ditemukan pada tanggal " . date('d-m-Y', strtotime($date)) . " untuk di-closing.");
+        }
+
+        $query->update([
+            'status' => 'approved',
+            'closed_at' => now(),
+        ]);
+
+        AuditLog::record(
+            'DAILY_CLOSING',
+            'Transaksi',
+            "Melakukan Closing Harian & Approval untuk {$count} transaksi pada tanggal " . date('d-m-Y', strtotime($date)),
+            $request->user()
+        );
+
+        return redirect()->back()->with('success', "Daily Closing berhasil! {$count} transaksi tanggal " . date('d-m-Y', strtotime($date)) . " telah disetujui & di-closing.");
     }
 }

@@ -15,18 +15,25 @@ class Transaction extends Model
         'cabang_id',
         'user_id',
         'nominal',
+        'nominal_ongkir',
+        'nominal_asuransi',
         'keterangan',
         'status',
+        'closed_at',
         'bukti_transaksi'
     ];
 
     protected $casts = [
         'tanggal' => 'date',
         'nominal' => 'decimal:2',
+        'nominal_ongkir' => 'decimal:2',
+        'nominal_asuransi' => 'decimal:2',
+        'closed_at' => 'datetime',
     ];
 
     protected $appends = [
         'bukti_transaksi_url',
+        'net_revenue',
     ];
 
     public function getBuktiTransaksiUrlAttribute(): ?string
@@ -35,6 +42,13 @@ class Transaction extends Model
             return null;
         }
         return \Illuminate\Support\Facades\Storage::url($this->bukti_transaksi);
+    }
+
+    public function getNetRevenueAttribute(): float
+    {
+        $ongkir = (float) ($this->nominal_ongkir > 0 ? $this->nominal_ongkir : $this->nominal);
+        $asuransi = (float) ($this->nominal_asuransi ?? 0);
+        return $ongkir - $asuransi;
     }
 
     public function category(): BelongsTo

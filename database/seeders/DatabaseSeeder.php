@@ -46,6 +46,8 @@ class DatabaseSeeder extends Seeder
             'POSSAMEDAY',
             'POSNEXTDAY',
             'POSREGULER',
+            'POSKARGO',
+            'POS EXPRESS',
         ];
 
         $categories = [];
