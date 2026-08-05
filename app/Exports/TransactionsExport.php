@@ -150,7 +150,7 @@ class TransactionsExport implements FromCollection, WithTitle, WithEvents, Shoul
                 $sheet->getStyle('A7')->getFont()->setItalic(true)->setSize(9)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('94A3B8'));
 
                 // 3. Table Column Headers (Row 9)
-                $headers = ['NO', 'NO. TRANSAKSI', 'TANGGAL', 'JENIS PRODUK', 'ONGKIR (PEMASUKAN)', 'ASURANSI (PENGELUARAN)', 'NET REVENUE', 'KETERANGAN'];
+                $headers = ['NO', 'NO. TRANSAKSI', 'TANGGAL', 'JENIS LAYANAN', 'ONGKIR (PEMASUKAN)', 'ASURANSI (PENGELUARAN)', 'NET REVENUE', 'KETERANGAN'];
                 foreach ($headers as $colIndex => $header) {
                     $columnLetter = chr(65 + $colIndex); // A to H
                     $sheet->setCellValue("{$columnLetter}9", $header);

@@ -185,12 +185,12 @@
     </div>
 
     @if(isset($product_summary) && count($product_summary) > 0)
-        <div class="section-title">REKAPITULASI PENDAPATAN PER JENIS PRODUK</div>
+        <div class="section-title">REKAPITULASI PENDAPATAN PER JENIS LAYANAN</div>
         <table class="data-table" style="margin-bottom: 15px;">
             <thead>
                 <tr>
                     <th style="width: 5%;">NO</th>
-                    <th style="width: 35%;">JENIS PRODUK / LAYANAN</th>
+                    <th style="width: 35%;">JENIS LAYANAN</th>
                     <th style="width: 15%; text-align: center;">JUMLAH TRANSAKSI</th>
                     <th style="width: 15%; text-align: right;">ONGKIR (IDR)</th>
                     <th style="width: 15%; text-align: right;">ASURANSI (IDR)</th>
@@ -218,7 +218,7 @@
             <tr>
                 <th style="width: 20%;">NO. TRX</th>
                 <th style="width: 12%;">TANGGAL</th>
-                <th style="width: 20%;">JENIS PRODUK</th>
+                <th style="width: 20%;">JENIS LAYANAN</th>
                 <th style="width: 16%; text-align: right;">ONGKIR</th>
                 <th style="width: 16%; text-align: right;">ASURANSI</th>
                 <th style="width: 16%; text-align: right;">NET REVENUE</th>

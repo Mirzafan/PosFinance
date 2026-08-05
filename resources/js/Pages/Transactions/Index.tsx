@@ -447,13 +447,13 @@ export default function Index() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-semibold text-slate-500 uppercase">Jenis Produk</label>
+              <label className="text-[10px] font-semibold text-slate-500 uppercase">Jenis Layanan</label>
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-900 dark:text-slate-300 cursor-pointer"
               >
-                <option value="">Semua Jenis Produk</option>
+                <option value="">Semua Jenis Layanan</option>
                 {categories.map(c => (
                   <option key={c.id} value={c.id}>{c.nama_kategori}</option>
                 ))}
@@ -470,7 +470,7 @@ export default function Index() {
                 <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider bg-slate-50 dark:bg-slate-950/40">
                   <th className="py-3 pl-4 pr-2 whitespace-nowrap">No. Transaksi</th>
                   <th className="py-3 px-2 whitespace-nowrap">Tanggal</th>
-                  <th className="py-3 px-2 whitespace-nowrap">Jenis Produk</th>
+                  <th className="py-3 px-2 whitespace-nowrap">Jenis Layanan</th>
                   <th className="py-3 px-2 text-right whitespace-nowrap">Ongkir (Pemasukan)</th>
                   <th className="py-3 px-2 text-right whitespace-nowrap">Asuransi (Pengeluaran)</th>
                   <th className="py-3 px-2 text-right whitespace-nowrap">Net Revenue</th>
@@ -622,7 +622,7 @@ export default function Index() {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
-                    Jenis Produk / Layanan <span className="text-rose-500">*</span>
+                    Jenis Layanan <span className="text-rose-500">*</span>
                   </label>
                   <select
                     value={data.kategori_id}
@@ -630,7 +630,7 @@ export default function Index() {
                     className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-200 cursor-pointer"
                     required
                   >
-                    <option value="">Pilih Jenis Produk</option>
+                    <option value="">Pilih Jenis Layanan</option>
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>{c.nama_kategori}</option>
                     ))}

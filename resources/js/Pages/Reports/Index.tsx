@@ -214,7 +214,7 @@ export default function Index() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans">Laporan Keuangan & Rekapitulasi Produk</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans">Laporan Keuangan & Rekapitulasi Layanan</h2>
             <p className="text-slate-500 dark:text-slate-400 text-sm">Tentukan periode Tanggal Mulai dan Tanggal Akhir untuk memuat dan mengunduh laporan resmi.</p>
           </div>
 
@@ -269,7 +269,7 @@ export default function Index() {
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-2">
               <Filter className="h-4 w-4 text-orange-500" />
-              Filter Periode & Jenis Produk
+              Filter Periode & Jenis Layanan
             </h3>
             <div className="flex items-center gap-2">
               <button
@@ -325,14 +325,14 @@ export default function Index() {
 
             <div>
               <label className="block text-[11px] font-semibold text-slate-500 uppercase mb-1">
-                Jenis Produk / Kategori
+                Jenis Layanan / Kategori
               </label>
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-200 cursor-pointer"
               >
-                <option value="">Semua Jenis Produk</option>
+                <option value="">Semua Jenis Layanan</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>{c.nama_kategori}</option>
                 ))}
@@ -377,19 +377,19 @@ export default function Index() {
           </div>
         </div>
 
-        {/* Tabel Rekapitulasi per Jenis Produk */}
+        {/* Tabel Rekapitulasi per Jenis Layanan */}
         {productSummary && productSummary.length > 0 && (
           <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800/80 rounded-2xl p-6 space-y-4 shadow-sm">
             <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Box className="h-4 w-4 text-orange-500" />
-              Rekapitulasi Pendapatan per Jenis Produk
+              Rekapitulasi Pendapatan per Jenis Layanan
             </h4>
 
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left border-collapse">
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 uppercase tracking-wider bg-slate-50 dark:bg-slate-950/40">
-                    <th className="py-3 pl-4 pr-2">Jenis Produk</th>
+                    <th className="py-3 pl-4 pr-2">Jenis Layanan</th>
                     <th className="py-3 px-2 text-center">Jumlah Paket</th>
                     <th className="py-3 px-2 text-right">Ongkir (IDR)</th>
                     <th className="py-3 px-2 text-right">Asuransi (IDR)</th>
@@ -430,7 +430,7 @@ export default function Index() {
                 <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 text-xs uppercase tracking-wider bg-slate-50 dark:bg-slate-950/20">
                   <th className="py-3.5 pl-6">No. Transaksi</th>
                   <th className="py-3.5">Tanggal</th>
-                  <th className="py-3.5">Jenis Produk</th>
+                  <th className="py-3.5">Jenis Layanan</th>
                   <th className="py-3.5 text-right">Ongkir</th>
                   <th className="py-3.5 text-right">Asuransi</th>
                   <th className="py-3.5 text-right">Net Revenue</th>

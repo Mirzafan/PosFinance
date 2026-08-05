@@ -300,16 +300,16 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
           </div>
         </div>
 
-        {/* Tabel Rekapitulasi Pendapatan per Jenis Produk */}
+        {/* Tabel Rekapitulasi Pendapatan per Jenis Layanan */}
         <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Box className="h-4 w-4 text-orange-500" />
-                Rekapitulasi Pendapatan per Jenis Produk
+                Rekapitulasi Pendapatan per Jenis Layanan
               </h4>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Breakdown detail pendapatan ongkir & pengeluaran asuransi untuk setiap produk layanan kurir (Periode: {activePeriod.toUpperCase()})
+                Breakdown detail pendapatan ongkir & pengeluaran asuransi untuk setiap layanan kurir (Periode: {activePeriod.toUpperCase()})
               </p>
             </div>
           </div>
@@ -318,7 +318,7 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
             <table className="w-full text-xs text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider bg-slate-50 dark:bg-slate-950/40">
-                  <th className="py-3 pl-4 pr-2">Jenis Produk / Layanan</th>
+                  <th className="py-3 pl-4 pr-2">Jenis Layanan</th>
                   <th className="py-3 px-2 text-center">Jumlah Paket</th>
                   <th className="py-3 px-2 text-right">Ongkir (Pemasukan)</th>
                   <th className="py-3 px-2 text-right">Asuransi (Pengeluaran)</th>
@@ -349,7 +349,7 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-slate-500">Belum ada data produk.</td>
+                    <td colSpan={5} className="py-8 text-center text-slate-500">Belum ada data layanan.</td>
                   </tr>
                 )}
               </tbody>
