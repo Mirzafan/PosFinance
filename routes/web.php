@@ -39,7 +39,6 @@ Route::middleware(['auth'])->group(function () {
 
         // Audit Logs
         Route::get('/dashboard/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
-    });
 
     // Financial Reports
     Route::get('/dashboard/reports', [ReportController::class, 'index'])->name('reports.index');
