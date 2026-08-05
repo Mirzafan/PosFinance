@@ -18,8 +18,15 @@ class AuditLog extends Model
         'action',
         'module',
         'description',
+        'old_values',
+        'new_values',
         'ip_address',
         'user_agent',
+    ];
+
+    protected $casts = [
+        'old_values' => 'array',
+        'new_values' => 'array',
     ];
 
     public function user()
@@ -27,11 +34,15 @@ class AuditLog extends Model
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Helper static method to record an audit log entry.
-     */
-    public static function record(string $action, string $module, string $description, ?User $user = null): self
-    {
+    // Helper static method to record an audit log entry.
+    public static function record(
+        string $action,
+        string $module,
+        string $description,
+        ?User $user = null,
+        ?array $oldValues = null,
+        ?array $newValues = null
+    ): self {
         $currentUser = $user ?? Auth::user();
 
         return static::create([
@@ -41,6 +52,8 @@ class AuditLog extends Model
             'action' => strtoupper($action),
             'module' => $module,
             'description' => $description,
+            'old_values' => $oldValues,
+            'new_values' => $newValues,
             'ip_address' => Request::ip(),
             'user_agent' => Request::userAgent(),
         ]);

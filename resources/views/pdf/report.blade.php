@@ -145,7 +145,7 @@
     <div class="header">
         <div>
             <h1 class="logo-text">POS INDONESIA</h1>
-            <p class="logo-sub">Kantor Regional IV Semarang - PosFinance</p>
+            <p class="logo-sub">Kantor Regional IV Semarang - Laporan Pendapatan Retail</p>
         </div>
         <div class="title">
             <h2>Laporan Pendapatan Kurir & Logistik</h2>

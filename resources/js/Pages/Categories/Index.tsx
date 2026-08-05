@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
-import { Plus, Edit2, Trash2, Tag, Search, X, Loader2, CheckCircle2 } from 'lucide-react';
+import LoadingSpinner from '@/Components/LoadingSpinner';
+import { Plus, Edit2, Trash2, Tag, Search, X, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 interface Category {
   id: number;
@@ -26,6 +27,10 @@ export default function Index() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+
+  // Safety Check Delete Modal State
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
 
   // Success Pop Up Modal State
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -119,6 +124,12 @@ export default function Index() {
             </button>
           )}
         </div>
+
+        {flash?.error && (
+          <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-4 flex items-center gap-3 text-rose-600 dark:text-rose-400 text-xs font-semibold shadow-sm animate-fadeIn">
+            <span>{flash.error}</span>
+          </div>
+        )}
 
         {/* Search */}
         <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800/80 rounded-2xl p-4 transition-colors">
@@ -289,6 +300,71 @@ export default function Index() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>,
+          document.body
+        )}
+
+        {/* Safety Check Modal Hapus Kategori */}
+        {showDeleteModal && categoryToDelete && typeof window !== 'undefined' && createPortal(
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+            <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative text-center space-y-5 animate-zoomIn">
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto text-rose-500 shadow-lg shadow-rose-950/20">
+                <AlertTriangle className="h-9 w-9 text-rose-500 animate-pulse" />
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+                  Hapus Kategori Transaksi?
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Apakah Anda yakin ingin menghapus kategori <span className="font-bold text-slate-900 dark:text-white">"{categoryToDelete.nama_kategori}"</span>?
+                </p>
+              </div>
+
+              <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-3.5 text-left text-rose-600 dark:text-rose-300 text-xs flex items-start gap-2.5">
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Peringatan Keamanan:</strong> Seluruh data transaksi yang menggunakan kategori ini juga akan terhapus dari sistem secara permanen.
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={processing}
+                  className="flex-1 py-2.5 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDeleteCategory}
+                  disabled={processing}
+                  className="flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-red-950/40 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {processing ? (
+                    <>
+                      <LoadingSpinner size="xs" color="white" />
+                      <span>Menghapus...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4" />
+                      <span>Ya, Hapus Kategori</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>,
           document.body

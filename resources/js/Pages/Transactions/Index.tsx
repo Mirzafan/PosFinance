@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Head, usePage, router, useForm } from '@inertiajs/react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
+import LoadingSpinner from '@/Components/LoadingSpinner';
 import { 
   Search, 
   ArrowUpRight, 
@@ -546,7 +547,7 @@ export default function Index() {
 
                 {transactions.data.length === 0 && (
                   <tr>
-                    <td colSpan={isStaff ? 8 : 9} className="py-16 text-center">
+                    <td colSpan={isStaff ? 8 : 10} className="py-16 text-center">
                       <div className="flex flex-col items-center justify-center max-w-sm mx-auto space-y-3">
                         <Coins className="h-8 w-8 text-slate-400" />
                         <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Belum Ada Transaksi Paket</h4>

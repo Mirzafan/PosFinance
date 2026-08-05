@@ -16,15 +16,7 @@ Route::middleware(['auth'])->group(function () {
     // Dashboard page
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
-    // CRUD Resources
-    
-    Route::resource('dashboard/categories', CategoryController::class)->only(['index', 'store', 'update', 'destroy'])->names([
-        'index' => 'categories.index',
-        'store' => 'categories.store',
-        'update' => 'categories.update',
-        'destroy' => 'categories.destroy',
-    ]);
-    
+    // Transactions Resources (Accessible to all authenticated users)
     Route::resource('dashboard/transactions', TransactionController::class)->only(['index', 'store', 'update', 'destroy'])->names([
         'index' => 'transactions.index',
         'store' => 'transactions.store',
@@ -45,8 +37,9 @@ Route::middleware(['auth'])->group(function () {
         'destroy' => 'users.destroy',
     ]);
 
-    // Audit Logs (Admin & Supervisor only)
-    Route::get('/dashboard/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+        // Audit Logs
+        Route::get('/dashboard/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+    });
 
     // Financial Reports
     Route::get('/dashboard/reports', [ReportController::class, 'index'])->name('reports.index');

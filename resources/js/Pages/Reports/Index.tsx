@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Head, usePage, router } from '@inertiajs/react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
+import LoadingSpinner from '@/Components/LoadingSpinner';
 import { 
   FileSpreadsheet, 
   FileText, 
@@ -75,11 +76,26 @@ interface PageProps {
   };
 }
 
+const getTodayString = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getFirstDayOfMonthString = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}-01`;
+};
+
 export default function Index() {
   const { transactions, summary, productSummary, categories, filters } = usePage<any>().props as unknown as PageProps;
 
   const [startDate, setStartDate] = useState(filters.start_date || '');
-  const [endDate, setEndDate] = useState(filters.end_date || '');
+  const [endDate, setEndDate] = useState(filters.end_date || getTodayString());
   const [selectedCategory, setSelectedCategory] = useState(filters.kategori_id || '');
 
   // Validation & Loading state
@@ -121,11 +137,15 @@ export default function Index() {
   };
 
   const resetFilters = () => {
+    const defaultEnd = getTodayString();
     setStartDate('');
-    setEndDate('');
+    setEndDate(defaultEnd);
+    setSelectedType('');
     setSelectedCategory('');
     setErrorMessage('');
-    router.get('/dashboard/reports', {}, { replace: true });
+    router.get('/dashboard/reports', {
+      end_date: defaultEnd
+    }, { replace: true });
   };
 
   const buildQueryString = () => {
@@ -226,8 +246,8 @@ export default function Index() {
             >
               {downloadingFormat === 'excel' ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Mengunduh...</span>
+                  <LoadingSpinner size="sm" color="white" />
+                  <span>Mengunduh Excel...</span>
                 </>
               ) : (
                 <>
@@ -243,8 +263,8 @@ export default function Index() {
             >
               {downloadingFormat === 'pdf' ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Mengunduh...</span>
+                  <LoadingSpinner size="sm" color="white" />
+                  <span>Menyiapkan PDF...</span>
                 </>
               ) : (
                 <>
@@ -255,6 +275,27 @@ export default function Index() {
             </button>
           </div>
         </div>
+
+        {/* Active Download Progress Indicator Banner */}
+        {downloadingFormat !== null && (
+          <div className="relative overflow-hidden bg-gradient-to-r from-orange-500/10 via-emerald-500/10 to-amber-500/10 border border-orange-500/30 dark:border-orange-500/40 rounded-xl p-4 text-slate-900 dark:text-slate-100 shadow-lg animate-fadeIn">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 via-emerald-500 to-amber-500 animate-pulse" />
+            <div className="flex items-center gap-3">
+              <LoadingSpinner size="md" color={downloadingFormat === 'excel' ? 'emerald' : 'primary'} />
+              <div>
+                <h4 className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                  <span>Sedang Mengunduh Laporan {downloadingFormat === 'excel' ? 'Excel (.xlsx)' : 'PDF'}</span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-orange-500/20 text-orange-600 dark:text-orange-300 animate-pulse">
+                    Memproses File Berukuran Besar...
+                  </span>
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Server sedang mengompilasi seluruh data rekapitulasi keuangan untuk periode {startDate || 'terpilih'} s/d {endDate || 'terpilih'}. File akan diunduh secara otomatis setelah proses selesai.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Validation Warning Alert */}
         {errorMessage && (

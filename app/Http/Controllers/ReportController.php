@@ -77,7 +77,7 @@ class ReportController extends Controller
             ],
             'productSummary' => $productSummary,
             'categories' => $categories,
-            'filters' => $request->only(['start_date', 'end_date', 'jenis_transaksi', 'kategori_id']),
+            'filters' => $request->only(['start_date', 'end_date', 'kategori_id']),
         ]);
     }
 
@@ -86,18 +86,16 @@ class ReportController extends Controller
         $filters = [
             'start_date' => $request->input('start_date'),
             'end_date' => $request->input('end_date'),
-            'jenis_transaksi' => $request->input('jenis_transaksi'),
             'kategori_id' => $request->input('kategori_id'),
         ];
 
-        return Excel::download(new TransactionsExport($filters), 'laporan-posfinance-regional4-' . date('Ymd-His') . '.xlsx');
+        return Excel::download(new TransactionsExport($filters), 'laporan-pendapatan-retail-' . date('Ymd-His') . '.xlsx');
     }
 
     public function exportPdf(Request $request)
     {
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
-        $jenisTransaksi = $request->input('jenis_transaksi');
         $kategoriId = $request->input('kategori_id');
 
         $query = Transaction::with(['category', 'branch']);
@@ -108,10 +106,6 @@ class ReportController extends Controller
 
         if ($endDate) {
             $query->whereDate('tanggal', '<=', $endDate);
-        }
-
-        if ($jenisTransaksi) {
-            $query->where('jenis_transaksi', $jenisTransaksi);
         }
 
         if ($kategoriId) {

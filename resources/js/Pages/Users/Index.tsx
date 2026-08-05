@@ -153,62 +153,68 @@ export default function Index() {
           </div>
         )}
 
-        {/* Title Header */}
+        {/* Header & Add User Button */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans flex items-center gap-2">
-              Manajemen Pengguna
-              <span className="text-xs font-semibold text-orange-600 dark:text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2.5 py-0.5 rounded-full">
-                {users.length} Akun Terdaftar
-              </span>
+              <Shield className="h-6 w-6 text-orange-500" />
+              Manajemen Hak Akses Pengguna
             </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Kelola otorisasi akun pengguna beserta hak akses peran (Role) mereka.</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Kelola akun pengguna, peran, dan otorisasi hak akses sistem PosFinance.</p>
           </div>
 
           <button
             onClick={openAddModal}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 shadow-lg shadow-orange-600/25 transition-all duration-150 active:scale-95 cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 shadow-md shadow-orange-600/20 transition-all cursor-pointer"
           >
-            <Plus className="h-4.5 w-4.5" />
-            Tambah Pengguna
+            <Plus className="h-4 w-4 stroke-[2.5]" />
+            <span>Tambah User Baru</span>
           </button>
         </div>
 
-        {/* Actions (Search) */}
-        <div className="flex items-center w-full max-w-sm bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-xl px-3 py-2">
-          <Search className="h-4 w-4 text-slate-400 dark:text-slate-500 mr-2" />
-          <input
-            type="text"
-            placeholder="Cari nama atau email pengguna..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="bg-transparent text-sm text-slate-900 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none w-full"
-          />
+        {/* User Search & Stats Card */}
+        <div className="bg-white border border-slate-200 dark:bg-slate-900/50 dark:border-slate-800 rounded-2xl p-4 transition-colors">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400 dark:text-slate-500" />
+            <input
+              type="text"
+              placeholder="Cari pengguna berdasarkan nama atau email..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="block w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-orange-500 transition-all"
+            />
+          </div>
         </div>
 
-        {/* Table view */}
-        <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800/80 rounded-2xl overflow-hidden shadow-sm">
+        {/* Users Table */}
+        <div className="bg-white border border-slate-200 dark:bg-slate-900/50 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left border-collapse">
+            <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider bg-slate-50 dark:bg-slate-950/40">
-                  <th className="py-3.5 pl-6 pr-4 whitespace-nowrap">Nama Pengguna</th>
-                  <th className="py-3.5 px-4 whitespace-nowrap">Alamat Email</th>
-                  <th className="py-3.5 px-4 whitespace-nowrap">Hak Akses Role</th>
-                  <th className="py-3.5 pr-6 pl-4 text-center whitespace-nowrap">Aksi</th>
+                <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <th className="py-3.5 pl-6 pr-4">Nama Lengkap</th>
+                  <th className="py-3.5 px-4">Alamat Email</th>
+                  <th className="py-3.5 px-4">Role Akses</th>
+                  <th className="py-3.5 pr-6 pl-4 text-center">Aksi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-800/50">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
                 {filteredUsers.map((u) => (
-                  <tr key={u.id} className="text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group">
+                  <tr key={u.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
                     <td className="py-3.5 pl-6 pr-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-600 to-amber-500 text-white flex items-center justify-center font-bold text-sm uppercase shrink-0 shadow-md">
-                          {u.name.charAt(0)}
+                        <div className="w-9 h-9 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 flex items-center justify-center font-bold text-xs">
+                          {u.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <h4 className="font-bold text-slate-900 dark:text-white text-xs">{u.name}</h4>
-                          <span className="text-[10px] text-slate-500">User ID: #{u.id}</span>
+                          <p className="text-xs font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
+                            {u.name}
+                            {currentUser.id === u.id && (
+                              <span className="text-[10px] font-medium text-orange-600 dark:text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded-full border border-orange-500/20">
+                                Saya
+                              </span>
+                            )}
+                          </p>
                         </div>
                       </div>
                     </td>

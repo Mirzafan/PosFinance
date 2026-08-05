@@ -45,10 +45,13 @@ class HandleInertiaRequests extends Middleware
 
                 $list = [];
 
-                $recentList = \App\Models\Transaction::with('user', 'category')
-                    ->latest()
-                    ->take(10)
-                    ->get();
+                if ($user->role === 'admin') {
+                    // Pending approval transactions
+                    $pendingList = \App\Models\Transaction::with('user', 'category')
+                        ->where('status', 'pending')
+                        ->latest()
+                        ->take(10)
+                        ->get();
 
                 foreach ($recentList as $trx) {
                     $nominalFmt = 'Rp ' . number_format((float)$trx->nominal, 0, ',', '.');

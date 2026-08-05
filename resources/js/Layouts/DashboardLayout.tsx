@@ -101,7 +101,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       label: 'Kategori Layanan',
       href: '/dashboard/categories',
       icon: Tag,
-      roles: ['admin', 'staff'],
+      roles: ['admin'],
     },
     {
       label: 'Transaksi',
@@ -132,7 +132,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const filteredMenu = menuItems.filter(item => item.roles.includes(user.role));
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans relative overflow-x-hidden transition-colors duration-200">
+    <div className="min-h-screen bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans relative overflow-x-clip transition-colors duration-200">
       {/* Sidebar - Fixed 100vh Full Slide Hide/Show for Desktop & Mobile */}
       <aside 
         className={`
@@ -233,8 +233,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className={`flex-1 flex flex-col min-w-0 min-h-screen transition-all duration-300 ease-in-out ${
         sidebarOpen ? 'md:pl-64' : 'md:pl-0'
       }`}>
-        {/* Top Navbar Header (Sticky) */}
-        <header className="h-16 border-b border-slate-200 bg-white/80 dark:border-slate-800 dark:bg-slate-900/80 backdrop-blur-md px-4 md:px-6 flex items-center justify-between sticky top-0 z-30 transition-colors">
+        {/* Top Navbar Header (Fixed/Sticky) */}
+        <header className="h-16 border-b border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-900/90 backdrop-blur-md px-4 md:px-6 flex items-center justify-between sticky top-0 z-40 transition-colors">
           <div className="flex items-center gap-3">
             {/* Toggle Button for Mobile */}
             <button 
@@ -269,8 +269,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <div className="flex items-center gap-3 md:gap-4">
-            {/* Theme Toggle Button */}
-
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}

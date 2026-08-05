@@ -42,7 +42,6 @@ interface Transaction {
 interface FinancialStats {
   total_input: number;
   total_pemasukan: number;
-  total_pengeluaran: number;
   approved_count: number;
   pending_count: number;
   rejected_count: number;

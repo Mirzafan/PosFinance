@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 
@@ -12,11 +15,6 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        // Require admin role to access User Management
-        if ($request->user()->role !== 'admin') {
-            abort(403, 'Hanya Admin yang memiliki akses ke User Management.');
-        }
-
         $users = User::orderBy('name', 'asc')->get();
 
         return Inertia::render('Users/Index', [
@@ -24,7 +22,7 @@ class UserController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
         if ($request->user()->role !== 'admin') {
             abort(403, 'Hanya Admin yang dapat menambah pengguna.');
@@ -62,12 +60,8 @@ class UserController extends Controller
         return redirect()->back()->with('success', 'Pengguna ' . $validated['name'] . ' berhasil ditambahkan.');
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateUserRequest $request, $id)
     {
-        if ($request->user()->role !== 'admin') {
-            abort(403, 'Hanya Admin yang dapat mengedit pengguna.');
-        }
-
         $user = User::findOrFail($id);
 
         $validated = $request->validate([
@@ -94,24 +88,26 @@ class UserController extends Controller
             $data['password'] = Hash::make($validated['password']);
         }
 
-        $user->update($data);
+        $oldValues = $user->only(['name', 'email', 'role']);
 
-        AuditLog::record(
-            'UPDATE',
-            'User',
-            "Memperbarui data akun pengguna {$user->name} ({$user->email}) [Role: " . strtoupper($user->role) . "]",
-            $request->user()
-        );
+        DB::transaction(function () use ($user, $data, $oldValues, $request) {
+            $user->update($data);
+
+            AuditLog::record(
+                'UPDATE',
+                'User',
+                "Memperbarui data akun pengguna {$user->name} ({$user->email}) [Role: " . strtoupper($user->role) . "]",
+                $request->user(),
+                $oldValues,
+                $user->only(['name', 'email', 'role'])
+            );
+        });
 
         return redirect()->back()->with('success', 'Data pengguna ' . $user->name . ' berhasil diperbarui.');
     }
 
     public function destroy(Request $request, $id)
     {
-        if ($request->user()->role !== 'admin') {
-            abort(403, 'Hanya Admin yang dapat menghapus pengguna.');
-        }
-
         if ($request->user()->id == $id) {
             return redirect()->back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
         }
@@ -119,14 +115,20 @@ class UserController extends Controller
         $user = User::findOrFail($id);
         $name = $user->name;
         $email = $user->email;
-        $user->delete();
+        $oldValues = $user->only(['name', 'email', 'role']);
 
-        AuditLog::record(
-            'DELETE',
-            'User',
-            "Menghapus akun pengguna {$name} ({$email})",
-            $request->user()
-        );
+        DB::transaction(function () use ($user, $name, $email, $oldValues, $request) {
+            $user->delete();
+
+            AuditLog::record(
+                'DELETE',
+                'User',
+                "Menghapus akun pengguna {$name} ({$email})",
+                $request->user(),
+                $oldValues,
+                null
+            );
+        });
 
         return redirect()->back()->with('success', 'Pengguna ' . $name . ' berhasil dihapus.');
     }
