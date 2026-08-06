@@ -233,7 +233,7 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
           {/* Card 3: Pendapatan Bersih (Net Revenue) */}
           <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-5 relative overflow-hidden shadow-sm">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Net Revenue (Pendapatan Bersih)</span>
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Net Revenue</span>
               <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
                 <Wallet className="h-4 w-4" />
               </div>
