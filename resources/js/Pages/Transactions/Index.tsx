@@ -405,17 +405,17 @@ export default function Index() {
               Jurnal & Daftar Transaksi Kurir
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-sm">
-              Pencatatan pendapatan ongkir & pengeluaran asuransi paket (POSSAMEDAY, POSNEXTDAY, POSREGULER, POSKARGO, EXPRESS).
+              Pencatatan pendapatan ongkir & pengeluaran asuransi paket.
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={openCreateModal}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold text-sm rounded-xl shadow-lg shadow-orange-900/30 transition-all cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-md shadow-orange-900/20 transition-all whitespace-nowrap shrink-0 cursor-pointer"
             >
-              <Plus className="h-4 w-4 stroke-[2.5]" />
-              Catat Transaksi Paket
+              <Plus className="h-4 w-4 stroke-[2.5] shrink-0" />
+              <span>Catat Transaksi Paket</span>
             </button>
           </div>
         </div>

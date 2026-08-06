@@ -12,7 +12,7 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $period = $request->input('period', 'monthly'); // daily, weekly, monthly, all
+        $period = $request->input('period', 'all'); // daily, weekly, monthly, all
 
         $query = Transaction::where('status', 'approved');
 
@@ -150,18 +150,8 @@ class DashboardController extends Controller
 
         // Product Breakdown Chart & Table Data
         $categories = Category::all();
-        $productBreakdown = $categories->map(function ($category) use ($period) {
-            $catQuery = Transaction::where('kategori_id', $category->id)->where('status', 'approved');
-
-            if ($period === 'daily') {
-                $catQuery->whereDate('tanggal', Carbon::today());
-            } elseif ($period === 'weekly') {
-                $catQuery->whereBetween('tanggal', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
-            } elseif ($period === 'monthly') {
-                $catQuery->whereMonth('tanggal', Carbon::now()->month)->whereYear('tanggal', Carbon::now()->year);
-            }
-
-            $catTransactions = $catQuery->get();
+        $productBreakdown = $categories->map(function ($category) {
+            $catTransactions = Transaction::where('kategori_id', $category->id)->where('status', 'approved')->get();
             $ongkir = (float) $catTransactions->sum(function ($t) {
                 return $t->nominal_ongkir > 0 ? $t->nominal_ongkir : $t->nominal;
             });

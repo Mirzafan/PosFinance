@@ -95,8 +95,8 @@ const getFirstDayOfMonthString = () => {
 export default function Index() {
   const { transactions, summary, productSummary, categories, filters } = usePage<any>().props as unknown as PageProps;
 
-  const [startDate, setStartDate] = useState(filters.start_date || getFirstDayOfMonthString());
-  const [endDate, setEndDate] = useState(filters.end_date || getTodayString());
+  const [startDate, setStartDate] = useState(filters.start_date || '');
+  const [endDate, setEndDate] = useState(filters.end_date || '');
   const [selectedCategory, setSelectedCategory] = useState(filters.kategori_id || '');
 
   // Validation & Loading state
@@ -123,12 +123,9 @@ export default function Index() {
   };
 
   const applyFilters = () => {
-    if (!validateRequiredDates()) return;
-
-    const params: any = {
-      start_date: startDate,
-      end_date: endDate,
-    };
+    const params: any = {};
+    if (startDate) params.start_date = startDate;
+    if (endDate) params.end_date = endDate;
     if (selectedCategory) params.kategori_id = selectedCategory;
 
     router.get('/dashboard/reports', params, {
@@ -138,16 +135,11 @@ export default function Index() {
   };
 
   const resetFilters = () => {
-    const defaultStart = getFirstDayOfMonthString();
-    const defaultEnd = getTodayString();
-    setStartDate(defaultStart);
-    setEndDate(defaultEnd);
+    setStartDate('');
+    setEndDate('');
     setSelectedCategory('');
     setErrorMessage('');
-    router.get('/dashboard/reports', {
-      start_date: defaultStart,
-      end_date: defaultEnd
-    }, { replace: true });
+    router.get('/dashboard/reports', {}, { replace: true });
   };
 
   const buildQueryString = () => {

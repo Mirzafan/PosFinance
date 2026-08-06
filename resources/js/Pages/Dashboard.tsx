@@ -89,22 +89,20 @@ const CATEGORY_COLORS = ['#ff6600', '#0ea5e9', '#10b981', '#8b5cf6', '#f59e0b', 
 
 export default function Dashboard({ summary, charts, productBreakdown, recentTransactions, filters }: DashboardProps) {
   const [isMounted, setIsMounted] = useState(false);
-  const activePeriod = filters?.period || summary?.period || 'monthly';
+  const activePeriod = filters?.period || summary?.period || 'all';
 
-  // Chart Tab View State (daily, weekly, monthly)
-  const [chartTab, setChartTab] = useState<'daily' | 'weekly' | 'monthly'>('monthly');
+  // Chart Tab View State (daily, weekly, monthly, all)
+  const [chartTab, setChartTab] = useState<'daily' | 'weekly' | 'monthly' | 'all'>('all');
 
   useEffect(() => {
     setIsMounted(true);
-    if (activePeriod === 'daily' || activePeriod === 'weekly' || activePeriod === 'monthly') {
-      setChartTab(activePeriod);
+    if (activePeriod === 'daily' || activePeriod === 'weekly' || activePeriod === 'monthly' || activePeriod === 'all') {
+      setChartTab(activePeriod as any);
     }
   }, [activePeriod]);
 
   const changePeriod = (p: string) => {
-    if (p === 'daily' || p === 'weekly' || p === 'monthly') {
-      setChartTab(p as any);
-    }
+    setChartTab(p as any);
     router.get('/dashboard', { period: p }, { preserveState: true, replace: true });
   };
 
@@ -133,8 +131,8 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
   const CustomTrendTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-slate-900 border border-slate-700 text-white p-3 rounded-xl shadow-xl text-xs space-y-1.5">
-          <p className="font-semibold text-slate-300 border-b border-slate-700 pb-1">{label}</p>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white p-3 rounded-xl shadow-xl text-xs space-y-1.5">
+          <p className="font-semibold text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700 pb-1">{label}</p>
           {payload.map((entry: any, index: number) => (
             <div key={`item-${index}`} className="flex items-center justify-between gap-4">
               <span className="flex items-center gap-1.5" style={{ color: entry.color }}>
@@ -155,19 +153,19 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
       const data = payload[0].payload;
       const percentage = totalPieOngkir > 0 ? ((data.total_ongkir / totalPieOngkir) * 100).toFixed(1) : 0;
       return (
-        <div className="bg-slate-900 border border-slate-700 text-white p-3 rounded-xl shadow-xl text-xs space-y-1">
-          <p className="font-bold text-orange-400 border-b border-slate-700 pb-1">{data.name}</p>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white p-3 rounded-xl shadow-xl text-xs space-y-1">
+          <p className="font-bold text-orange-600 dark:text-orange-400 border-b border-slate-200 dark:border-slate-700 pb-1">{data.name}</p>
           <div className="flex items-center justify-between gap-4 pt-0.5">
-            <span className="text-slate-400">Total Ongkir:</span>
-            <span className="font-bold text-emerald-400">{formatRupiah(data.total_ongkir)}</span>
+            <span className="text-slate-500 dark:text-slate-400">Total Ongkir:</span>
+            <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatRupiah(data.total_ongkir)}</span>
           </div>
           <div className="flex items-center justify-between gap-4">
-            <span className="text-slate-400">Jumlah Paket:</span>
-            <span className="font-bold text-slate-200">{data.count} Paket</span>
+            <span className="text-slate-500 dark:text-slate-400">Jumlah Paket:</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200">{data.count} Paket</span>
           </div>
           <div className="flex items-center justify-between gap-4">
-            <span className="text-slate-400">Pangsa Pasar:</span>
-            <span className="font-bold text-amber-400">{percentage}%</span>
+            <span className="text-slate-500 dark:text-slate-400">Pangsa Pasar:</span>
+            <span className="font-bold text-amber-600 dark:text-amber-400">{percentage}%</span>
           </div>
         </div>
       );
@@ -271,7 +269,7 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
               <div>
                 <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <BarChart2 className="h-5 w-5 text-orange-500" />
-                  Grafik Tren Pendapatan & Pengeluaran Asuransi
+                  Grafik Tren Pendapatan & Pengeluaran
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Omset ongkir (hijau) vs biaya asuransi (merah)
@@ -284,7 +282,7 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
                   onClick={() => changePeriod('daily')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                     chartTab === 'daily'
-                      ? 'bg-slate-900 text-white dark:bg-orange-500 shadow'
+                      ? 'bg-orange-600 text-white dark:bg-orange-500 shadow-sm shadow-orange-600/30'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
@@ -294,7 +292,7 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
                   onClick={() => changePeriod('weekly')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                     chartTab === 'weekly'
-                      ? 'bg-slate-900 text-white dark:bg-orange-500 shadow'
+                      ? 'bg-orange-600 text-white dark:bg-orange-500 shadow-sm shadow-orange-600/30'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
@@ -304,11 +302,21 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
                   onClick={() => changePeriod('monthly')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                     chartTab === 'monthly'
-                      ? 'bg-slate-900 text-white dark:bg-orange-500 shadow'
+                      ? 'bg-orange-600 text-white dark:bg-orange-500 shadow-sm shadow-orange-600/30'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   Bulanan
+                </button>
+                <button
+                  onClick={() => changePeriod('all')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    chartTab === 'all'
+                      ? 'bg-orange-600 text-white dark:bg-orange-500 shadow-sm shadow-orange-600/30'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  Semua
                 </button>
               </div>
             </div>
@@ -382,23 +390,18 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
 
             {/* Category Share Legend List */}
             {pieData && pieData.length > 0 && (
-              <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800/80">
-                {pieData.slice(0, 5).map((item, idx) => {
-                  const pct = totalPieOngkir > 0 ? ((item.total_ongkir / totalPieOngkir) * 100).toFixed(1) : '0';
-                  const color = CATEGORY_COLORS[idx % CATEGORY_COLORS.length];
-                  return (
-                    <div key={item.id} className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2 overflow-hidden pr-2">
+              <div className="pt-3 border-t border-slate-200 dark:border-slate-800/80">
+                <div className="grid grid-cols-2 gap-2.5 max-h-[160px] overflow-y-auto pr-1">
+                  {pieData.map((item, idx) => {
+                    const color = CATEGORY_COLORS[idx % CATEGORY_COLORS.length];
+                    return (
+                      <div key={item.id} className="flex items-center gap-2 text-xs">
                         <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
                         <span className="font-semibold text-slate-700 dark:text-slate-300 truncate">{item.name}</span>
                       </div>
-                      <div className="flex items-center gap-3 shrink-0 font-mono">
-                        <span className="text-slate-500 dark:text-slate-400">{pct}%</span>
-                        <span className="font-bold text-slate-900 dark:text-white">{formatRupiah(item.total_ongkir)}</span>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>

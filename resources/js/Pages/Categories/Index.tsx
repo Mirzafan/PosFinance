@@ -118,7 +118,7 @@ export default function Index() {
               Kategori Layanan
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Daftar kategori layanan (POSSAMEDAY, POSNEXTDAY, & POSREGULER) PosFinance.
+              Daftar kategori layanan PosAja.
             </p>
           </div>
 

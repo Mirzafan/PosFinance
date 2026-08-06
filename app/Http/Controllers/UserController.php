@@ -15,6 +15,10 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
+        if ($request->user()->role !== 'admin') {
+            abort(403, 'Hanya Admin yang dapat mengakses manajemen pengguna.');
+        }
+
         $users = User::orderBy('name', 'asc')->get();
 
         return Inertia::render('Users/Index', [
@@ -62,6 +66,10 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $request, $id)
     {
+        if ($request->user()->role !== 'admin') {
+            abort(403, 'Hanya Admin yang dapat mengelola pengguna.');
+        }
+
         $user = User::findOrFail($id);
 
         $validated = $request->validate([
@@ -108,6 +116,10 @@ class UserController extends Controller
 
     public function destroy(Request $request, $id)
     {
+        if ($request->user()->role !== 'admin') {
+            abort(403, 'Hanya Admin yang dapat menghapus pengguna.');
+        }
+
         if ($request->user()->id == $id) {
             return redirect()->back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
         }
