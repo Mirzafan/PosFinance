@@ -478,7 +478,8 @@ export default function Index() {
                   <th className="py-3.5 px-4">Jenis Layanan</th>
                   <th className="py-3.5 px-4 text-right">Ongkir</th>
                   <th className="py-3.5 px-4 text-right">Asuransi</th>
-                  <th className="py-3.5 pr-6 pl-4 text-right">Net Revenue</th>
+                  <th className="py-3.5 px-4 text-right">Net Revenue</th>
+                  <th className="py-3.5 pr-6 pl-4">Catatan</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800/40 text-xs">
@@ -498,14 +499,15 @@ export default function Index() {
                       </td>
                       <td className="py-3.5 px-4 text-right font-bold text-emerald-600 dark:text-emerald-400">{formatRupiah(ongkir)}</td>
                       <td className="py-3.5 px-4 text-right font-bold text-rose-600 dark:text-rose-400">{asuransi > 0 ? formatRupiah(asuransi) : '-'}</td>
-                      <td className="py-3.5 pr-6 pl-4 text-right font-extrabold text-slate-900 dark:text-white">{formatRupiah(net)}</td>
+                      <td className="py-3.5 px-4 text-right font-extrabold text-slate-900 dark:text-white">{formatRupiah(net)}</td>
+                      <td className="py-3.5 pr-6 pl-4 text-xs text-slate-600 dark:text-slate-400 max-w-[180px] truncate" title={trx.keterangan || '-'}>{trx.keterangan || '-'}</td>
                     </tr>
                   );
                 })}
 
                 {transactions.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-xs text-slate-500">
+                    <td colSpan={7} className="py-12 text-center text-xs text-slate-500">
                       Silakan tentukan rentang tanggal untuk menampilkan data transaksi.
                     </td>
                   </tr>

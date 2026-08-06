@@ -498,7 +498,8 @@ export default function Index() {
                   <th className="py-3.5 px-4 whitespace-nowrap">Jenis Layanan</th>
                   <th className="py-3.5 px-4 text-right whitespace-nowrap">Ongkir (Pemasukan)</th>
                   <th className="py-3.5 px-4 text-right whitespace-nowrap">Asuransi (Pengeluaran)</th>
-                  <th className={`py-3.5 ${isStaff ? 'pr-6 pl-4' : 'px-4'} text-right whitespace-nowrap`}>Net Revenue</th>
+                  <th className="py-3.5 px-4 text-right whitespace-nowrap">Net Revenue</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">Catatan</th>
                   {!isStaff && <th className="py-3.5 pr-6 pl-4 text-center whitespace-nowrap">Aksi</th>}
                 </tr>
               </thead>
@@ -527,8 +528,11 @@ export default function Index() {
                       <td className="py-3.5 px-4 text-right font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">
                         {asuransi > 0 ? formatRupiah(asuransi) : '-'}
                       </td>
-                      <td className={`py-3.5 ${isStaff ? 'pr-6 pl-4' : 'px-4'} text-right font-extrabold text-slate-900 dark:text-white whitespace-nowrap`}>
+                      <td className="py-3.5 px-4 text-right font-extrabold text-slate-900 dark:text-white whitespace-nowrap">
                         {formatRupiah(net)}
+                      </td>
+                      <td className="py-3.5 px-4 text-xs font-normal text-slate-600 dark:text-slate-400 max-w-[180px] truncate" title={trx.keterangan || '-'}>
+                        {trx.keterangan || '-'}
                       </td>
                       {!isStaff && (
                         <td className="py-3 pr-4 pl-2 text-center whitespace-nowrap">
