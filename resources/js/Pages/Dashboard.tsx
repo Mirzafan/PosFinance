@@ -269,7 +269,7 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
               <div>
                 <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <BarChart2 className="h-5 w-5 text-orange-500" />
-                  Grafik Tren Pendapatan & Pengeluaran
+                  Grafik Tren Pendapatan & Pengeluaran Asuransi
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Omset ongkir (hijau) vs biaya asuransi (merah)
@@ -307,16 +307,6 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
                   }`}
                 >
                   Bulanan
-                </button>
-                <button
-                  onClick={() => changePeriod('all')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    chartTab === 'all'
-                      ? 'bg-orange-600 text-white dark:bg-orange-500 shadow-sm shadow-orange-600/30'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  Semua
                 </button>
               </div>
             </div>
