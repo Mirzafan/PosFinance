@@ -442,21 +442,21 @@ export default function Index() {
               <table className="w-full text-xs text-left border-collapse">
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 uppercase tracking-wider bg-slate-50 dark:bg-slate-950/40">
-                    <th className="py-3 pl-4 pr-2">Jenis Layanan</th>
-                    <th className="py-3 px-2 text-center">Jumlah Paket</th>
-                    <th className="py-3 px-2 text-right">Ongkir (IDR)</th>
-                    <th className="py-3 px-2 text-right">Asuransi (IDR)</th>
-                    <th className="py-3 pr-4 pl-2 text-right">Net Revenue</th>
+                    <th className="py-3.5 pl-6 pr-4">Jenis Layanan</th>
+                    <th className="py-3.5 px-4 text-center">Jumlah Paket</th>
+                    <th className="py-3.5 px-4 text-right">Ongkir (IDR)</th>
+                    <th className="py-3.5 px-4 text-right">Asuransi (IDR)</th>
+                    <th className="py-3.5 pr-6 pl-4 text-right">Net Revenue</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800/50">
                   {productSummary.map((prod, idx) => (
                     <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="py-3 pl-4 pr-2 font-bold text-slate-900 dark:text-white">{prod.nama_kategori}</td>
-                      <td className="py-3 px-2 text-center font-semibold text-slate-700 dark:text-slate-300">{prod.count} Paket</td>
-                      <td className="py-3 px-2 text-right font-bold text-emerald-600 dark:text-emerald-400">{formatRupiah(prod.total_ongkir)}</td>
-                      <td className="py-3 px-2 text-right font-bold text-rose-600 dark:text-rose-400">{formatRupiah(prod.total_asuransi)}</td>
-                      <td className="py-3 pr-4 pl-2 text-right font-extrabold text-orange-600 dark:text-orange-400">{formatRupiah(prod.net_revenue)}</td>
+                      <td className="py-3.5 pl-6 pr-4 font-bold text-slate-900 dark:text-white">{prod.nama_kategori}</td>
+                      <td className="py-3.5 px-4 text-center font-semibold text-slate-700 dark:text-slate-300">{prod.count} Paket</td>
+                      <td className="py-3.5 px-4 text-right font-bold text-emerald-600 dark:text-emerald-400">{formatRupiah(prod.total_ongkir)}</td>
+                      <td className="py-3.5 px-4 text-right font-bold text-rose-600 dark:text-rose-400">{formatRupiah(prod.total_asuransi)}</td>
+                      <td className="py-3.5 pr-6 pl-4 text-right font-extrabold text-orange-600 dark:text-orange-400">{formatRupiah(prod.net_revenue)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -481,51 +481,39 @@ export default function Index() {
             <table className="w-full text-sm text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 text-xs uppercase tracking-wider bg-slate-50 dark:bg-slate-950/20">
-                  <th className="py-3.5 pl-6">No. Transaksi</th>
-                  <th className="py-3.5">Tanggal</th>
-                  <th className="py-3.5">Jenis Layanan</th>
-                  <th className="py-3.5 text-right">Ongkir</th>
-                  <th className="py-3.5 text-right">Asuransi</th>
-                  <th className="py-3.5 text-right">Net Revenue</th>
-                  <th className="py-3.5 pr-6 text-center">Bukti</th>
+                  <th className="py-3.5 pl-6 pr-4">No. Transaksi</th>
+                  <th className="py-3.5 px-4">Tanggal</th>
+                  <th className="py-3.5 px-4">Jenis Layanan</th>
+                  <th className="py-3.5 px-4 text-right">Ongkir</th>
+                  <th className="py-3.5 px-4 text-right">Asuransi</th>
+                  <th className="py-3.5 pr-6 pl-4 text-right">Net Revenue</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800/40 text-xs">
                 {transactions.map((trx) => {
-                  const isPdf = trx.bukti_transaksi_url ? trx.bukti_transaksi_url.toLowerCase().endsWith('.pdf') : false;
                   const ongkir = Number((trx.nominal_ongkir && trx.nominal_ongkir > 0) ? trx.nominal_ongkir : (trx.nominal || 0));
                   const asuransi = Number(trx.nominal_asuransi || 0);
                   const net = ongkir - asuransi;
 
                   return (
                     <tr key={trx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                      <td className="py-3 pl-6 font-mono font-bold text-slate-900 dark:text-white">{trx.nomor_transaksi}</td>
-                      <td className="py-3">{formatDateDdMmYy(trx.tanggal)}</td>
-                      <td className="py-3">
+                      <td className="py-3.5 pl-6 pr-4 font-mono font-bold text-slate-900 dark:text-white">{trx.nomor_transaksi}</td>
+                      <td className="py-3.5 px-4">{formatDateDdMmYy(trx.tanggal)}</td>
+                      <td className="py-3.5 px-4">
                         <span className="inline-block text-[10px] font-bold text-slate-700 bg-slate-100 dark:text-slate-300 dark:bg-slate-800 px-2 py-0.5 rounded-full">
                           {trx.category?.nama_kategori || '-'}
                         </span>
                       </td>
-                      <td className="py-3 text-right font-bold text-emerald-600 dark:text-emerald-400">{formatRupiah(ongkir)}</td>
-                      <td className="py-3 text-right font-bold text-rose-600 dark:text-rose-400">{asuransi > 0 ? formatRupiah(asuransi) : '-'}</td>
-                      <td className="py-3 text-right font-extrabold text-slate-900 dark:text-white">{formatRupiah(net)}</td>
-                      <td className="py-3 pr-6 text-center">
-                        {trx.bukti_transaksi_url ? (
-                          <button
-                            onClick={() => openProofPreview(trx)}
-                            className="px-2 py-0.5 text-[11px] rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 cursor-pointer"
-                          >
-                            <Eye className="h-3 w-3 inline" />
-                          </button>
-                        ) : '-'}
-                      </td>
+                      <td className="py-3.5 px-4 text-right font-bold text-emerald-600 dark:text-emerald-400">{formatRupiah(ongkir)}</td>
+                      <td className="py-3.5 px-4 text-right font-bold text-rose-600 dark:text-rose-400">{asuransi > 0 ? formatRupiah(asuransi) : '-'}</td>
+                      <td className="py-3.5 pr-6 pl-4 text-right font-extrabold text-slate-900 dark:text-white">{formatRupiah(net)}</td>
                     </tr>
                   );
                 })}
 
                 {transactions.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-xs text-slate-500">
+                    <td colSpan={6} className="py-12 text-center text-xs text-slate-500">
                       Silakan tentukan rentang tanggal untuk menampilkan data transaksi.
                     </td>
                   </tr>
@@ -535,28 +523,6 @@ export default function Index() {
           </div>
         </div>
       </div>
-
-      {/* Pratinjau Modal */}
-      {previewModalOpen && activePreview && typeof window !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/70">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Pratinjau Bukti #{activePreview.nomor}</h3>
-              <button onClick={() => setPreviewModalOpen(false)} className="text-slate-400 hover:text-white cursor-pointer">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="p-6 bg-slate-100 dark:bg-slate-950 flex items-center justify-center overflow-auto max-h-[78vh]">
-              {activePreview.isPdf ? (
-                <iframe src={activePreview.url} className="w-full h-[70vh] rounded-xl border border-slate-300 shadow-2xl" title="Bukti PDF" />
-              ) : (
-                <img src={activePreview.url} alt="Bukti Foto" className="max-h-[70vh] max-w-full object-contain rounded-xl shadow-2xl" />
-              )}
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
     </DashboardLayout>
   );
 }

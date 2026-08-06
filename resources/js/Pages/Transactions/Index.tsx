@@ -493,57 +493,42 @@ export default function Index() {
             <table className="w-full text-xs text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider bg-slate-50 dark:bg-slate-950/40">
-                  <th className="py-3 pl-4 pr-2 whitespace-nowrap">No. Transaksi</th>
-                  <th className="py-3 px-2 whitespace-nowrap">Tanggal</th>
-                  <th className="py-3 px-2 whitespace-nowrap">Jenis Layanan</th>
-                  <th className="py-3 px-2 text-right whitespace-nowrap">Ongkir (Pemasukan)</th>
-                  <th className="py-3 px-2 text-right whitespace-nowrap">Asuransi (Pengeluaran)</th>
-                  <th className="py-3 px-2 text-right whitespace-nowrap">Net Revenue</th>
-                  <th className="py-3 px-2 text-center whitespace-nowrap">Bukti</th>
-                  {!isStaff && <th className="py-3 pr-4 pl-2 text-center whitespace-nowrap">Aksi</th>}
+                  <th className="py-3.5 pl-6 pr-4 whitespace-nowrap">No. Transaksi</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">Tanggal</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">Jenis Layanan</th>
+                  <th className="py-3.5 px-4 text-right whitespace-nowrap">Ongkir (Pemasukan)</th>
+                  <th className="py-3.5 px-4 text-right whitespace-nowrap">Asuransi (Pengeluaran)</th>
+                  <th className={`py-3.5 ${isStaff ? 'pr-6 pl-4' : 'px-4'} text-right whitespace-nowrap`}>Net Revenue</th>
+                  {!isStaff && <th className="py-3.5 pr-6 pl-4 text-center whitespace-nowrap">Aksi</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800/50">
                 {transactions.data.map((trx) => {
-                  const isPdf = trx.bukti_transaksi_url ? trx.bukti_transaksi_url.toLowerCase().endsWith('.pdf') : false;
                   const ongkir = Number((trx.nominal_ongkir && trx.nominal_ongkir > 0) ? trx.nominal_ongkir : (trx.nominal || 0));
                   const asuransi = Number(trx.nominal_asuransi || 0);
                   const net = ongkir - asuransi;
 
                   return (
                     <tr key={trx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="py-3 pl-4 pr-2 font-mono text-[11px] font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                      <td className="py-3.5 pl-6 pr-4 font-mono text-[11px] font-bold text-slate-900 dark:text-white whitespace-nowrap">
                         {trx.nomor_transaksi}
                       </td>
-                      <td className="py-3 px-2 text-xs font-medium whitespace-nowrap">
+                      <td className="py-3.5 px-4 text-xs font-medium whitespace-nowrap">
                         {formatDateDdMmYy(trx.tanggal)}
                       </td>
-                      <td className="py-3 px-2 whitespace-nowrap">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         <span className="inline-block text-[10px] font-bold text-orange-700 bg-orange-100 dark:text-orange-300 dark:bg-orange-950/60 border border-orange-200 dark:border-orange-800/50 px-2.5 py-0.5 rounded-full">
                           {trx.category?.nama_kategori || '-'}
                         </span>
                       </td>
-                      <td className="py-3 px-2 text-right font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                      <td className="py-3.5 px-4 text-right font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                         {formatRupiah(ongkir)}
                       </td>
-                      <td className="py-3 px-2 text-right font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">
+                      <td className="py-3.5 px-4 text-right font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">
                         {asuransi > 0 ? formatRupiah(asuransi) : '-'}
                       </td>
-                      <td className="py-3 px-2 text-right font-extrabold text-slate-900 dark:text-white whitespace-nowrap">
+                      <td className={`py-3.5 ${isStaff ? 'pr-6 pl-4' : 'px-4'} text-right font-extrabold text-slate-900 dark:text-white whitespace-nowrap`}>
                         {formatRupiah(net)}
-                      </td>
-                      <td className="py-3 px-2 text-center whitespace-nowrap">
-                        {trx.bukti_transaksi_url ? (
-                          <button
-                            onClick={() => openProofPreview(trx)}
-                            className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 cursor-pointer"
-                          >
-                            {isPdf ? <FileText className="h-3 w-3 text-rose-500" /> : <ImageIcon className="h-3 w-3 text-cyan-600" />}
-                            <Eye className="h-3 w-3 text-slate-400" />
-                          </button>
-                        ) : (
-                          <span className="text-[11px] text-slate-400 italic">Tidak Ada</span>
-                        )}
                       </td>
                       {!isStaff && (
                         <td className="py-3 pr-4 pl-2 text-center whitespace-nowrap">
@@ -571,7 +556,7 @@ export default function Index() {
 
                 {transactions.data.length === 0 && (
                   <tr>
-                    <td colSpan={isStaff ? 8 : 10} className="py-16 text-center">
+                    <td colSpan={isStaff ? 6 : 7} className="py-16 text-center">
                       <div className="flex flex-col items-center justify-center max-w-sm mx-auto space-y-3">
                         <Coins className="h-8 w-8 text-slate-400" />
                         <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Belum Ada Transaksi Paket</h4>
@@ -764,19 +749,6 @@ export default function Index() {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
-                  Bukti Transaksi (Foto / PDF) {!editingTrx && <span className="text-rose-500">*</span>}
-                </label>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,application/pdf"
-                  onChange={handleFileChange}
-                  className="w-full text-xs text-slate-500 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl p-2"
-                  required={!editingTrx}
-                />
-              </div>
-
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
                 <button
                   type="button"
@@ -794,30 +766,6 @@ export default function Index() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* Proof Preview Modal */}
-      {previewModalOpen && activePreview && typeof window !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-3xl shadow-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                Pratinjau Bukti Transaksi #{activePreview.nomor}
-              </h3>
-              <button onClick={() => setPreviewModalOpen(false)} className="text-slate-400 hover:text-white cursor-pointer">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="h-[60vh] flex items-center justify-center bg-slate-950 rounded-xl overflow-hidden">
-              {activePreview.isPdf ? (
-                <iframe src={activePreview.url} className="w-full h-full border-none" title="Bukti PDF" />
-              ) : (
-                <img src={activePreview.url} alt="Bukti Foto" className="max-h-full max-w-full object-contain" />
-              )}
-            </div>
           </div>
         </div>,
         document.body

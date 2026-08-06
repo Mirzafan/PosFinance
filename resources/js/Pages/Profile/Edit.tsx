@@ -224,15 +224,12 @@ export default function Edit() {
                       <th className="py-3 px-2 whitespace-nowrap">Jenis</th>
                       <th className="py-3 px-2 whitespace-nowrap">Kategori</th>
                       <th className="py-3 px-2 min-w-[150px]">Keterangan</th>
-                      <th className="py-3 px-2 text-right whitespace-nowrap">Nominal</th>
-                      <th className="py-3 pr-4 pl-2 text-center whitespace-nowrap">Bukti</th>
+                      <th className="py-3 pr-4 pl-2 text-right whitespace-nowrap">Nominal</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 dark:divide-slate-800/40">
                     {personalTransactions && personalTransactions.length > 0 ? (
                       personalTransactions.map((trx) => {
-                        const isPdf = trx.bukti_transaksi_url ? trx.bukti_transaksi_url.toLowerCase().endsWith('.pdf') : false;
-
                         return (
                           <tr key={trx.id} className="text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                             <td className="py-3 pl-4 pr-2 font-mono text-[11px] font-bold text-slate-900 dark:text-white whitespace-nowrap">
@@ -266,7 +263,7 @@ export default function Edit() {
                             <td className="py-3 px-2 text-xs max-w-[150px] truncate text-slate-700 dark:text-slate-300">
                               {trx.keterangan || '-'}
                             </td>
-                            <td className="py-3 px-2 text-right font-bold whitespace-nowrap">
+                            <td className="py-3 pr-4 pl-2 text-right font-bold whitespace-nowrap">
                               {trx.jenis_transaksi === 'pemasukan' ? (
                                 <span className="text-emerald-600 dark:text-emerald-400 text-xs inline-flex items-center">
                                   {formatRupiah(trx.nominal)}
@@ -277,37 +274,12 @@ export default function Edit() {
                                 </span>
                               )}
                             </td>
-                            {/* Bukti Transaksi Column */}
-                            <td className="py-3 pr-4 pl-2 text-center whitespace-nowrap">
-                              {trx.bukti_transaksi_url ? (
-                                <button
-                                  onClick={() => openProofPreview(trx)}
-                                  className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 border transition-all cursor-pointer"
-                                  title="Lihat Pratinjau Bukti"
-                                >
-                                  {isPdf ? (
-                                    <>
-                                      <FileText className="h-3 w-3 text-rose-500 dark:text-rose-400" />
-                                      <span>PDF</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <ImageIcon className="h-3 w-3 text-cyan-600 dark:text-cyan-400" />
-                                      <span>Foto</span>
-                                    </>
-                                  )}
-                                  <Eye className="h-3 w-3 text-slate-400" />
-                                </button>
-                              ) : (
-                                <span className="text-[11px] text-slate-400 dark:text-slate-600 italic">-</span>
-                              )}
-                            </td>
                           </tr>
                         );
                       })
                     ) : (
                       <tr>
-                        <td colSpan={8} className="py-12 text-center text-xs text-slate-500">
+                        <td colSpan={6} className="py-12 text-center text-xs text-slate-500">
                           Anda belum pernah mencatat transaksi dalam sistem ini.
                         </td>
                       </tr>
@@ -344,73 +316,6 @@ export default function Edit() {
           </div>
         )}
       </div>
-
-      {/* ========================================================================= */}
-      {/* PRATINJAU BUKTI TRANSAKSI MODAL (PROFILE) */}
-      {/* ========================================================================= */}
-      {previewModalOpen && activePreview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/70">
-              <div className="flex items-center gap-2">
-                {activePreview.isPdf ? (
-                  <FileText className="h-5 w-5 text-rose-500 dark:text-rose-400" />
-                ) : (
-                  <ImageIcon className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-                )}
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Pratinjau Bukti Transaksi</h3>
-                  <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400">{activePreview.nomor}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <a
-                  href={activePreview.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:text-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  Buka Tab Baru
-                </a>
-                <a
-                  href={activePreview.url}
-                  download
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white bg-orange-600 hover:bg-orange-500 rounded-lg shadow-md transition-colors"
-                >
-                  <Download className="h-3.5 w-3.5" />
-                  Unduh
-                </a>
-                <button
-                  onClick={() => setPreviewModalOpen(false)}
-                  className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ml-2 cursor-pointer"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Modal Content */}
-            <div className="p-6 bg-slate-100 dark:bg-slate-950 flex items-center justify-center overflow-auto max-h-[78vh]">
-              {activePreview.isPdf ? (
-                <iframe
-                  src={activePreview.url}
-                  title={`Bukti Transaksi ${activePreview.nomor}`}
-                  className="w-full h-[70vh] rounded-xl border border-slate-300 dark:border-slate-800 shadow-2xl"
-                />
-              ) : (
-                <img
-                  src={activePreview.url}
-                  alt={`Bukti Transaksi ${activePreview.nomor}`}
-                  className="max-h-[70vh] max-w-full rounded-xl object-contain shadow-2xl border border-slate-300 dark:border-slate-800"
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </DashboardLayout>
   );
 }
