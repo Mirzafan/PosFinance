@@ -192,10 +192,10 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
           <div className="flex items-center gap-3">
             <Link
               href="/dashboard/transactions"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 shadow-md transition-all active:scale-95 cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-md shadow-orange-900/20 transition-all whitespace-nowrap shrink-0 cursor-pointer"
             >
-              <Plus className="h-4 w-4" />
-              Catat Transaksi
+              <Plus className="h-4 w-4 stroke-[2.5] shrink-0" />
+              <span>Catat Transaksi</span>
             </Link>
           </div>
         </div>
@@ -241,7 +241,7 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
             <h3 className="text-2xl font-extrabold text-blue-600 dark:text-blue-400 tracking-tight">
               {formatRupiah(summary?.net_revenue || 0)}
             </h3>
-            <p className="text-[11px] text-slate-500 mt-1 font-medium">Ongkir Dikurangi Asuransi</p>
+            <p className="text-[11px] text-slate-500 mt-1 font-medium">Pendapatan Bersih</p>
           </div>
 
           {/* Card 4: Total Transaksi Paket */}

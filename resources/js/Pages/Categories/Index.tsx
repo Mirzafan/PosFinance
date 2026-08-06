@@ -125,10 +125,10 @@ export default function Index() {
           {canManage && (
             <button
               onClick={openAddModal}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-white bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-xs font-semibold shadow-lg shadow-orange-500/20 transition-all cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-md shadow-orange-900/20 transition-all whitespace-nowrap shrink-0 cursor-pointer"
             >
-              <Plus className="h-4 w-4 stroke-[2.5]" />
-              Tambah Kategori Baru
+              <Plus className="h-4 w-4 stroke-[2.5] shrink-0" />
+              <span>Tambah Kategori Baru</span>
             </button>
           )}
         </div>
