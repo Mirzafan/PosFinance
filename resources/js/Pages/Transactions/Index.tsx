@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Head, usePage, router, useForm } from '@inertiajs/react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import DateInput from '@/Components/DateInput';
 import { 
   Search, 
   ArrowUpRight, 
@@ -115,6 +116,20 @@ export default function Index() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successModalTitle, setSuccessModalTitle] = useState('Berhasil');
   const [successModalMessage, setSuccessModalMessage] = useState('');
+
+  const formatDateDdMmYy = (dateStr: string) => {
+    if (!dateStr) return '-';
+    const parts = dateStr.split('T')[0].split(' ')[0].split('-');
+    if (parts.length === 3) {
+      const yy = parts[0].slice(-2);
+      return `${parts[2]}/${parts[1]}/${yy}`;
+    }
+    const d = new Date(dateStr);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const yy = String(d.getFullYear()).slice(-2);
+    return `${day}/${month}/${yy}`;
+  };
 
   const formatNumberWithDots = (val: string | number) => {
     if (!val && val !== 0) return '';
@@ -439,22 +454,20 @@ export default function Index() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-200 dark:border-slate-800/50">
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-semibold text-slate-500 uppercase">Mulai Tanggal</label>
-              <input
-                type="date"
+              <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">MULAI TANGGAL</label>
+              <DateInput
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-300"
+                className="bg-slate-50/70 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-300 shadow-sm"
               />
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-semibold text-slate-500 uppercase">Sampai Tanggal</label>
-              <input
-                type="date"
+              <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">SAMPAI TANGGAL</label>
+              <DateInput
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-slate-300"
+                className="bg-slate-50/70 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-300 shadow-sm"
               />
             </div>
 
@@ -503,7 +516,7 @@ export default function Index() {
                         {trx.nomor_transaksi}
                       </td>
                       <td className="py-3 px-2 text-xs font-medium whitespace-nowrap">
-                        {new Date(trx.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {formatDateDdMmYy(trx.tanggal)}
                       </td>
                       <td className="py-3 px-2 whitespace-nowrap">
                         <span className="inline-block text-[10px] font-bold text-orange-700 bg-orange-100 dark:text-orange-300 dark:bg-orange-950/60 border border-orange-200 dark:border-orange-800/50 px-2.5 py-0.5 rounded-full">
@@ -629,8 +642,7 @@ export default function Index() {
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
                     Tanggal Transaksi <span className="text-rose-500">*</span>
                   </label>
-                  <input
-                    type="date"
+                  <DateInput
                     value={data.tanggal}
                     onChange={(e) => setData('tanggal', e.target.value)}
                     className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-200"

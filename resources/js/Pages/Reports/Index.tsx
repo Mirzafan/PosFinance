@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Head, usePage, router } from '@inertiajs/react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 import LoadingSpinner from '@/Components/LoadingSpinner';
+import DateInput from '@/Components/DateInput';
 import { 
   FileSpreadsheet, 
   FileText, 
@@ -94,7 +95,7 @@ const getFirstDayOfMonthString = () => {
 export default function Index() {
   const { transactions, summary, productSummary, categories, filters } = usePage<any>().props as unknown as PageProps;
 
-  const [startDate, setStartDate] = useState(filters.start_date || '');
+  const [startDate, setStartDate] = useState(filters.start_date || getFirstDayOfMonthString());
   const [endDate, setEndDate] = useState(filters.end_date || getTodayString());
   const [selectedCategory, setSelectedCategory] = useState(filters.kategori_id || '');
 
@@ -137,12 +138,14 @@ export default function Index() {
   };
 
   const resetFilters = () => {
+    const defaultStart = getFirstDayOfMonthString();
     const defaultEnd = getTodayString();
-    setStartDate('');
+    setStartDate(defaultStart);
     setEndDate(defaultEnd);
     setSelectedCategory('');
     setErrorMessage('');
     router.get('/dashboard/reports', {
+      start_date: defaultStart,
       end_date: defaultEnd
     }, { replace: true });
   };
@@ -214,6 +217,20 @@ export default function Index() {
       nomor: trx.nomor_transaksi
     });
     setPreviewModalOpen(true);
+  };
+
+  const formatDateDdMmYy = (dateStr: string) => {
+    if (!dateStr) return '-';
+    const parts = dateStr.split('T')[0].split(' ')[0].split('-');
+    if (parts.length === 3) {
+      const yy = parts[0].slice(-2);
+      return `${parts[2]}/${parts[1]}/${yy}`;
+    }
+    const d = new Date(dateStr);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const yy = String(d.getFullYear()).slice(-2);
+    return `${day}/${month}/${yy}`;
   };
 
   const formatRupiah = (val: number) => {
@@ -289,7 +306,7 @@ export default function Index() {
                   </span>
                 </h4>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  Server sedang mengompilasi seluruh data rekapitulasi keuangan untuk periode {startDate || 'terpilih'} s/d {endDate || 'terpilih'}. File akan diunduh secara otomatis setelah proses selesai.
+                  Server sedang mengompilasi seluruh data rekapitulasi keuangan untuk periode {formatDateDdMmYy(startDate) || 'terpilih'} s/d {formatDateDdMmYy(endDate) || 'terpilih'}. File akan diunduh secara otomatis setelah proses selesai.
                 </p>
               </div>
             </div>
@@ -330,35 +347,31 @@ export default function Index() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
             <div>
-              <label className="block text-[11px] font-semibold text-slate-500 uppercase mb-1 flex items-center gap-1">
-                <Calendar className="h-3 w-3 text-orange-500" />
-                Mulai Tanggal <span className="text-rose-500">*</span>
+              <label className="block text-[11px] font-semibold text-slate-500 uppercase mb-1 tracking-wider">
+                MULAI TANGGAL <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="date"
+              <DateInput
                 value={startDate}
                 onChange={(e) => {
                   setStartDate(e.target.value);
                   if (errorMessage) setErrorMessage('');
                 }}
-                className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-200"
+                className="w-full bg-slate-50/70 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-slate-200 shadow-sm"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-slate-500 uppercase mb-1 flex items-center gap-1">
-                <Calendar className="h-3 w-3 text-orange-500" />
-                Sampai Tanggal <span className="text-rose-500">*</span>
+              <label className="block text-[11px] font-semibold text-slate-500 uppercase mb-1 tracking-wider">
+                SAMPAI TANGGAL <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="date"
+              <DateInput
                 value={endDate}
                 onChange={(e) => {
                   setEndDate(e.target.value);
                   if (errorMessage) setErrorMessage('');
                 }}
-                className="w-full bg-slate-50 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-200"
+                className="w-full bg-slate-50/70 border border-slate-300 dark:bg-slate-950 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-slate-200 shadow-sm"
                 required
               />
             </div>
@@ -487,7 +500,7 @@ export default function Index() {
                   return (
                     <tr key={trx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                       <td className="py-3 pl-6 font-mono font-bold text-slate-900 dark:text-white">{trx.nomor_transaksi}</td>
-                      <td className="py-3">{new Date(trx.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                      <td className="py-3">{formatDateDdMmYy(trx.tanggal)}</td>
                       <td className="py-3">
                         <span className="inline-block text-[10px] font-bold text-slate-700 bg-slate-100 dark:text-slate-300 dark:bg-slate-800 px-2 py-0.5 rounded-full">
                           {trx.category?.nama_kategori || '-'}

@@ -73,10 +73,10 @@ class TransactionsExport implements FromCollection, WithTitle, WithEvents, Shoul
                 $netRevenue = $totalOngkir - $totalAsuransi;
 
                 $startDate = !empty($this->filters['start_date']) 
-                    ? Carbon::parse($this->filters['start_date'])->format('d/m/Y') 
+                    ? Carbon::parse($this->filters['start_date'])->format('d/m/y') 
                     : null;
                 $endDate = !empty($this->filters['end_date']) 
-                    ? Carbon::parse($this->filters['end_date'])->format('d/m/Y') 
+                    ? Carbon::parse($this->filters['end_date'])->format('d/m/y') 
                     : null;
 
                 if ($startDate && $endDate) {
@@ -170,7 +170,7 @@ class TransactionsExport implements FromCollection, WithTitle, WithEvents, Shoul
 
                     $sheet->setCellValue("A{$row}", $index + 1);
                     $sheet->setCellValue("B{$row}", $trx->nomor_transaksi);
-                    $sheet->setCellValue("C{$row}", $trx->tanggal ? Carbon::parse($trx->tanggal)->format('d-m-Y') : '-');
+                    $sheet->setCellValue("C{$row}", $trx->tanggal ? Carbon::parse($trx->tanggal)->format('d/m/y') : '-');
                     $sheet->setCellValue("D{$row}", $trx->category->nama_kategori ?? '-');
                     
                     $sheet->setCellValueExplicit("E{$row}", $ongkir, DataType::TYPE_NUMERIC);

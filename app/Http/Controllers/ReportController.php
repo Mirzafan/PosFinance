@@ -15,15 +15,12 @@ class ReportController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Transaction::with(['category', 'branch']);
+        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', Carbon::today()->format('Y-m-d'));
 
-        if ($request->filled('start_date')) {
-            $query->whereDate('tanggal', '>=', $request->input('start_date'));
-        }
-
-        if ($request->filled('end_date')) {
-            $query->whereDate('tanggal', '<=', $request->input('end_date'));
-        }
+        $query = Transaction::with(['category', 'branch'])
+            ->whereDate('tanggal', '>=', $startDate)
+            ->whereDate('tanggal', '<=', $endDate);
 
         if ($request->filled('jenis_transaksi')) {
             $query->where('jenis_transaksi', $request->input('jenis_transaksi'));
@@ -77,15 +74,19 @@ class ReportController extends Controller
             ],
             'productSummary' => $productSummary,
             'categories' => $categories,
-            'filters' => $request->only(['start_date', 'end_date', 'kategori_id']),
+            'filters' => [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'kategori_id' => $request->input('kategori_id'),
+            ],
         ]);
     }
 
     public function exportExcel(Request $request)
     {
         $filters = [
-            'start_date' => $request->input('start_date'),
-            'end_date' => $request->input('end_date'),
+            'start_date' => $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d')),
+            'end_date' => $request->input('end_date', Carbon::today()->format('Y-m-d')),
             'kategori_id' => $request->input('kategori_id'),
         ];
 
@@ -94,19 +95,13 @@ class ReportController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
+        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', Carbon::today()->format('Y-m-d'));
         $kategoriId = $request->input('kategori_id');
 
-        $query = Transaction::with(['category', 'branch']);
-
-        if ($startDate) {
-            $query->whereDate('tanggal', '>=', $startDate);
-        }
-
-        if ($endDate) {
-            $query->whereDate('tanggal', '<=', $endDate);
-        }
+        $query = Transaction::with(['category', 'branch'])
+            ->whereDate('tanggal', '>=', $startDate)
+            ->whereDate('tanggal', '<=', $endDate);
 
         if ($kategoriId) {
             $query->where('kategori_id', $kategoriId);

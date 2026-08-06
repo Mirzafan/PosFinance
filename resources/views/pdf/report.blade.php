@@ -156,7 +156,7 @@
     <table class="info-table">
         <tr>
             <td style="width: 15%;"><strong>Periode</strong></td>
-            <td style="width: 35%;">: {{ $start_date }} s/d {{ $end_date }}</td>
+            <td style="width: 35%;">: {{ $start_date ? \Carbon\Carbon::parse($start_date)->format('d/m/y') : '-' }} s/d {{ $end_date ? \Carbon\Carbon::parse($end_date)->format('d/m/y') : '-' }}</td>
             <td style="width: 15%;"><strong>Lokasi / Unit</strong></td>
             <td style="width: 35%;">: {{ $branch_name }}</td>
         </tr>
@@ -233,7 +233,7 @@
                 @endphp
                 <tr>
                     <td><strong>{{ $trx->nomor_transaksi }}</strong></td>
-                    <td>{{ $trx->tanggal ? \Carbon\Carbon::parse($trx->tanggal)->format('d-m-Y') : '-' }}</td>
+                    <td>{{ $trx->tanggal ? \Carbon\Carbon::parse($trx->tanggal)->format('d/m/y') : '-' }}</td>
                     <td>{{ $trx->category->nama_kategori ?? '-' }}</td>
                     <td class="text-right">Rp {{ number_format($ongkir, 0, ',', '.') }}</td>
                     <td class="text-right" style="color: #e74c3c;">Rp {{ number_format($asuransi, 0, ',', '.') }}</td>
