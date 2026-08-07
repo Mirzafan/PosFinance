@@ -698,18 +698,18 @@ export default function Index() {
                       }}
                       className="w-4 h-4 text-orange-600 rounded border-slate-300 focus:ring-orange-500 cursor-pointer"
                     />
-                    <span>Tambahkan Pengeluaran Asuransi Paket (2,5% dari Ongkir)</span>
+                    <span>Tambahkan Pengeluaran Asuransi Paket</span>
                   </label>
-                  {useInsurance && (
+                  {/* {useInsurance && (
                     <span className="text-[10px] font-extrabold text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-950/60 px-2.5 py-0.5 rounded-full border border-orange-300">
                       Auto 2,5% Ongkir
                     </span>
-                  )}
+                  )} */}
                 </div>
 
                 {useInsurance && (
                   <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2 animate-fadeIn">
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    {/* <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">
                       Nominal Pengeluaran Asuransi Paket
                     </label>
                     <div className="relative">
@@ -722,10 +722,10 @@ export default function Index() {
                         onChange={handleAsuransiChange}
                         className="w-full bg-white border border-slate-300 dark:bg-slate-900 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2 text-sm font-mono font-bold text-slate-900 dark:text-white focus:outline-none"
                       />
-                    </div>
+                    </div> */}
                     <div className="flex items-center justify-between text-[10px]">
                       <span className="text-slate-400">Dihitung 2,5% dari nominal ongkir</span>
-                      <button
+                      {/* <button
                         type="button"
                         onClick={() => {
                           const ongkirNum = Number(data.nominal_ongkir || 0);
@@ -736,7 +736,7 @@ export default function Index() {
                         className="font-bold text-orange-600 dark:text-orange-400 hover:underline cursor-pointer"
                       >
                         Reset 2,5% Auto
-                      </button>
+                      </button> */}
                     </div>
                   </div>
                 )}

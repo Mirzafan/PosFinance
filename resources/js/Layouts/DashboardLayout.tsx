@@ -136,7 +136,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Sidebar - Fixed 100vh Full Slide Hide/Show for Desktop & Mobile */}
       <aside 
         className={`
-          fixed top-0 bottom-0 left-0 z-40 h-screen w-64 bg-white border-r border-slate-200 dark:bg-slate-900 dark:border-slate-800 
+          fixed top-0 bottom-0 left-0 z-50 h-screen w-64 bg-white border-r border-slate-200 dark:bg-slate-900 dark:border-slate-800 
           flex flex-col justify-between transition-all duration-300 ease-in-out shrink-0 overflow-x-hidden no-scrollbar
           ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           ${sidebarOpen ? 'md:translate-x-0' : 'md:-translate-x-full'}
@@ -234,7 +234,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         sidebarOpen ? 'md:pl-64' : 'md:pl-0'
       }`}>
         {/* Top Navbar Header (Fixed/Sticky) */}
-        <header className="h-16 border-b border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-900/90 backdrop-blur-md px-4 md:px-6 flex items-center justify-between sticky top-0 z-40 transition-colors">
+        <header className="h-16 border-b border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-900/90 backdrop-blur-md px-4 md:px-6 flex items-center justify-between sticky top-0 z-30 transition-colors">
           <div className="flex items-center gap-3">
             {/* Toggle Button for Mobile */}
             <button 
@@ -317,7 +317,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {mobileSidebarOpen && (
         <div 
           onClick={() => setMobileSidebarOpen(false)}
-          className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-sm md:hidden animate-fadeIn"
+          className="fixed inset-0 z-40 bg-slate-950/50 md:hidden animate-fadeIn"
         />
       )}
 
