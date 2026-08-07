@@ -89,14 +89,14 @@ const CATEGORY_COLORS = ['#ff6600', '#0ea5e9', '#10b981', '#8b5cf6', '#f59e0b', 
 
 export default function Dashboard({ summary, charts, productBreakdown, recentTransactions, filters }: DashboardProps) {
   const [isMounted, setIsMounted] = useState(false);
-  const activePeriod = filters?.period || summary?.period || 'all';
+  const activePeriod = filters?.period || summary?.period || 'daily';
 
-  // Chart Tab View State (daily, weekly, monthly, all)
-  const [chartTab, setChartTab] = useState<'daily' | 'weekly' | 'monthly' | 'all'>('all');
+  // Chart Tab View State (daily, weekly, monthly)
+  const [chartTab, setChartTab] = useState<'daily' | 'weekly' | 'monthly'>('daily');
 
   useEffect(() => {
     setIsMounted(true);
-    if (activePeriod === 'daily' || activePeriod === 'weekly' || activePeriod === 'monthly' || activePeriod === 'all') {
+    if (activePeriod === 'daily' || activePeriod === 'weekly' || activePeriod === 'monthly') {
       setChartTab(activePeriod as any);
     }
   }, [activePeriod]);
@@ -403,10 +403,13 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
             <div>
               <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Box className="h-4 w-4 text-orange-500" />
-                Rekapitulasi Pendapatan per Jenis Layanan
+                <span>Rekapitulasi Pendapatan per Jenis Layanan</span>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
+                  {chartTab === 'daily' ? 'Harian (Hari Ini)' : chartTab === 'weekly' ? 'Mingguan (Minggu Ini)' : 'Bulanan (Bulan Ini)'}
+                </span>
               </h4>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Breakdown detail pendapatan ongkir & pengeluaran asuransi untuk setiap layanan kurir
+                Breakdown detail pendapatan ongkir & pengeluaran asuransi untuk setiap layanan kurir ({chartTab === 'daily' ? 'Hari Ini' : chartTab === 'weekly' ? 'Minggu Ini' : 'Bulan Ini'})
               </p>
             </div>
           </div>

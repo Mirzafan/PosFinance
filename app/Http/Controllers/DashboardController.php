@@ -12,7 +12,7 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $period = $request->input('period', 'all'); // daily, weekly, monthly, all
+        $period = $request->input('period', 'daily'); // daily, weekly, monthly, all
 
         $query = Transaction::where('status', 'approved');
 
@@ -148,10 +148,10 @@ class DashboardController extends Controller
         }
         $monthlyTrends = array_values($monthlyTrendsMap);
 
-        // Product Breakdown Chart & Table Data
+        // Product Breakdown Chart & Table Data (Filtered by active period)
         $categories = Category::all();
-        $productBreakdown = $categories->map(function ($category) {
-            $catTransactions = Transaction::where('kategori_id', $category->id)->where('status', 'approved')->get();
+        $productBreakdown = $categories->map(function ($category) use ($transactions) {
+            $catTransactions = $transactions->where('kategori_id', $category->id);
             $ongkir = (float) $catTransactions->sum(function ($t) {
                 return $t->nominal_ongkir > 0 ? $t->nominal_ongkir : $t->nominal;
             });
