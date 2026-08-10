@@ -39,8 +39,6 @@ interface Transaction {
   keterangan: string | null;
   status: 'pending' | 'approved' | 'rejected';
   closed_at?: string | null;
-  bukti_transaksi: string | null;
-  bukti_transaksi_url: string | null;
   category?: { nama_kategori: string };
 }
 
@@ -94,7 +92,6 @@ export default function Index() {
   // Form Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTrx, setEditingTrx] = useState<Transaction | null>(null);
-  const [filePreview, setFilePreview] = useState<{ url: string; isPdf: boolean; name: string } | null>(null);
   
   const [ongkirDisplay, setOngkirDisplay] = useState('');
   const [asuransiDisplay, setAsuransiDisplay] = useState('');
@@ -103,10 +100,6 @@ export default function Index() {
   // Daily Closing Modal State
   const [isClosingModalOpen, setIsClosingModalOpen] = useState(false);
   const [closingDate, setClosingDate] = useState(new Date().toISOString().split('T')[0]);
-
-  // Bukti Preview Modal State
-  const [previewModalOpen, setPreviewModalOpen] = useState(false);
-  const [activePreview, setActivePreview] = useState<{ url: string; isPdf: boolean; nomor: string } | null>(null);
 
   // Delete Modal State
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -196,7 +189,6 @@ export default function Index() {
     nominal_ongkir: '',
     nominal_asuransi: '0',
     keterangan: '',
-    bukti_transaksi: null as File | null,
   });
 
   const applyFilters = (pageNumber = 1) => {
@@ -229,7 +221,7 @@ export default function Index() {
     }).format(val);
   };
 
-  // Open Modal Create
+  // Open Modal Tambah
   const openCreateModal = () => {
     setEditingTrx(null);
     clearErrors();
@@ -242,11 +234,9 @@ export default function Index() {
       nominal_ongkir: '',
       nominal_asuransi: '0',
       keterangan: '',
-      bukti_transaksi: null,
     });
     setOngkirDisplay('');
     setAsuransiDisplay('');
-    setFilePreview(null);
     setIsModalOpen(true);
   };
 
@@ -272,37 +262,11 @@ export default function Index() {
       nominal_ongkir: rawOngkir,
       nominal_asuransi: hasAsuransi ? rawAsuransi : '0',
       keterangan: trx.keterangan || '',
-      bukti_transaksi: null,
     });
     setOngkirDisplay(formatNumberWithDots(rawOngkir));
     setAsuransiDisplay(hasAsuransi ? formatNumberWithDots(rawAsuransi) : '');
 
-    if (trx.bukti_transaksi_url) {
-      const isPdf = trx.bukti_transaksi_url.toLowerCase().endsWith('.pdf');
-      setFilePreview({
-        url: trx.bukti_transaksi_url,
-        isPdf,
-        name: trx.bukti_transaksi ? trx.bukti_transaksi.split('/').pop() || 'Bukti Transaksi' : 'Bukti Transaksi'
-      });
-    } else {
-      setFilePreview(null);
-    }
-
     setIsModalOpen(true);
-  };
-
-  // Handle File Change
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setData('bukti_transaksi', file);
-      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-      setFilePreview({
-        url: URL.createObjectURL(file),
-        isPdf,
-        name: file.name
-      });
-    }
   };
 
   // Submit Form
@@ -321,12 +285,7 @@ export default function Index() {
         keterangan: data.keterangan,
       };
 
-      if (data.bukti_transaksi) {
-        updateData.bukti_transaksi = data.bukti_transaksi;
-      }
-
       router.post(`/dashboard/transactions/${editingTrx.id}`, updateData, {
-        forceFormData: true,
         onSuccess: () => {
           setIsModalOpen(false);
           setSuccessModalTitle('Berhasil Perbarui Transaksi');
@@ -337,7 +296,6 @@ export default function Index() {
       });
     } else {
       post('/dashboard/transactions', {
-        forceFormData: true,
         onSuccess: () => {
           setIsModalOpen(false);
           setSuccessModalTitle('Berhasil Menambahkan Transaksi');
@@ -360,17 +318,6 @@ export default function Index() {
         setShowSuccessModal(true);
       }
     });
-  };
-
-  const openProofPreview = (trx: Transaction) => {
-    if (!trx.bukti_transaksi_url) return;
-    const isPdf = trx.bukti_transaksi_url.toLowerCase().endsWith('.pdf');
-    setActivePreview({
-      url: trx.bukti_transaksi_url,
-      isPdf,
-      nomor: trx.nomor_transaksi
-    });
-    setPreviewModalOpen(true);
   };
 
   const handleDeleteConfirm = (trx: Transaction) => {

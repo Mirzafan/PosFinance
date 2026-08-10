@@ -37,8 +37,6 @@ interface Transaction {
   keterangan: string | null;
   status: string;
   closed_at?: string | null;
-  bukti_transaksi: string | null;
-  bukti_transaksi_url: string | null;
   category?: { nama_kategori: string };
 }
 
@@ -102,10 +100,6 @@ export default function Index() {
   // Validation & Loading state
   const [errorMessage, setErrorMessage] = useState('');
   const [downloadingFormat, setDownloadingFormat] = useState<'excel' | 'pdf' | null>(null);
-
-  // Proof Preview Modal
-  const [previewModalOpen, setPreviewModalOpen] = useState(false);
-  const [activePreview, setActivePreview] = useState<{ url: string; isPdf: boolean; nomor: string } | null>(null);
 
   const validateRequiredDates = () => {
     if (!startDate || !endDate) {
@@ -200,16 +194,7 @@ export default function Index() {
     }
   };
 
-  const openProofPreview = (trx: Transaction) => {
-    if (!trx.bukti_transaksi_url) return;
-    const isPdf = trx.bukti_transaksi_url.toLowerCase().endsWith('.pdf');
-    setActivePreview({
-      url: trx.bukti_transaksi_url,
-      isPdf,
-      nomor: trx.nomor_transaksi
-    });
-    setPreviewModalOpen(true);
-  };
+
 
   const formatDateDdMmYy = (dateStr: string) => {
     if (!dateStr) return '-';

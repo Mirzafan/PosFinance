@@ -74,8 +74,6 @@ interface DashboardProps {
     keterangan: string;
     status?: 'pending' | 'approved' | 'rejected';
     closed_at?: string | null;
-    bukti_transaksi?: string | null;
-    bukti_transaksi_url?: string | null;
     category?: {
       nama_kategori: string;
     };
@@ -178,7 +176,6 @@ export default function Dashboard({ summary, charts, productBreakdown, recentTra
       <Head title="Dashboard Financial & Revenue - PosFinance Regional IV" />
 
       <div className="space-y-8 animate-fadeIn">
-        {/* Title Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans flex items-center gap-2">

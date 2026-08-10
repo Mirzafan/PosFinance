@@ -257,7 +257,6 @@ export default function Index() {
           document.body
         )}
 
-        {/* Edit Modal */}
         {showEditModal && typeof window !== 'undefined' && createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => setShowEditModal(false)} />

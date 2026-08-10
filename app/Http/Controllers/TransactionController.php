@@ -71,22 +71,14 @@ class TransactionController extends Controller
             'nominal_ongkir' => 'required|numeric|min:0',
             'nominal_asuransi' => 'nullable|numeric|min:0',
             'keterangan' => 'nullable|string',
-            'bukti_transaksi' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
         ], [
             'kategori_id.required' => 'Kategori wajib dipilih.',
             'nominal_ongkir.required' => 'Nominal pendapatan (ongkir) wajib diisi.',
-            'bukti_transaksi.mimes' => 'Bukti transaksi harus berupa foto (JPG, PNG, WEBP) atau dokumen PDF.',
-            'bukti_transaksi.max' => 'Ukuran file bukti transaksi maksimal 10 MB.',
         ]);
 
         $dateInput = !empty($validated['tanggal']) ? date('Y-m-d', strtotime($validated['tanggal'])) : date('Y-m-d');
 
         $branch = Branch::first() ?? Branch::create(['nama_cabang' => 'Pos Indonesia Kantor Regional IV Semarang']);
-
-        $buktiPath = null;
-        if ($request->hasFile('bukti_transaksi')) {
-            $buktiPath = $request->file('bukti_transaksi')->store('bukti_transaksi', 'public');
-        }
 
         $dateStr = date('Ymd', strtotime($dateInput));
         $randomSuffix = strtoupper(substr(uniqid(), -4));
@@ -108,7 +100,6 @@ class TransactionController extends Controller
             'nominal_asuransi' => $asuransi,
             'keterangan' => $validated['keterangan'] ?? null,
             'status' => $status,
-            'bukti_transaksi' => $buktiPath,
         ]);
 
         // Record Audit Log
@@ -134,12 +125,9 @@ class TransactionController extends Controller
             'nominal_ongkir' => 'required|numeric|min:0',
             'nominal_asuransi' => 'nullable|numeric|min:0',
             'keterangan' => 'nullable|string',
-            'bukti_transaksi' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
         ], [
             'kategori_id.required' => 'Kategori wajib dipilih.',
             'nominal_ongkir.required' => 'Nominal pendapatan (ongkir) wajib diisi.',
-            'bukti_transaksi.mimes' => 'Bukti transaksi harus berupa foto (JPG, PNG, WEBP) atau dokumen PDF.',
-            'bukti_transaksi.max' => 'Ukuran file bukti transaksi maksimal 10 MB.',
         ]);
 
         $ongkir = (float) $validated['nominal_ongkir'];
@@ -156,13 +144,6 @@ class TransactionController extends Controller
 
         if (!empty($validated['tanggal'])) {
             $data['tanggal'] = date('Y-m-d', strtotime($validated['tanggal']));
-        }
-
-        if ($request->hasFile('bukti_transaksi')) {
-            if ($transaction->bukti_transaksi && Storage::disk('public')->exists($transaction->bukti_transaksi)) {
-                Storage::disk('public')->delete($transaction->bukti_transaksi);
-            }
-            $data['bukti_transaksi'] = $request->file('bukti_transaksi')->store('bukti_transaksi', 'public');
         }
 
         $oldValues = $transaction->only(['nomor_transaksi', 'tanggal', 'kategori_id', 'nominal', 'keterangan', 'status']);
@@ -189,10 +170,6 @@ class TransactionController extends Controller
         }
 
         $transaction = Transaction::findOrFail($id);
-
-        if ($transaction->bukti_transaksi && Storage::disk('public')->exists($transaction->bukti_transaksi)) {
-            Storage::disk('public')->delete($transaction->bukti_transaksi);
-        }
 
         $nomor = $transaction->nomor_transaksi;
         $oldValues = $transaction->only(['nomor_transaksi', 'tanggal', 'kategori_id', 'nominal', 'status']);
@@ -327,12 +304,6 @@ class TransactionController extends Controller
 
         $transactions = Transaction::whereIn('id', $validated['ids'])->get();
         $count = $transactions->count();
-
-        foreach ($transactions as $t) {
-            if ($t->bukti_transaksi && Storage::disk('public')->exists($t->bukti_transaksi)) {
-                Storage::disk('public')->delete($t->bukti_transaksi);
-            }
-        }
 
         DB::transaction(function () use ($validated, $count, $request) {
             Transaction::whereIn('id', $validated['ids'])->delete();

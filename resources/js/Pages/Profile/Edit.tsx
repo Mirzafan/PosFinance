@@ -1,29 +1,15 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Head, usePage } from '@inertiajs/react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import {
-  User as UserIcon,
-  ShieldCheck,
   Building2,
   Receipt,
-  TrendingUp,
-  TrendingDown,
-  CheckCircle2,
-  Clock,
-  XCircle,
-  FileText,
-  Image as ImageIcon,
-  Eye,
-  ExternalLink,
-  Download,
-  X,
   ArrowUpRight,
   ArrowDownLeft,
   Key,
-  UserCheck,
   Calendar
 } from 'lucide-react';
 
@@ -35,7 +21,6 @@ interface Transaction {
   nominal: number;
   keterangan: string | null;
   status: 'pending' | 'approved' | 'rejected';
-  bukti_transaksi_url: string | null;
   category?: { nama_kategori: string };
 }
 
@@ -69,10 +54,6 @@ export default function Edit() {
 
   const [activeTab, setActiveTab] = useState<'overview' | 'settings'>('overview');
 
-  // Bukti Preview Modal State
-  const [previewModalOpen, setPreviewModalOpen] = useState(false);
-  const [activePreview, setActivePreview] = useState<{ url: string; isPdf: boolean; nomor: string } | null>(null);
-
   const formatRupiah = (val: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
@@ -80,17 +61,6 @@ export default function Edit() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(val || 0);
-  };
-
-  const openProofPreview = (trx: Transaction) => {
-    if (!trx.bukti_transaksi_url) return;
-    const isPdf = trx.bukti_transaksi_url.toLowerCase().endsWith('.pdf');
-    setActivePreview({
-      url: trx.bukti_transaksi_url,
-      isPdf,
-      nomor: trx.nomor_transaksi
-    });
-    setPreviewModalOpen(true);
   };
 
   const roleLabelMap = {

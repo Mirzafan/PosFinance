@@ -22,7 +22,6 @@ class Transaction extends Model
         'keterangan',
         'status',
         'closed_at',
-        'bukti_transaksi'
     ];
 
     protected $casts = [
@@ -34,17 +33,8 @@ class Transaction extends Model
     ];
 
     protected $appends = [
-        'bukti_transaksi_url',
         'net_revenue',
     ];
-
-    public function getBuktiTransaksiUrlAttribute(): ?string
-    {
-        if (!$this->bukti_transaksi) {
-            return null;
-        }
-        return \Illuminate\Support\Facades\Storage::url($this->bukti_transaksi);
-    }
 
     public function getNetRevenueAttribute(): float
     {

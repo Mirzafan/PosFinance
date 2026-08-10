@@ -23,7 +23,6 @@ class UpdateTransactionRequest extends FormRequest
             'nominal_ongkir' => 'required|numeric|min:0',
             'nominal_asuransi' => 'nullable|numeric|min:0',
             'keterangan' => 'nullable|string',
-            'bukti_transaksi' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
         ];
     }
 
@@ -35,8 +34,6 @@ class UpdateTransactionRequest extends FormRequest
             'kategori_id.exists' => 'Kategori yang dipilih tidak valid.',
             'nominal_ongkir.required' => 'Nominal pendapatan (ongkir) wajib diisi.',
             'nominal_ongkir.min' => 'Nominal pendapatan (ongkir) tidak boleh kurang dari 0.',
-            'bukti_transaksi.mimes' => 'Bukti transaksi harus berupa foto (JPG, PNG, WEBP) atau dokumen PDF.',
-            'bukti_transaksi.max' => 'Ukuran file bukti transaksi maksimal 10 MB.',
         ];
     }
 }
