@@ -120,6 +120,16 @@ export default function ForgotPassword({ status }: { status?: string }) {
             </Link>
           </div>
         </div>
+
+        {/* Footer */}
+        <div className="mt-8 text-center space-y-1 z-10">
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            &copy; {new Date().getFullYear()} PT Pos Indonesia (Persero) &bull; Kantor Regional IV Semarang
+          </p>
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">
+            PosFinance v1.0 &bull; Sistem Manajemen Keuangan & Pendapatan Logistik
+          </p>
+        </div>
       </div>
     </div>
   );

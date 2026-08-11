@@ -311,6 +311,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <main className="flex-1 p-4 md:p-8 max-w-[1600px] w-full mx-auto">
           {children}
         </main>
+
+        {/* Footer */}
+        <footer className="mt-auto border-t border-slate-200 dark:border-slate-800/80 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md py-4 px-6 text-center md:flex md:items-center md:justify-between text-xs text-slate-500 dark:text-slate-400 transition-colors">
+          <div className="flex items-center justify-center md:justify-start gap-2 font-medium">
+            <div className="w-4.5 h-4.5 rounded-md bg-gradient-to-tr from-orange-600 to-amber-500 flex items-center justify-center text-[8px] font-black text-white shadow-sm shrink-0">
+              POS
+            </div>
+            <span>&copy; {new Date().getFullYear()} PT Pos Indonesia (Persero) &bull; Kantor Regional IV Semarang</span>
+          </div>
+          <p className="mt-1.5 md:mt-0 font-mono text-[11px] text-slate-400 dark:text-slate-500">
+            PosFinance v1.0 &bull; Sistem Manajemen Keuangan & Pendapatan Logistik
+          </p>
+        </footer>
       </div>
 
       {/* Mobile Sidebar Overlay */}
