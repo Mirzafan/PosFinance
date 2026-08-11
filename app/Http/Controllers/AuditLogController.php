@@ -50,17 +50,19 @@ class AuditLogController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        // Statistical summary counts
-        $totalLogs = AuditLog::count();
-        $transaksiLogsCount = AuditLog::where('module', 'Transaksi')->count();
-        $userLogsCount = AuditLog::where('module', 'User')->count();
+        // Statistical summary counts via single SQL aggregate query
+        $statsData = AuditLog::selectRaw("
+            COUNT(*) as total_logs,
+            SUM(CASE WHEN module = 'Transaksi' THEN 1 ELSE 0 END) as transaksi_count,
+            SUM(CASE WHEN module = 'User' THEN 1 ELSE 0 END) as user_count
+        ")->first();
 
         return Inertia::render('AuditLogs/Index', [
             'logs' => $logs,
             'stats' => [
-                'total_logs' => $totalLogs,
-                'transaksi_count' => $transaksiLogsCount,
-                'user_count' => $userLogsCount,
+                'total_logs' => (int) ($statsData->total_logs ?? 0),
+                'transaksi_count' => (int) ($statsData->transaksi_count ?? 0),
+                'user_count' => (int) ($statsData->user_count ?? 0),
             ],
             'filters' => $request->only(['search', 'module', 'action', 'start_date', 'end_date']),
         ]);

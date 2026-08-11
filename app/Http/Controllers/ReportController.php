@@ -15,7 +15,7 @@ class ReportController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Transaction::with(['category', 'branch']);
+        $query = Transaction::with(['category:id,nama_kategori', 'branch:id,nama_cabang']);
 
         if ($request->filled('start_date')) {
             $query->whereDate('tanggal', '>=', $request->input('start_date'));
@@ -36,7 +36,8 @@ class ReportController extends Controller
         // Laporan hanya menghitung transaksi yang sudah disetujui (Approved)
         $query->where('status', 'approved');
 
-        $transactions = $query->orderBy('tanggal', 'desc')
+        $transactions = $query->select(['id', 'nomor_transaksi', 'tanggal', 'jenis_transaksi', 'kategori_id', 'cabang_id', 'nominal', 'nominal_ongkir', 'nominal_asuransi', 'keterangan', 'status'])
+            ->orderBy('tanggal', 'desc')
             ->orderBy('id', 'desc')
             ->get();
 
@@ -47,7 +48,7 @@ class ReportController extends Controller
         $netRevenue = $totalOngkir - $totalAsuransi;
 
         // Product Breakdown Summary
-        $categories = Category::orderBy('nama_kategori')->get();
+        $categories = Category::select(['id', 'nama_kategori'])->orderBy('nama_kategori')->get();
         $productSummary = $categories->map(function ($cat) use ($transactions) {
             $catTrx = $transactions->where('kategori_id', $cat->id);
             $ongkir = (float) $catTrx->sum(function ($t) {

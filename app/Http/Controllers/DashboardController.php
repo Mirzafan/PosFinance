@@ -19,12 +19,12 @@ class DashboardController extends Controller
         if ($period === 'daily') {
             $query->whereDate('tanggal', Carbon::today());
         } elseif ($period === 'weekly') {
-            $query->whereBetween('tanggal', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+            $query->whereBetween('tanggal', [Carbon::now()->startOfWeek()->format('Y-m-d 00:00:00'), Carbon::now()->endOfWeek()->format('Y-m-d 23:59:59')]);
         } elseif ($period === 'monthly') {
             $query->whereMonth('tanggal', Carbon::now()->month)->whereYear('tanggal', Carbon::now()->year);
         }
 
-        $transactions = $query->get();
+        $transactions = $query->select(['id', 'tanggal', 'nominal', 'nominal_ongkir', 'nominal_asuransi', 'kategori_id'])->get();
 
         $totalOngkir = (float) $transactions->sum(function ($t) {
             return $t->nominal_ongkir > 0 ? $t->nominal_ongkir : $t->nominal;
@@ -34,7 +34,7 @@ class DashboardController extends Controller
         $netRevenue = $totalOngkir - $totalAsuransi;
         $totalTransaksi = $transactions->count();
 
-        // Check today's closing status
+        // Check today's closing status using optimized queries
         $todayCount = Transaction::whereDate('tanggal', Carbon::today())->count();
         $todayClosedCount = Transaction::whereDate('tanggal', Carbon::today())->whereNotNull('closed_at')->count();
         $isTodayClosed = $todayCount > 0 && $todayCount === $todayClosedCount;
@@ -60,7 +60,8 @@ class DashboardController extends Controller
         $daysInMonth = Carbon::now()->daysInMonth;
 
         $dailyTrx = Transaction::where('status', 'approved')
-            ->whereBetween('tanggal', [$startOfMonth->format('Y-m-d'), $endOfMonth->format('Y-m-d')])
+            ->whereBetween('tanggal', [$startOfMonth->format('Y-m-d 00:00:00'), $endOfMonth->format('Y-m-d 23:59:59')])
+            ->select(['id', 'tanggal', 'nominal', 'nominal_ongkir', 'nominal_asuransi'])
             ->get();
 
         $dailyTrendsMap = [];
@@ -122,6 +123,7 @@ class DashboardController extends Controller
 
         $yearlyTrx = Transaction::where('status', 'approved')
             ->whereYear('tanggal', $currentYear)
+            ->select(['id', 'tanggal', 'nominal', 'nominal_ongkir', 'nominal_asuransi'])
             ->get();
 
         $monthlyTrendsMap = [];
@@ -149,7 +151,7 @@ class DashboardController extends Controller
         $monthlyTrends = array_values($monthlyTrendsMap);
 
         // Product Breakdown Chart & Table Data (Filtered by active period)
-        $categories = Category::all();
+        $categories = Category::select(['id', 'nama_kategori'])->get();
         $productBreakdown = $categories->map(function ($category) use ($transactions) {
             $catTransactions = $transactions->where('kategori_id', $category->id);
             $ongkir = (float) $catTransactions->sum(function ($t) {
@@ -168,10 +170,11 @@ class DashboardController extends Controller
                 'count' => $count,
                 'value' => $ongkir,
             ];
-        })->toArray();
+        })->values()->toArray();
 
         // 5 Recent Transactions
-        $recentTransactions = Transaction::with(['category', 'user'])
+        $recentTransactions = Transaction::with(['category:id,nama_kategori', 'user:id,name'])
+            ->select(['id', 'nomor_transaksi', 'tanggal', 'jenis_transaksi', 'kategori_id', 'user_id', 'nominal', 'nominal_ongkir', 'nominal_asuransi', 'status'])
             ->orderBy('tanggal', 'desc')
             ->orderBy('id', 'desc')
             ->take(5)
@@ -193,3 +196,4 @@ class DashboardController extends Controller
         ]);
     }
 }
+
