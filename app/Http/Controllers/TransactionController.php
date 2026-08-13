@@ -8,6 +8,7 @@ use App\Models\Transaction;
 use App\Models\Category;
 use App\Models\Branch;
 use App\Models\AuditLog;
+use App\Models\DailyClosing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -54,10 +55,29 @@ class TransactionController extends Controller
 
         $categories = Category::orderBy('nama_kategori')->get();
 
+        $nowWib = \Carbon\Carbon::now('Asia/Jakarta');
+
         return Inertia::render('Transactions/Index', [
             'transactions' => $transactions,
             'categories' => $categories,
             'filters' => $request->only(['search', 'start_date', 'end_date', 'kategori_id', 'jenis_transaksi', 'status']),
+            'operating_hours' => [
+                'is_outside_hours' => false,
+                'is_closed_today' => false,
+                'is_locked_today' => false,
+                'kas_status' => [
+                    'status' => 'open',
+                    'mode' => 'auto_open',
+                    'is_locked' => false,
+                    'label' => 'Kas Buka 🔓',
+                    'description' => 'Kas harian aktif.',
+                    'today_closing_id' => null,
+                    'is_outside_hours' => false,
+                    'today_date' => $nowWib->isoFormat('D MMMM YYYY'),
+                    'today_raw_date' => $nowWib->format('Y-m-d'),
+                ],
+                'formatted_time' => $nowWib->format('H:i') . ' WIB',
+            ],
         ]);
     }
 
@@ -76,7 +96,9 @@ class TransactionController extends Controller
             'nominal_ongkir.required' => 'Nominal pendapatan (ongkir) wajib diisi.',
         ]);
 
-        $dateInput = !empty($validated['tanggal']) ? date('Y-m-d', strtotime($validated['tanggal'])) : date('Y-m-d');
+        $now = \Carbon\Carbon::now('Asia/Jakarta');
+        $todayDate = $now->format('Y-m-d');
+        $dateInput = !empty($validated['tanggal']) ? date('Y-m-d', strtotime($validated['tanggal'])) : $todayDate;
 
         $branch = Branch::first() ?? Branch::create(['nama_cabang' => 'Pos Indonesia Kantor Regional IV Semarang']);
 
@@ -129,6 +151,8 @@ class TransactionController extends Controller
             'kategori_id.required' => 'Kategori wajib dipilih.',
             'nominal_ongkir.required' => 'Nominal pendapatan (ongkir) wajib diisi.',
         ]);
+
+        $targetDate = !empty($validated['tanggal']) ? date('Y-m-d', strtotime($validated['tanggal'])) : $transaction->tanggal;
 
         $ongkir = (float) $validated['nominal_ongkir'];
         $asuransi = (float) ($validated['nominal_asuransi'] ?? 0);

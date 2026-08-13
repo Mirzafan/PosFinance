@@ -189,7 +189,7 @@ export default function Index() {
 
   return (
     <DashboardLayout>
-      <Head title="Audit Log & Activity Trail - PosFinance" />
+      <Head title="Audit Log Logistik & Kurir - PosFinance Regional IV" />
 
       <div className="space-y-6 animate-fadeIn">
         {/* Header Title */}
@@ -197,7 +197,7 @@ export default function Index() {
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
               <ShieldCheck className="h-7 w-7 text-orange-500" />
-              Audit Log & Activity Trail
+              Audit Log & Activity Trail Logistik & Kurir
               <span className="text-xs font-semibold text-orange-600 dark:text-orange-400 bg-orange-500/10 border border-orange-500/20 px-3 py-1 rounded-full">
                 {stats.total_logs} Total Log Recorded
               </span>

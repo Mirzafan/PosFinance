@@ -47,6 +47,27 @@ interface Category {
   nama_kategori: string;
 }
 
+interface KasStatus {
+  status: 'open' | 'closed';
+  mode: 'auto_open' | 'auto_closed' | 'manual_closed' | 'emergency_open';
+  is_locked: boolean;
+  label: string;
+  description: string;
+  today_closing_id?: number | null;
+  is_outside_hours: boolean;
+  today_date: string;
+  today_raw_date: string;
+}
+
+interface OperatingHours {
+  is_outside_hours: boolean;
+  is_closed_today: boolean;
+  is_locked_today: boolean;
+  current_hour?: number;
+  formatted_time: string;
+  kas_status?: KasStatus;
+}
+
 interface PageProps {
   auth: {
     user: {
@@ -71,14 +92,15 @@ interface PageProps {
     jenis_transaksi?: string;
     status?: string;
   };
+  operating_hours?: OperatingHours;
   flash?: {
     success?: string;
     error?: string;
   };
 }
 
-export default function Index() {
-  const { auth, transactions, categories, filters, flash } = usePage<any>().props as unknown as PageProps;
+export default function Index(props: PageProps) {
+  const { auth, transactions, categories, filters, operating_hours, flash } = props;
   const userRole = auth.user.role;
   const isStaff = userRole === 'staff';
   const isAdmin = userRole === 'admin';
@@ -112,16 +134,13 @@ export default function Index() {
 
   const formatDateDdMmYy = (dateStr: string) => {
     if (!dateStr) return '-';
-    const parts = dateStr.split('T')[0].split(' ')[0].split('-');
+    const cleanStr = String(dateStr).split('T')[0].split(' ')[0];
+    const parts = cleanStr.split('-');
     if (parts.length === 3) {
       const yy = parts[0].slice(-2);
       return `${parts[2]}/${parts[1]}/${yy}`;
     }
-    const d = new Date(dateStr);
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const yy = String(d.getFullYear()).slice(-2);
-    return `${day}/${month}/${yy}`;
+    return dateStr;
   };
 
   const formatNumberWithDots = (val: string | number) => {
@@ -200,6 +219,7 @@ export default function Index() {
 
     router.get('/dashboard/transactions', params, {
       preserveState: true,
+      preserveScroll: true,
       replace: true
     });
   };
@@ -342,24 +362,40 @@ export default function Index() {
 
   return (
     <DashboardLayout>
-      <Head title="Jurnal Transaksi - PosFinance Regional IV" />
+      <Head title="Jurnal Transaksi Logistik & Kurir - PosFinance Regional IV" />
 
       <div className="space-y-6 animate-fadeIn">
+        {/* Flash Message Banner */}
+        {flash?.error && (
+          <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center gap-2.5 shadow-sm animate-fade-in">
+            <AlertCircle className="h-5 w-5 shrink-0 text-rose-500" />
+            <span>{flash.error}</span>
+          </div>
+        )}
+
+        {flash?.success && (
+          <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center gap-2.5 shadow-sm animate-fade-in">
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
+            <span>{flash.success}</span>
+          </div>
+        )}
+
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans flex items-center gap-2">
-              Jurnal & Daftar Transaksi Kurir
+              Jurnal & Daftar Transaksi Logistik & Kurir
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-sm">
-              Pencatatan pendapatan ongkir & pengeluaran asuransi paket.
+              Pencatatan pendapatan ongkir & pengeluaran asuransi pengiriman Logistik & Kurir.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 shrink-0">
             <button
               onClick={openCreateModal}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-md shadow-orange-900/20 transition-all whitespace-nowrap shrink-0 cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-md transition-all whitespace-nowrap shrink-0 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white shadow-orange-900/20 cursor-pointer"
+              title="Catat Transaksi Paket Baru"
             >
               <Plus className="h-4 w-4 stroke-[2.5] shrink-0" />
               <span>Catat Transaksi Paket</span>
@@ -522,8 +558,8 @@ export default function Index() {
 
           {/* Pagination */}
           {transactions.last_page > 1 && (
-            <div className="border-t border-slate-200 dark:border-slate-800 px-6 py-4 flex items-center justify-between">
-              <span className="text-xs text-slate-500 font-medium">
+            <div className="border-t border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <span className="text-xs text-slate-500 font-medium text-center sm:text-left">
                 Menampilkan {transactions.data.length} dari {transactions.total} transaksi
               </span>
               <div className="flex items-center gap-2">
@@ -534,8 +570,8 @@ export default function Index() {
                 >
                   <ChevronLeft className="h-3.5 w-3.5 inline" /> Sebelumnya
                 </button>
-                <span className="text-xs text-slate-500 px-2">
-                  Halaman {transactions.current_page} dari {transactions.last_page}
+                <span className="text-xs text-slate-500 px-1 sm:px-2">
+                  {transactions.current_page} / {transactions.last_page}
                 </span>
                 <button
                   disabled={transactions.current_page === transactions.last_page}
@@ -567,6 +603,8 @@ export default function Index() {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 text-slate-700 dark:text-slate-300 text-sm">
+
+
               {Object.keys(errors).length > 0 && (
                 <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs">
                   {Object.values(errors)[0]}
@@ -711,7 +749,7 @@ export default function Index() {
                 <button
                   type="submit"
                   disabled={processing}
-                  className="px-5 py-2 bg-gradient-to-r from-orange-500 to-amber-600 text-white font-semibold text-xs rounded-xl shadow-md cursor-pointer"
+                  className="px-5 py-2 bg-gradient-to-r from-orange-500 to-amber-600 text-white font-semibold text-xs rounded-xl shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {editingTrx ? 'Simpan Perubahan' : 'Simpan Transaksi Paket'}
                 </button>

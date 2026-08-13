@@ -71,3 +71,28 @@ html.dark ::-webkit-calendar-picker-indicator:hover {
   transform: scale(1.1);
 }
 
+/* Remove default browser black focus outline & tap highlight box on SVG elements & Recharts pie/bar charts */
+svg,
+svg *,
+svg path,
+svg g,
+.recharts-pie-sector,
+.recharts-sector,
+.recharts-active-shape,
+.recharts-layer,
+.recharts-surface,
+.recharts-responsive-container * {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+svg:focus,
+svg *:focus,
+svg *:focus-visible,
+path:focus,
+path:focus-visible {
+  outline: none !important;
+}
+
+

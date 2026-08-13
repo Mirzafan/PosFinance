@@ -22,7 +22,10 @@ import {
   XCircle,
   Clock,
   CheckCheck,
-  ChevronRight
+  ChevronRight,
+  Target,
+  Trophy,
+  HelpCircle
 } from 'lucide-react';
 import { useTheme } from '../Hooks/useTheme';
 
@@ -110,6 +113,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       roles: ['admin', 'staff'],
     },
     {
+      label: 'Target Pendapatan',
+      href: '/dashboard/targets',
+      icon: Target,
+      roles: ['admin', 'staff'],
+    },
+    {
       label: 'Laporan Keuangan',
       href: '/dashboard/reports',
       icon: FileBarChart2,
@@ -126,6 +135,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       href: '/dashboard/audit-logs',
       icon: ShieldCheck,
       roles: ['admin'],
+    },
+    {
+      label: 'Help & Support',
+      href: '/dashboard/help-support',
+      icon: HelpCircle,
+      roles: ['admin', 'staff'],
     },
   ];
 
@@ -186,6 +201,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={() => setMobileSidebarOpen(false)}
                   className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all duration-150 ${
                     isActive
                       ? 'bg-orange-600 text-white shadow-lg shadow-orange-600/20'
@@ -204,6 +220,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="p-3.5 border-t border-slate-200 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900 overflow-x-hidden no-scrollbar">
           <Link
             href="/profile"
+            onClick={() => setMobileSidebarOpen(false)}
             className="bg-slate-100 border border-slate-200 dark:bg-slate-950/50 dark:border-slate-800/80 hover:border-orange-500/40 hover:bg-slate-200 dark:hover:bg-slate-950 rounded-xl p-3 mb-2.5 flex items-center gap-3 transition-all group cursor-pointer"
             title="Buka Profil Saya"
           >

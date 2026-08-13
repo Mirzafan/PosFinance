@@ -148,7 +148,7 @@
             <!-- 3. Process: Verifikasi Akun & Hak Akses (Rectangle) -->
             <rect x="200" y="145" width="240" height="42" rx="4" fill="#ffffff" stroke="#000000" stroke-width="2"/>
             <text x="320" y="164" fill="#000000" font-size="10" font-weight="bold" text-anchor="middle">Verifikasi Akun & Hak Akses</text>
-            <text x="320" y="177" fill="#333333" font-size="8.5" text-anchor="middle">(Admin / Staff / Supervisor)</text>
+            <text x="320" y="177" fill="#333333" font-size="8.5" text-anchor="middle">(Admin / Staff)</text>
 
             <!-- Arrow 3 -->
             <line x1="320" y1="187" x2="320" y2="215" stroke="#000000" stroke-width="2" marker-end="url(#arrow)"/>
@@ -322,7 +322,7 @@
         <tbody>
             <tr>
                 <td><strong>Otentikasi & RBAC</strong></td>
-                <td>Sistem login terproteksi untuk peran Admin, Staff Keuangan, dan Supervisor.</td>
+                <td>Sistem login terproteksi untuk peran Admin dan Staff Keuangan.</td>
             </tr>
             <tr>
                 <td><strong>Jurnal Transaksi Kas</strong></td>

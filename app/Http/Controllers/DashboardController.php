@@ -4,15 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\Transaction;
 use App\Models\Category;
+use App\Services\ForecastingService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, ForecastingService $forecastingService)
     {
         $period = $request->input('period', 'daily'); // daily, weekly, monthly, all
+        $forecastHorizon = (int) $request->input('forecast_days', 14);
+        if (!in_array($forecastHorizon, [7, 14, 30])) {
+            $forecastHorizon = 14;
+        }
 
         $query = Transaction::where('status', 'approved');
 
@@ -150,6 +155,60 @@ class DashboardController extends Controller
         }
         $monthlyTrends = array_values($monthlyTrendsMap);
 
+        // 4. Yearly Trends (Last 5 Years)
+        $startYear = ((int) $currentYear) - 4;
+        $yearlyTrendsMap = [];
+        for ($y = $startYear; $y <= (int) $currentYear; $y++) {
+            $yKey = (string) $y;
+            $yearlyTrendsMap[$yKey] = [
+                'label' => "Th {$y}",
+                'key' => $yKey,
+                'ongkir' => 0,
+                'asuransi' => 0,
+                'net' => 0,
+            ];
+        }
+
+        $allApprovedTrx = Transaction::where('status', 'approved')
+            ->select(['id', 'tanggal', 'nominal', 'nominal_ongkir', 'nominal_asuransi'])
+            ->get();
+
+        foreach ($allApprovedTrx as $t) {
+            $yStr = Carbon::parse($t->tanggal)->format('Y');
+            if (isset($yearlyTrendsMap[$yStr])) {
+                $ongkirVal = (float) ($t->nominal_ongkir > 0 ? $t->nominal_ongkir : $t->nominal);
+                $asuransiVal = (float) ($t->nominal_asuransi ?? 0);
+                $yearlyTrendsMap[$yStr]['ongkir'] += $ongkirVal;
+                $yearlyTrendsMap[$yStr]['asuransi'] += $asuransiVal;
+                $yearlyTrendsMap[$yStr]['net'] += ($ongkirVal - $asuransiVal);
+            }
+        }
+        $yearlyTrends = array_values($yearlyTrendsMap);
+
+        // 5. All-Time Trends (Grouped by Month/Year)
+        $allTimeMap = [];
+        foreach ($allApprovedTrx as $t) {
+            $ymKey = Carbon::parse($t->tanggal)->format('M y');
+            if (!isset($allTimeMap[$ymKey])) {
+                $allTimeMap[$ymKey] = [
+                    'label' => $ymKey,
+                    'key' => $ymKey,
+                    'ongkir' => 0,
+                    'asuransi' => 0,
+                    'net' => 0,
+                ];
+            }
+            $ongkirVal = (float) ($t->nominal_ongkir > 0 ? $t->nominal_ongkir : $t->nominal);
+            $asuransiVal = (float) ($t->nominal_asuransi ?? 0);
+            $allTimeMap[$ymKey]['ongkir'] += $ongkirVal;
+            $allTimeMap[$ymKey]['asuransi'] += $asuransiVal;
+            $allTimeMap[$ymKey]['net'] += ($ongkirVal - $asuransiVal);
+        }
+        $allTimeTrends = array_values($allTimeMap);
+        if (empty($allTimeTrends)) {
+            $allTimeTrends = $monthlyTrends;
+        }
+
         // Product Breakdown Chart & Table Data (Filtered by active period)
         $categories = Category::select(['id', 'nama_kategori'])->get();
         $productBreakdown = $categories->map(function ($category) use ($transactions) {
@@ -172,6 +231,49 @@ class DashboardController extends Controller
             ];
         })->values()->toArray();
 
+        // Service Leaderboard calculation
+        $totalSystemRevenue = $totalOngkir;
+        $leaderboardData = $categories->map(function ($category) use ($transactions, $totalSystemRevenue) {
+            $catTrx = $transactions->where('kategori_id', $category->id);
+            $totalOngkir = (float) $catTrx->sum(function ($t) {
+                return $t->nominal_ongkir > 0 ? $t->nominal_ongkir : $t->nominal;
+            });
+            $totalAsuransi = (float) $catTrx->sum('nominal_asuransi');
+            $netRevenue = $totalOngkir - $totalAsuransi;
+            $count = $catTrx->count();
+            $avgPerPaket = $count > 0 ? round($totalOngkir / $count) : 0;
+            $marketShare = $totalSystemRevenue > 0 ? round(($totalOngkir / $totalSystemRevenue) * 100, 1) : 0;
+
+            return [
+                'id' => $category->id,
+                'name' => $category->nama_kategori,
+                'total_ongkir' => $totalOngkir,
+                'total_asuransi' => $totalAsuransi,
+                'net_revenue' => $netRevenue,
+                'package_count' => $count,
+                'avg_per_paket' => $avgPerPaket,
+                'market_share' => $marketShare,
+            ];
+        })->sortByDesc('total_ongkir')->values();
+
+        $rankedLeaderboard = $leaderboardData->map(function ($item, $index) {
+            $item['rank'] = $index + 1;
+            if ($index === 0) {
+                $item['badge'] = '🥇 Juara 1 (Gold Performer)';
+                $item['rank_color'] = 'amber';
+            } elseif ($index === 1) {
+                $item['badge'] = '🥈 Juara 2 (Silver Performer)';
+                $item['rank_color'] = 'slate';
+            } elseif ($index === 2) {
+                $item['badge'] = '🥉 Juara 3 (Bronze Performer)';
+                $item['rank_color'] = 'orange';
+            } else {
+                $item['badge'] = 'Peringkat ' . ($index + 1);
+                $item['rank_color'] = 'blue';
+            }
+            return $item;
+        });
+
         // 5 Recent Transactions
         $recentTransactions = Transaction::with(['category:id,nama_kategori', 'user:id,name'])
             ->select(['id', 'nomor_transaksi', 'tanggal', 'jenis_transaksi', 'kategori_id', 'user_id', 'nominal', 'nominal_ongkir', 'nominal_asuransi', 'status'])
@@ -180,18 +282,26 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
+        // Generate ML Time Series Forecast
+        $forecastingData = $forecastingService->generateForecast($forecastHorizon);
+
         return Inertia::render('Dashboard', [
             'summary' => $summary,
             'charts' => [
                 'daily_trends' => $dailyTrends,
                 'weekly_trends' => $weeklyTrends,
                 'monthly_trends' => $monthlyTrends,
+                'yearly_trends' => $yearlyTrends,
+                'all_time_trends' => $allTimeTrends,
                 'category_breakdown' => array_values($productBreakdown),
             ],
             'productBreakdown' => array_values($productBreakdown),
+            'serviceLeaderboard' => $rankedLeaderboard,
             'recentTransactions' => $recentTransactions,
+            'forecasting' => $forecastingData,
             'filters' => [
                 'period' => $period,
+                'forecast_days' => $forecastHorizon,
             ],
         ]);
     }

@@ -135,7 +135,7 @@ export default function Index() {
 
   return (
     <DashboardLayout>
-      <Head title="Manajemen Pengguna - PosFinance" />
+      <Head title="Manajemen Pengguna Logistik & Kurir - PosFinance Regional IV" />
 
       <div className="space-y-6 animate-fadeIn">
         {/* Flash Notifications */}
@@ -158,7 +158,7 @@ export default function Index() {
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans flex items-center gap-2">
               <Shield className="h-6 w-6 text-orange-500" />
-              Manajemen Hak Akses Pengguna
+              Manajemen Hak Akses Pengguna Logistik & Kurir
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Kelola akun pengguna, peran, dan otorisasi hak akses sistem PosFinance.</p>
           </div>

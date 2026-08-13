@@ -107,7 +107,7 @@ export default function Index() {
 
   return (
     <DashboardLayout>
-      <Head title="Kategori Layanan - PosFinance Regional IV Semarang" />
+      <Head title="Master Kategori Layanan Logistik & Kurir - PosFinance Regional IV Semarang" />
 
       <div className="space-y-6 animate-fadeIn">
         {/* Header */}
@@ -115,10 +115,10 @@ export default function Index() {
           <div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Tag className="h-6 w-6 text-orange-500" />
-              Kategori Layanan
+              Kategori Layanan Logistik & Kurir
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Daftar kategori layanan PosAja.
+              Daftar kategori layanan pengiriman paket & barang Logistik & Kurir PosAja.
             </p>
           </div>
 

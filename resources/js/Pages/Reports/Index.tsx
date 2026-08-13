@@ -124,6 +124,7 @@ export default function Index() {
 
     router.get('/dashboard/reports', params, {
       preserveState: true,
+      preserveScroll: true,
       replace: true
     });
   };
@@ -198,16 +199,13 @@ export default function Index() {
 
   const formatDateDdMmYy = (dateStr: string) => {
     if (!dateStr) return '-';
-    const parts = dateStr.split('T')[0].split(' ')[0].split('-');
+    const cleanStr = String(dateStr).split('T')[0].split(' ')[0];
+    const parts = cleanStr.split('-');
     if (parts.length === 3) {
       const yy = parts[0].slice(-2);
       return `${parts[2]}/${parts[1]}/${yy}`;
     }
-    const d = new Date(dateStr);
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const yy = String(d.getFullYear()).slice(-2);
-    return `${day}/${month}/${yy}`;
+    return dateStr;
   };
 
   const formatRupiah = (val: number) => {
@@ -221,21 +219,21 @@ export default function Index() {
 
   return (
     <DashboardLayout>
-      <Head title="Laporan Keuangan - PosFinance Regional IV Semarang" />
+      <Head title="Laporan Keuangan Logistik & Kurir - PosFinance Regional IV Semarang" />
 
       <div className="space-y-6 animate-fadeIn">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans">Laporan Keuangan & Rekapitulasi Layanan</h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Tentukan periode Tanggal Mulai dan Tanggal Akhir untuk memuat dan mengunduh laporan resmi.</p>
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans">Laporan Keuangan & Rekapitulasi Layanan Logistik & Kurir</h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">Tentukan periode Tanggal Mulai dan Tanggal Akhir untuk memuat dan mengunduh laporan resmi Logistik & Kurir.</p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
             <button
               onClick={handleExportExcel}
               disabled={downloadingFormat !== null}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-xs rounded-xl shadow-lg transition-all cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-xs rounded-xl shadow-lg transition-all cursor-pointer w-full sm:w-auto"
             >
               {downloadingFormat === 'excel' ? (
                 <>
@@ -252,7 +250,7 @@ export default function Index() {
             <button
               onClick={handleExportPdf}
               disabled={downloadingFormat !== null}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-xs rounded-xl shadow-lg transition-all cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-xs rounded-xl shadow-lg transition-all cursor-pointer w-full sm:w-auto"
             >
               {downloadingFormat === 'pdf' ? (
                 <>
@@ -372,37 +370,37 @@ export default function Index() {
         </div>
 
         {/* 3 Summary Metric Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+          <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-slate-500 uppercase">Total Pendapatan Ongkir</span>
               <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600">
                 <TrendingUp className="h-4 w-4" />
               </div>
             </div>
-            <h3 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatRupiah(summary.total_ongkir || summary.total_pemasukan)}</h3>
+            <h3 className="text-lg sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 truncate">{formatRupiah(summary.total_ongkir || summary.total_pemasukan)}</h3>
             <p className="text-[11px] text-slate-500 mt-1">Total Ongkir Terkumpul</p>
           </div>
 
-          <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+          <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-slate-500 uppercase">Total Pengeluaran Asuransi</span>
               <div className="p-2 rounded-xl bg-rose-500/10 text-rose-600">
                 <TrendingDown className="h-4 w-4" />
               </div>
             </div>
-            <h3 className="text-2xl font-bold text-rose-600 dark:text-rose-400">{formatRupiah(summary.total_asuransi || 0)}</h3>
+            <h3 className="text-lg sm:text-2xl font-bold text-rose-600 dark:text-rose-400 truncate">{formatRupiah(summary.total_asuransi || 0)}</h3>
             <p className="text-[11px] text-slate-500 mt-1">Biaya Asuransi Paket</p>
           </div>
 
-          <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+          <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-slate-500 uppercase">Pendapatan Bersih (Net Revenue)</span>
               <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600">
                 <Wallet className="h-4 w-4" />
               </div>
             </div>
-            <h3 className="text-2xl font-bold text-blue-600 dark:text-blue-400">{formatRupiah(summary.net_revenue || summary.saldo)}</h3>
+            <h3 className="text-lg sm:text-2xl font-bold text-blue-600 dark:text-blue-400 truncate">{formatRupiah(summary.net_revenue || summary.saldo)}</h3>
             <p className="text-[11px] text-slate-500 mt-1">Ongkir - Asuransi</p>
           </div>
         </div>

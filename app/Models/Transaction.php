@@ -25,7 +25,7 @@ class Transaction extends Model
     ];
 
     protected $casts = [
-        'tanggal' => 'date',
+        'tanggal' => 'date:Y-m-d',
         'nominal' => 'decimal:2',
         'nominal_ongkir' => 'decimal:2',
         'nominal_asuransi' => 'decimal:2',
