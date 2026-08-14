@@ -455,12 +455,8 @@ export default function Dashboard({ summary, charts, productBreakdown, serviceLe
             {/* Header Leaderboard */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800/80 pb-5">
               <div className="flex items-center gap-3.5">
-                <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 shadow-inner relative group">
+                <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 shadow-inner group">
                   <Trophy className="h-6 w-6 text-amber-500 transform group-hover:scale-110 transition-transform" />
-                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
-                  </span>
                 </div>
                 <div>
                   <h4 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2.5 flex-wrap tracking-tight">
