@@ -13,7 +13,9 @@ import {
   Layers,
   Trophy,
   Award,
-  Medal
+  Medal,
+  Crown,
+  Sparkles
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -449,71 +451,152 @@ export default function Dashboard({ summary, charts, productBreakdown, serviceLe
         {/* LEADERBOARD LAYANAN TERPOPULER (TOP PERFORMER SERVICES) */}
         {/* ========================================================================= */}
         {serviceLeaderboard && serviceLeaderboard.length > 0 && (
-          <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-3xl p-6 shadow-sm space-y-6 transition-colors">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                  <Trophy className="h-5 w-5" />
+          <div className="bg-white border border-slate-200/80 dark:bg-[#0B101B] dark:border-[#182232] rounded-3xl p-6 shadow-sm space-y-6 transition-all">
+            {/* Header Leaderboard */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800/80 pb-5">
+              <div className="flex items-center gap-3.5">
+                <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 shadow-inner relative group">
+                  <Trophy className="h-6 w-6 text-amber-500 transform group-hover:scale-110 transition-transform" />
+                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+                  </span>
                 </div>
                 <div>
-                  <h4 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
-                    <span>Leaderboard Layanan Logistik & Kurir Terpopuler</span>
-                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                      Top Performer
+                  <h4 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2.5 flex-wrap tracking-tight">
+                    <span>Leaderboard Layanan Logistik & Kurir</span>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-amber-500/15 to-orange-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                      <Sparkles className="w-3 h-3 text-amber-500" /> Top Performer
                     </span>
-                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
-                      {chartTab === 'daily' ? 'Harian (Hari Ini)' : chartTab === 'weekly' ? 'Mingguan (Minggu Ini)' : chartTab === 'monthly' ? 'Bulanan (Bulan Ini)' : chartTab === 'yearly' ? 'Tahunan (5 Tahun Terakhir)' : 'Semua Waktu'}
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                      {chartTab === 'daily' ? 'Hari Ini' : chartTab === 'weekly' ? 'Minggu Ini' : chartTab === 'monthly' ? 'Bulan Ini' : chartTab === 'yearly' ? '5 Tahun Terakhir' : 'Semua Waktu'}
                     </span>
                   </h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
                     Peringkat kontribusi pendapatan ongkir & volume pengiriman per kategori layanan ({chartTab === 'daily' ? 'Hari Ini' : chartTab === 'weekly' ? 'Minggu Ini' : chartTab === 'monthly' ? 'Bulan Ini' : chartTab === 'yearly' ? '5 Tahun Terakhir' : 'Semua Waktu'})
                   </p>
                 </div>
               </div>
 
-              <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                Total {serviceLeaderboard.length} Kategori Layanan
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 text-xs font-bold text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80 self-start sm:self-auto">
+                <Box className="w-3.5 h-3.5 text-orange-500" />
+                <span>Total {serviceLeaderboard.length} Layanan</span>
               </div>
             </div>
 
             {/* Top 3 Podium Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
               {serviceLeaderboard.slice(0, 3).map((item, idx) => {
-                const colors = [
-                  { bg: 'from-amber-500/10 to-orange-500/5', border: 'border-amber-500/30', text: 'text-amber-600 dark:text-amber-400', badge: 'bg-amber-500 text-white' },
-                  { bg: 'from-slate-500/10 to-slate-400/5', border: 'border-slate-400/30', text: 'text-slate-600 dark:text-slate-300', badge: 'bg-slate-500 text-white' },
-                  { bg: 'from-orange-500/10 to-amber-700/5', border: 'border-orange-500/30', text: 'text-orange-600 dark:text-orange-400', badge: 'bg-orange-600 text-white' },
-                ][idx];
+                const isGold = idx === 0;
+                const isSilver = idx === 1;
+
+                const config = isGold
+                  ? {
+                      containerBg: 'bg-gradient-to-b from-amber-500/10 via-amber-400/5 to-white dark:from-amber-500/15 dark:via-amber-500/5 dark:to-[#0B101B]',
+                      border: 'border-amber-400/50 dark:border-amber-500/40 hover:border-amber-500 shadow-amber-500/5',
+                      topLine: 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500',
+                      badgeBg: 'bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 text-white shadow-md shadow-amber-500/25',
+                      badgeLabel: 'JUARA 1 · GOLD PERFORMER',
+                      IconComponent: Crown,
+                      rankBadge: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30',
+                      revenueColor: 'text-amber-600 dark:text-amber-400',
+                      barBg: 'bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400',
+                    }
+                  : isSilver
+                  ? {
+                      containerBg: 'bg-gradient-to-b from-slate-400/10 via-slate-300/5 to-white dark:from-slate-400/15 dark:via-slate-400/5 dark:to-[#0B101B]',
+                      border: 'border-slate-300/80 dark:border-slate-700/80 hover:border-slate-400 dark:hover:border-slate-500 shadow-slate-500/5',
+                      topLine: 'bg-gradient-to-r from-slate-400 via-zinc-300 to-slate-500',
+                      badgeBg: 'bg-gradient-to-r from-slate-600 to-slate-700 text-white shadow-md shadow-slate-500/20',
+                      badgeLabel: 'JUARA 2 · SILVER PERFORMER',
+                      IconComponent: Medal,
+                      rankBadge: 'bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/30',
+                      revenueColor: 'text-slate-800 dark:text-slate-200',
+                      barBg: 'bg-gradient-to-r from-slate-500 via-slate-400 to-zinc-300',
+                    }
+                  : {
+                      containerBg: 'bg-gradient-to-b from-orange-500/10 via-amber-700/5 to-white dark:from-orange-500/15 dark:via-amber-800/5 dark:to-[#0B101B]',
+                      border: 'border-orange-400/40 dark:border-orange-500/40 hover:border-orange-400 shadow-orange-500/5',
+                      topLine: 'bg-gradient-to-r from-orange-500 via-amber-600 to-amber-700',
+                      badgeBg: 'bg-gradient-to-r from-amber-700 via-orange-700 to-amber-800 text-white shadow-md shadow-orange-500/20',
+                      badgeLabel: 'JUARA 3 · BRONZE PERFORMER',
+                      IconComponent: Award,
+                      rankBadge: 'bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-500/30',
+                      revenueColor: 'text-orange-600 dark:text-orange-400',
+                      barBg: 'bg-gradient-to-r from-orange-600 via-amber-600 to-amber-500',
+                    };
+
+                const IconComp = config.IconComponent;
 
                 return (
-                  <div key={item.id} className={`p-4 rounded-2xl bg-gradient-to-br ${colors.bg} border ${colors.border} relative overflow-hidden flex flex-col justify-between space-y-3 shadow-sm`}>
-                    <div className="flex items-center justify-between">
-                      <span className={`px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider ${colors.badge}`}>
-                        {item.badge}
-                      </span>
-                      <span className="text-xs font-extrabold text-slate-400">Peringkat #{item.rank}</span>
-                    </div>
+                  <div
+                    key={item.id}
+                    className={`rounded-2xl border ${config.border} ${config.containerBg} relative overflow-hidden flex flex-col justify-between shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group`}
+                  >
+                    {/* Top Accent Line */}
+                    <div className={`h-1.5 w-full ${config.topLine}`} />
 
-                    <div>
-                      <h5 className="font-extrabold text-slate-900 dark:text-white text-base truncate">
-                        {item.name}
-                      </h5>
-                      <div className="text-lg font-black text-emerald-600 dark:text-emerald-400 mt-1">
-                        {formatRupiah(item.total_ongkir)}
+                    <div className="p-5 flex flex-col justify-between flex-1 space-y-4">
+                      {/* Top Header Badge & Rank */}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider ${config.badgeBg}`}>
+                          <IconComp className="w-3.5 h-3.5" />
+                          <span>{config.badgeLabel}</span>
+                        </span>
+                        <span className={`px-2.5 py-0.5 rounded-lg text-xs font-black border ${config.rankBadge}`}>
+                          #{item.rank}
+                        </span>
                       </div>
-                    </div>
 
-                    <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 space-y-1.5 text-xs">
-                      <div className="flex justify-between text-slate-500 font-medium">
-                        <span>Pangsa Pasar</span>
-                        <span className="font-bold text-slate-900 dark:text-white">{item.market_share}%</span>
+                      {/* Service Name & Revenue Display */}
+                      <div className="space-y-1">
+                        <h5 className="font-black text-slate-900 dark:text-white text-lg tracking-tight truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                          {item.name}
+                        </h5>
+                        <div className="pt-1">
+                          <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">
+                            Total Pendapatan Ongkir
+                          </p>
+                          <div className={`text-2xl font-black tracking-tight mt-0.5 ${config.revenueColor}`}>
+                            {formatRupiah(item.total_ongkir)}
+                          </div>
+                        </div>
                       </div>
-                      <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
-                        <div className="h-full bg-gradient-to-r from-orange-500 to-amber-500 rounded-full" style={{ width: `${Math.min(100, item.market_share)}%` }} />
+
+                      {/* Market Share Progress Bar */}
+                      <div className="space-y-2 pt-2 border-t border-slate-200/60 dark:border-slate-800/60">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="font-semibold text-slate-600 dark:text-slate-400">Pangsa Pasar</span>
+                          <span className="font-extrabold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white text-xs">
+                            {item.market_share}%
+                          </span>
+                        </div>
+                        <div className="w-full h-2 rounded-full bg-slate-200/80 dark:bg-slate-800 overflow-hidden p-0.5 border border-slate-300/40 dark:border-slate-700/40">
+                          <div
+                            className={`h-full ${config.barBg} rounded-full transition-all duration-500`}
+                            style={{ width: `${Math.min(100, item.market_share)}%` }}
+                          />
+                        </div>
                       </div>
-                      <div className="flex justify-between text-[11px] text-slate-400 pt-0.5">
-                        <span>Volume: {item.package_count} Paket</span>
-                        <span>Rata-rata: {formatRupiah(item.avg_per_paket)}</span>
+
+                      {/* Footer Stat Grid */}
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <div className="p-2.5 rounded-xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-800/60 space-y-0.5">
+                          <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 block uppercase tracking-wider">
+                            Volume
+                          </span>
+                          <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate">
+                            {item.package_count} Paket
+                          </span>
+                        </div>
+                        <div className="p-2.5 rounded-xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-800/60 space-y-0.5">
+                          <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 block uppercase tracking-wider">
+                            Rata-rata
+                          </span>
+                          <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate">
+                            {formatRupiah(item.avg_per_paket)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
