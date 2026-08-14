@@ -383,10 +383,10 @@ export default function Index(props: PageProps) {
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans flex items-center gap-2">
+            <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
               Jurnal & Daftar Transaksi Logistik & Kurir
             </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">
+            <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
               Pencatatan pendapatan ongkir & pengeluaran asuransi pengiriman Logistik & Kurir.
             </p>
           </div>

@@ -156,11 +156,11 @@ export default function Index() {
         {/* Header & Add User Button */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans flex items-center gap-2">
-              <Shield className="h-6 w-6 text-orange-500" />
-              Manajemen Hak Akses Pengguna Logistik & Kurir
+            <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+              <Shield className="h-5 w-5 text-orange-500" />
+              <span>Manajemen Hak Akses Pengguna Logistik & Kurir</span>
             </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Kelola akun pengguna, peran, dan otorisasi hak akses sistem PosFinance.</p>
+            <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">Kelola akun pengguna, peran, dan otorisasi hak akses sistem PosFinance.</p>
           </div>
 
           <button

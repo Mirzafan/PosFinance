@@ -79,13 +79,13 @@ export default function Index({ leaderboard, topCategory, summary, filters }: Pa
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
-              <div className="p-2 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                <Trophy className="h-6 w-6" />
+            <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+              <div className="p-1.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                <Trophy className="h-5 w-5" />
               </div>
               <span>Leaderboard & Peringkat Layanan Kurir</span>
             </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+            <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
               Analisis peringkat kontribusi omset & volume paket terbanyak PT Pos Indonesia Regional IV Semarang.
             </p>
           </div>

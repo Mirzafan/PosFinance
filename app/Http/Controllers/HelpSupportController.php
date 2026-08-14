@@ -29,7 +29,7 @@ class HelpSupportController extends Controller
                 ];
             });
 
-        return Inertia::render('HelpSupport/Index', [
+        return Inertia::render('Diskusi/Index', [
             'dbMessages' => $messages,
         ]);
     }

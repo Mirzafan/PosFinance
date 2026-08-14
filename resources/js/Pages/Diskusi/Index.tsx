@@ -30,11 +30,11 @@ interface DBMessage {
   created_at: string;
 }
 
-interface HelpSupportProps {
+interface DiskusiProps {
   dbMessages?: DBMessage[];
 }
 
-export default function HelpSupportIndex({ dbMessages = [] }: HelpSupportProps) {
+export default function DiskusiIndex({ dbMessages = [] }: DiskusiProps) {
   const { auth } = usePage<any>().props;
   const user = auth.user;
   const isAdmin = user.role === 'admin';
@@ -80,7 +80,7 @@ export default function HelpSupportIndex({ dbMessages = [] }: HelpSupportProps) 
 
     setIsSending(true);
     router.post(
-      '/dashboard/help-support/messages',
+      '/dashboard/diskusi/messages',
       { message: newReplyText },
       {
         preserveScroll: true,
@@ -99,17 +99,17 @@ export default function HelpSupportIndex({ dbMessages = [] }: HelpSupportProps) 
 
   return (
     <DashboardLayout>
-      <Head title="Pusat Bantuan Logistik & Kurir - PosFinance Regional IV" />
+      <Head title="Forum Diskusi & Support - PosFinance Regional IV" />
 
       <div className="space-y-6 animate-fadeIn">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
-              <HelpCircle className="h-6 w-6 text-orange-500" />
-              <span>Pusat Bantuan & Support Operasional Logistik & Kurir</span>
+            <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+              <MessageSquare className="h-5 w-5 text-orange-500" />
+              <span>Forum Diskusi & Support Operasional Logistik & Kurir</span>
             </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">
+            <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
               Layanan chat langsung Staff ↔ Admin Keuangan, panduan SOP, dan kontak emergency PosFinance.
             </p>
           </div>
@@ -127,7 +127,7 @@ export default function HelpSupportIndex({ dbMessages = [] }: HelpSupportProps) 
               }`}
             >
               <MessageSquare className="h-4 w-4" />
-              <span>Chat Support (Staff ↔ Admin)</span>
+              <span>Chat Diskusi (Staff ↔ Admin)</span>
             </button>
 
             <button

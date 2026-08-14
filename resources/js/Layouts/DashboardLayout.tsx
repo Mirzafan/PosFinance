@@ -25,7 +25,8 @@ import {
   ChevronRight,
   Target,
   Trophy,
-  HelpCircle
+  HelpCircle,
+  MessageSquare
 } from 'lucide-react';
 import { useTheme } from '../Hooks/useTheme';
 
@@ -137,9 +138,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       roles: ['admin'],
     },
     {
-      label: 'Help & Support',
-      href: '/dashboard/help-support',
-      icon: HelpCircle,
+      label: 'Diskusi',
+      href: '/dashboard/diskusi',
+      icon: MessageSquare,
       roles: ['admin', 'staff'],
     },
   ];

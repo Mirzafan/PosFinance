@@ -207,10 +207,10 @@ export default function TargetsIndex() {
               <Target className="h-3.5 w-3.5" />
               <span>Management & Budgeting Regional IV</span>
             </div>
-            <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+            <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
               Target Pendapatan Bulanan Logistik & Kurir
-            </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
               Monitoring realisasi omset ongkir vs target bulanan per kategori layanan Logistik & Kurir PT Pos Indonesia Regional IV Semarang.
             </p>
           </div>

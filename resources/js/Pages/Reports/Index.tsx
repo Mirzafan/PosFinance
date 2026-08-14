@@ -225,8 +225,12 @@ export default function Index() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans">Laporan Keuangan & Rekapitulasi Layanan Logistik & Kurir</h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Tentukan periode Tanggal Mulai dan Tanggal Akhir untuk memuat dan mengunduh laporan resmi Logistik & Kurir.</p>
+            <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+              <span>Laporan Keuangan & Rekapitulasi Layanan Logistik & Kurir</span>
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
+              Tentukan periode Tanggal Mulai dan Tanggal Akhir untuk memuat dan mengunduh laporan resmi Logistik & Kurir.
+            </p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">

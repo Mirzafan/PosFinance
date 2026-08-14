@@ -77,9 +77,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reports/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
     Route::get('/reports/flowchart-pdf', [ReportController::class, 'exportFlowchartPdf'])->name('reports.flowchart-pdf');
 
-    // Help & Support Center
-    Route::get('/dashboard/help-support', [HelpSupportController::class, 'index'])->name('help-support.index');
-    Route::post('/dashboard/help-support/messages', [HelpSupportController::class, 'store'])->name('help-support.store');
+    // Forum Diskusi & Support
+    Route::get('/dashboard/diskusi', [HelpSupportController::class, 'index'])->name('diskusi.index');
+    Route::post('/dashboard/diskusi/messages', [HelpSupportController::class, 'store'])->name('diskusi.store');
+    Route::redirect('/dashboard/help-support', '/dashboard/diskusi');
 
     // Profile Controller
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

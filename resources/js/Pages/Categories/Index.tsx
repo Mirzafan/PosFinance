@@ -113,11 +113,11 @@ export default function Index() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Tag className="h-6 w-6 text-orange-500" />
-              Kategori Layanan Logistik & Kurir
+            <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+              <Tag className="h-5 w-5 text-orange-500" />
+              <span>Kategori Layanan Logistik & Kurir</span>
             </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
               Daftar kategori layanan pengiriman paket & barang Logistik & Kurir PosAja.
             </p>
           </div>

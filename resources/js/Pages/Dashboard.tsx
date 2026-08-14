@@ -213,10 +213,10 @@ export default function Dashboard({ summary, charts, productBreakdown, serviceLe
       <div className="space-y-8 animate-fadeIn">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans flex items-center gap-2">
+            <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
               Dashboard Pendapatan & Financial Logistik & Kurir
             </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
+            <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
               PT Pos Indonesia (Persero) Kantor Regional IV Semarang
             </p>
           </div>
