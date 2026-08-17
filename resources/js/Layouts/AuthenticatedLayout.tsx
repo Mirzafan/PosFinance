@@ -83,14 +83,14 @@ export default function Authenticated({
                                         <Dropdown.Link
                                             href={route('profile.edit')}
                                         >
-                                            Profile
+                                            Profil
                                         </Dropdown.Link>
                                         <button
                                             type="button"
                                             onClick={() => setShowLogoutModal(true)}
                                             className="block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none dark:text-gray-300 dark:hover:bg-gray-800 dark:focus:bg-gray-800"
                                         >
-                                            Log Out
+                                            Keluar
                                         </button>
                                     </Dropdown.Content>
                                 </Dropdown>
@@ -167,14 +167,14 @@ export default function Authenticated({
 
                         <div className="mt-3 space-y-1">
                             <ResponsiveNavLink href={route('profile.edit')}>
-                                Profile
+                                Profil
                             </ResponsiveNavLink>
                             <button
                                 type="button"
                                 onClick={() => setShowLogoutModal(true)}
                                 className="block w-full px-4 py-2 text-start text-base font-medium text-gray-600 transition duration-150 ease-in-out hover:bg-gray-50 hover:text-gray-800 focus:bg-gray-50 focus:text-gray-800 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200 dark:focus:bg-gray-700 dark:focus:text-gray-200"
                             >
-                                Log Out
+                                Keluar
                             </button>
                         </div>
                     </div>
