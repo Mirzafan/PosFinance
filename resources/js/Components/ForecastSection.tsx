@@ -162,36 +162,40 @@ export default function ForecastSection({ forecasting }: ForecastSectionProps) {
   return (
     <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-3xl p-6 shadow-sm text-slate-900 dark:text-white space-y-6 relative overflow-hidden transition-colors">
       {/* Background Decorative Glow */}
-      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-purple-500/5 dark:bg-purple-600/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-orange-500/5 dark:bg-orange-600/10 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-orange-500/5 dark:bg-orange-600/10 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800/80 pb-5 relative z-10">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 dark:bg-purple-500/20 border border-purple-500/20 dark:border-purple-500/30 text-purple-600 dark:text-purple-300 text-xs font-semibold mb-2">
-            <BarChart3 className="h-3.5 w-3.5 text-purple-500 dark:text-purple-400" />
-            <span>Analisis Proyeksi & Tren Pendapatan</span>
+        <div className="flex items-start gap-3">
+          <div className="p-2 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 shrink-0 mt-0.5">
+            <LineChart className="h-5 w-5" />
           </div>
-          <h3 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
-            <LineChart className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-            Proyeksi Pendapatan & Volume Paket
-          </h3>
-          <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
-            Estimasi proyeksi omset ongkir dan volume pengiriman kurir PT Pos Indonesia Regional IV Semarang.
-          </p>
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 dark:bg-orange-500/20 border border-orange-500/20 dark:border-orange-500/30 text-orange-600 dark:text-orange-300 text-xs font-semibold mb-1">
+              <BarChart3 className="h-3.5 w-3.5 text-orange-500 dark:text-orange-400" />
+              <span>Analisis Proyeksi & Tren Pendapatan</span>
+            </div>
+            <h3 className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
+              Proyeksi Pendapatan & Volume Paket
+            </h3>
+            <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">
+              Estimasi proyeksi omset ongkir dan volume pengiriman kurir PT Pos Indonesia Regional IV Semarang.
+            </p>
+          </div>
         </div>
 
         {/* Horizon Filter Selector */}
-        <div className="bg-slate-100 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 p-1.5 rounded-2xl flex items-center gap-1 self-start sm:self-auto shadow-inner">
+        <div className="bg-white dark:bg-slate-950 p-1 rounded-2xl flex items-center gap-1 border border-slate-200 dark:border-slate-800 shadow-sm overflow-x-auto no-scrollbar self-start sm:self-auto">
           {[7, 14, 30].map((days) => (
             <button
               key={days}
               type="button"
               onClick={() => changeHorizon(days)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                 horizon === days
-                  ? 'bg-gradient-to-r from-purple-600 to-orange-500 text-white shadow-md shadow-purple-600/20'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800/50'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-md shadow-orange-600/20'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               {days} Hari Ke Depan
@@ -273,14 +277,18 @@ export default function ForecastSection({ forecasting }: ForecastSectionProps) {
       {/* Chart Section */}
       <div className="bg-slate-50/50 border border-slate-200 dark:bg-slate-950/70 dark:border-slate-800 rounded-2xl p-5 relative z-10 space-y-4">
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 pb-3">
-          <div>
-            <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200 flex items-center gap-2">
-              <Activity className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-              Grafik Perbandingan: Data Aktual vs Estimasi Proyeksi ({horizon} Hari Ke Depan)
-            </h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Garis hijau = Data Historis Aktual | Garis ungu putus-putus = Estimasi Proyeksi Ke Depan
-            </p>
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 shrink-0 mt-0.5">
+              <Activity className="h-5 w-5" />
+            </div>
+            <div>
+              <h4 className="text-base font-bold text-slate-900 dark:text-white">
+                Grafik Perbandingan: Data Aktual vs Estimasi Proyeksi ({horizon} Hari Ke Depan)
+              </h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Garis hijau = Data Historis Aktual | Garis ungu putus-putus = Estimasi Proyeksi Ke Depan
+              </p>
+            </div>
           </div>
 
           <div className="hidden lg:flex items-center gap-4 text-xs">

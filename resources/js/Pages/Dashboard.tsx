@@ -455,11 +455,11 @@ export default function Dashboard({ summary, charts, productBreakdown, serviceLe
             {/* Header Leaderboard */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800/80 pb-5">
               <div className="flex items-center gap-3.5">
-                <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 shadow-inner group">
-                  <Trophy className="h-6 w-6 text-amber-500 transform group-hover:scale-110 transition-transform" />
+                <div className="p-2 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 shrink-0 mt-0.5">
+                  <Trophy className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2.5 flex-wrap tracking-tight">
+                  <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2.5 flex-wrap tracking-tight">
                     <span>Leaderboard Layanan Logistik & Kurir</span>
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-gradient-to-r from-amber-500/15 to-orange-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
                       <Sparkles className="w-3 h-3 text-amber-500" /> Top Performer
@@ -604,18 +604,22 @@ export default function Dashboard({ summary, charts, productBreakdown, serviceLe
 
         {/* Tabel Rekapitulasi Pendapatan per Jenis Layanan */}
         <div className="bg-white border border-slate-200 dark:bg-[#0B101B] dark:border-[#182232] rounded-2xl p-6 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Box className="h-4 w-4 text-orange-500" />
-                <span>Rekapitulasi Pendapatan per Jenis Layanan Logistik & Kurir</span>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
-                  {chartTab === 'daily' ? 'Harian (Hari Ini)' : chartTab === 'weekly' ? 'Mingguan (Minggu Ini)' : chartTab === 'monthly' ? 'Bulanan (Bulan Ini)' : chartTab === 'yearly' ? 'Tahunan (5 Tahun Terakhir)' : 'Semua Waktu'}
-                </span>
-              </h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Breakdown detail pendapatan ongkir & pengeluaran asuransi untuk setiap layanan kurir ({chartTab === 'daily' ? 'Hari Ini' : chartTab === 'weekly' ? 'Minggu Ini' : 'Bulan Ini'})
-              </p>
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 shrink-0 mt-0.5">
+                <Box className="h-5 w-5" />
+              </div>
+              <div>
+                <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 flex-wrap tracking-tight">
+                  <span>Rekapitulasi Pendapatan per Jenis Layanan Logistik & Kurir</span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
+                    {chartTab === 'daily' ? 'Harian (Hari Ini)' : chartTab === 'weekly' ? 'Mingguan (Minggu Ini)' : chartTab === 'monthly' ? 'Bulanan (Bulan Ini)' : chartTab === 'yearly' ? 'Tahunan (5 Tahun Terakhir)' : 'Semua Waktu'}
+                  </span>
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Breakdown detail pendapatan ongkir & pengeluaran asuransi untuk setiap layanan kurir ({chartTab === 'daily' ? 'Hari Ini' : chartTab === 'weekly' ? 'Minggu Ini' : 'Bulan Ini'})
+                </p>
+              </div>
             </div>
           </div>
 
