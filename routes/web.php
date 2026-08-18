@@ -52,9 +52,12 @@ Route::middleware(['auth'])->group(function () {
 
         // Audit Logs
         Route::get('/dashboard/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+        Route::delete('/dashboard/audit-logs/{id}', [AuditLogController::class, 'destroy'])->name('audit-logs.destroy');
+        Route::post('/dashboard/audit-logs/clear', [AuditLogController::class, 'clearAll'])->name('audit-logs.clear');
 
-        // Target Store (Admin only)
+        // Target Store & Reset (Admin only)
         Route::post('/dashboard/targets', [TargetController::class, 'store'])->name('targets.store');
+        Route::post('/dashboard/targets/reset', [TargetController::class, 'reset'])->name('targets.reset');
     });
 
     Route::get('/dashboard/categories', [CategoryController::class, 'index'])->name('categories.index');

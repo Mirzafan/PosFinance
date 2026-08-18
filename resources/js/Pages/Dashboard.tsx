@@ -211,7 +211,7 @@ export default function Dashboard({ summary, charts, productBreakdown, serviceLe
       <div className="space-y-8 animate-fadeIn">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans flex items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans flex items-center gap-2">
               Dashboard Pendapatan & Financial Logistik & Kurir
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
@@ -541,7 +541,7 @@ export default function Dashboard({ summary, charts, productBreakdown, serviceLe
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left border-collapse">
+            <table className="w-full text-xs text-left border-collapse min-w-[640px]">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider bg-slate-50 dark:bg-slate-950/40">
                   <th className="py-3 pl-4 pr-2">Jenis Layanan</th>

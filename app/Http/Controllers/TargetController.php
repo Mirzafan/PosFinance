@@ -145,4 +145,34 @@ class TargetController extends Controller
 
         return redirect()->back()->with('success', "Target pendapatan untuk {$catName} berhasil disimpan!");
     }
+
+    public function reset(Request $request)
+    {
+        if ($request->user()->role !== 'admin') {
+            abort(403, 'Hanya Admin yang dapat mereset target pendapatan.');
+        }
+
+        $validated = $request->validate([
+            'kategori_id' => 'required|exists:categories,id',
+            'bulan' => 'required|integer|min:1|max:12',
+            'tahun' => 'required|integer|min:2020|max:2030',
+        ]);
+
+        $category = Category::find($validated['kategori_id']);
+        $catName = $category ? $category->nama_kategori : 'Kategori';
+
+        RevenueTarget::where('kategori_id', $validated['kategori_id'])
+            ->where('bulan', $validated['bulan'])
+            ->where('tahun', $validated['tahun'])
+            ->delete();
+
+        AuditLog::record(
+            'RESET_TARGET',
+            'Revenue Target',
+            "Mereset target pendapatan bulanan layanan {$catName} untuk periode {$validated['bulan']}/{$validated['tahun']}.",
+            $request->user()
+        );
+
+        return redirect()->back()->with('success', "Target pendapatan untuk {$catName} berhasil direset!");
+    }
 }

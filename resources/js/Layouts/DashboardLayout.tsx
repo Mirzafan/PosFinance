@@ -338,7 +338,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <span>&copy; {new Date().getFullYear()} PT Pos Indonesia (Persero) &bull; Kantor Regional IV Semarang</span>
           </div>
           <p className="mt-1.5 md:mt-0 font-mono text-[11px] text-slate-400 dark:text-slate-500">
-            PosFinance v1.0 &bull; Sistem Manajemen Keuangan & Pendapatan Logistik
+            PosFinance v1.0 &bull; Sistem Manajemen Keuangan & Pendapatan Logistik &amp; Kurir
           </p>
         </footer>
       </div>

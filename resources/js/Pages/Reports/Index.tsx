@@ -225,7 +225,7 @@ export default function Index() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans">Laporan Keuangan & Rekapitulasi Layanan Logistik & Kurir</h2>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans">Laporan Keuangan & Rekapitulasi Layanan Logistik & Kurir</h2>
             <p className="text-slate-500 dark:text-slate-400 text-sm">Tentukan periode Tanggal Mulai dan Tanggal Akhir untuk memuat dan mengunduh laporan resmi Logistik & Kurir.</p>
           </div>
 
@@ -414,7 +414,7 @@ export default function Index() {
             </h4>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left border-collapse">
+              <table className="w-full text-xs text-left border-collapse min-w-[650px]">
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 uppercase tracking-wider bg-slate-50 dark:bg-slate-950/40">
                     <th className="py-3.5 pl-6 pr-4">Jenis Layanan</th>
@@ -453,7 +453,7 @@ export default function Index() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left border-collapse">
+            <table className="w-full text-sm text-left border-collapse min-w-[720px]">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 text-xs uppercase tracking-wider bg-slate-50 dark:bg-slate-950/20">
                   <th className="py-3.5 pl-6 pr-4">No. Transaksi</th>

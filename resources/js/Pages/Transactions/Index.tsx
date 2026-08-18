@@ -383,7 +383,7 @@ export default function Index(props: PageProps) {
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans flex items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-sans flex items-center gap-2">
               Jurnal & Daftar Transaksi Logistik & Kurir
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-sm">
@@ -473,7 +473,7 @@ export default function Index(props: PageProps) {
         {/* Data Table */}
         <div className="bg-white border border-slate-200 dark:bg-slate-900/40 dark:border-slate-800/80 rounded-2xl overflow-hidden flex flex-col">
           <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left border-collapse">
+            <table className="w-full text-xs text-left border-collapse min-w-[720px]">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider bg-slate-50 dark:bg-slate-950/40">
                   <th className="py-3.5 pl-6 pr-4 whitespace-nowrap">No. Transaksi</th>

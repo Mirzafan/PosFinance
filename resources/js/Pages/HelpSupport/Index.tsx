@@ -306,10 +306,10 @@ export default function HelpSupportIndex({ dbMessages = [] }: HelpSupportProps) 
               <p className="text-xs text-slate-500 dark:text-slate-400">Admin Keuangan, Sistem & IT Helpdesk PosFinance</p>
               <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-1.5 text-xs font-mono font-bold">
                 <div className="text-orange-600 dark:text-orange-400 flex items-center gap-2">
-                  <span>📞 +62 812-3456-7890 (Call / WA)</span>
+                  <span>📞 +62 822-3262-3208 (Call / WA)</span>
                 </div>
                 <div className="text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
-                  <span>✉️ admin@posindonesia-reg4.co.id</span>
+                  <span>✉️ mmirzafanani@gmail.com</span>
                 </div>
               </div>
             </div>
