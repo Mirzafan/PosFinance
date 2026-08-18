@@ -79,9 +79,9 @@ export default function Index({ leaderboard, topCategory, summary, filters }: Pa
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
-              <div className="p-1.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                <Trophy className="h-5 w-5" />
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+              <div className="p-2 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                <Trophy className="h-6 w-6" />
               </div>
               <span>Leaderboard & Peringkat Layanan Kurir</span>
             </h2>
@@ -298,7 +298,7 @@ export default function Index({ leaderboard, topCategory, summary, filters }: Pa
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-xs min-w-[760px]">
               <thead className="bg-slate-50 dark:bg-slate-950/80 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-800/80">
                 <tr>
                   <th className="py-3.5 px-4 text-center w-14">Rank</th>

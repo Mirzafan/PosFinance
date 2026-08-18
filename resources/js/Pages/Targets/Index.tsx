@@ -14,6 +14,7 @@ import {
   Layers,
   Coins,
   Edit3,
+  RotateCcw,
   X,
   Info
 } from 'lucide-react';
@@ -75,6 +76,11 @@ export default function TargetsIndex() {
   const [selectedYear, setSelectedYear] = useState<number>(filters.year);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [editingCategory, setEditingCategory] = useState<CategoryTargetItem | null>(null);
+
+  // Reset modal state
+  const [resetModalOpen, setResetModalOpen] = useState<boolean>(false);
+  const [targetToReset, setTargetToReset] = useState<CategoryTargetItem | null>(null);
+  const [isResetting, setIsResetting] = useState<boolean>(false);
 
   const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
     kategori_id: '',
@@ -142,6 +148,30 @@ export default function TargetsIndex() {
         setShowModal(false);
         reset();
       },
+    });
+  };
+
+  const handleOpenResetModal = (item: CategoryTargetItem) => {
+    setTargetToReset(item);
+    setResetModalOpen(true);
+  };
+
+  const confirmResetTarget = () => {
+    if (!targetToReset) return;
+    setIsResetting(true);
+    router.post('/dashboard/targets/reset', {
+      kategori_id: targetToReset.category_id,
+      bulan: selectedMonth,
+      tahun: selectedYear,
+    }, {
+      onSuccess: () => {
+        setResetModalOpen(false);
+        setTargetToReset(null);
+        setIsResetting(false);
+      },
+      onError: () => {
+        setIsResetting(false);
+      }
     });
   };
 
@@ -213,19 +243,6 @@ export default function TargetsIndex() {
             <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
               Monitoring realisasi omset ongkir vs target bulanan per kategori layanan Logistik & Kurir PT Pos Indonesia Regional IV Semarang.
             </p>
-          </div>
-
-          <div className="flex items-center gap-3 self-start sm:self-auto">
-            {isAdmin && (
-              <button
-                type="button"
-                onClick={() => openSetTargetModal()}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-bold text-xs shadow-md shadow-orange-600/20 transition-all cursor-pointer"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Set Target Bulanan</span>
-              </button>
-            )}
           </div>
         </div>
 
@@ -382,14 +399,24 @@ export default function TargetsIndex() {
                     <div className="flex items-center gap-2">
                       {getStatusBadge(item.status, item.percentage)}
                       {isAdmin && (
-                        <button
-                          type="button"
-                          onClick={() => openSetTargetModal(item)}
-                          className="p-1.5 rounded-xl text-slate-400 hover:text-orange-500 hover:bg-orange-500/10 transition-all cursor-pointer"
-                          title="Edit Target"
-                        >
-                          <Edit3 className="h-4 w-4" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => openSetTargetModal(item)}
+                            className="p-1.5 rounded-xl text-slate-400 hover:text-orange-500 hover:bg-orange-500/10 transition-all cursor-pointer"
+                            title="Edit Target Layanan"
+                          >
+                            <Edit3 className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenResetModal(item)}
+                            className="p-1.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-all cursor-pointer"
+                            title="Reset Target Layanan Ini"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -558,6 +585,64 @@ export default function TargetsIndex() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>,
+          document.body
+        )}
+
+        {/* Reset Target Confirmation Modal (Admin Only) */}
+        {resetModalOpen && targetToReset && typeof window !== 'undefined' && createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-7 sm:p-8 w-full max-w-md shadow-2xl space-y-6 relative text-center">
+              <button
+                type="button"
+                onClick={() => setResetModalOpen(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              <div className="w-16 h-16 rounded-3xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto shadow-lg shadow-rose-950/20">
+                <RotateCcw className="h-8 w-8 text-rose-600 dark:text-rose-400" />
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                  Reset Target Pendapatan?
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Apakah Anda yakin ingin mereset target pendapatan untuk layanan <span className="font-extrabold text-slate-900 dark:text-white">{targetToReset.category_name}</span> pada periode <span className="font-bold text-orange-600 dark:text-orange-400">{filters.month_name} {selectedYear}</span>?
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-left text-xs space-y-1">
+                <div className="flex justify-between items-center text-[11px] text-slate-500">
+                  <span>Target Nominal Saat Ini:</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{formatRupiah(targetToReset.target_nominal)}</span>
+                </div>
+                <p className="text-[11px] text-slate-500 opacity-90">
+                  Target nominal akan dikembalikan ke Rp 0 untuk periode bulan ini.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setResetModalOpen(false)}
+                  className="flex-1 py-2.5 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-2xl border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  disabled={isResetting}
+                  onClick={confirmResetTarget}
+                  className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-rose-950/30 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  <span>{isResetting ? 'Mereset...' : 'Ya, Reset Target 🔄'}</span>
+                </button>
+              </div>
             </div>
           </div>,
           document.body

@@ -156,8 +156,8 @@ export default function Index() {
         {/* Header & Add User Button */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
-              <Shield className="h-5 w-5 text-orange-500" />
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+              <Shield className="h-6 w-6 text-orange-500" />
               <span>Manajemen Hak Akses Pengguna Logistik & Kurir</span>
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">Kelola akun pengguna, peran, dan otorisasi hak akses sistem PosFinance.</p>
@@ -189,7 +189,7 @@ export default function Index() {
         {/* Users Table */}
         <div className="bg-white border border-slate-200 dark:bg-slate-900/50 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse min-w-[600px]">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   <th className="py-3.5 pl-6 pr-4">Nama Lengkap</th>

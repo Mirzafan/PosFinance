@@ -263,7 +263,7 @@ export default function DailyClosingsIndex() {
               )}
             </div>
 
-            <div className="text-right">
+            <div className="text-left md:text-right">
               <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">
                 Jam Buka 07.00 Pagi – Tutup 17.00 Sore
               </p>

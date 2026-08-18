@@ -67,4 +67,43 @@ class AuditLogController extends Controller
             'filters' => $request->only(['search', 'module', 'action', 'start_date', 'end_date']),
         ]);
     }
+
+    public function destroy(Request $request, $id)
+    {
+        if ($request->user()->role !== 'admin') {
+            abort(403, 'Hanya Admin yang memiliki akses untuk menghapus Audit Log.');
+        }
+
+        $log = AuditLog::findOrFail($id);
+        $logInfo = "{$log->user_name} ({$log->module} - {$log->action})";
+        $log->delete();
+
+        AuditLog::record(
+            'DELETE',
+            'Security',
+            "Menghapus 1 entri audit log: {$logInfo}",
+            $request->user()
+        );
+
+        return redirect()->back()->with('success', 'Catatan Audit Log berhasil dihapus.');
+    }
+
+    public function clearAll(Request $request)
+    {
+        if ($request->user()->role !== 'admin') {
+            abort(403, 'Hanya Admin yang memiliki akses untuk mereset seluruh Audit Log.');
+        }
+
+        $total = AuditLog::count();
+        AuditLog::query()->delete();
+
+        AuditLog::record(
+            'DELETE',
+            'Security',
+            "Admin membersihkan seluruh data riwayat audit log ({$total} log telah dihapus)",
+            $request->user()
+        );
+
+        return redirect()->back()->with('success', 'Seluruh riwayat Audit Log berhasil dikosongkan.');
+    }
 }
